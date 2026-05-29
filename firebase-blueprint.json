@@ -1,0 +1,178 @@
+{
+  "entities": {
+    "Farmer": {
+      "title": "Farmer Profile",
+      "description": "Represents a verified or pending farmer profile containing contact and ledger details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the farmer document" },
+        "name": { "type": "string", "description": "Full legal name of the farmer" },
+        "gender": { "type": "string", "enum": ["male", "female"] },
+        "district": { "type": "string", "description": "District name (e.g. Rajshahi)" },
+        "address": { "type": "string", "description": "Full address details" },
+        "rating": { "type": "number", "description": "Out of 5 star average rating" },
+        "verified": { "type": "boolean", "description": "Admin verification flag" },
+        "productCount": { "type": "number", "description": "Count of total products offered by farmer" },
+        "salesCount": { "type": "number", "description": "Count of total kilograms or items sold" },
+        "avatar": { "type": "string", "description": "Gender enum or direct image URL link" },
+        "phone": { "type": "string", "description": "Primary mobile number" },
+        "bio": { "type": "string", "description": "Brief farming history, specialties, or notes" },
+        "nid": { "type": "string", "description": "National ID number of Bangladesh" },
+        "nidImage": { "type": "string", "description": "Secure image URL showing physical NID card" },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Blocked"] },
+        "balance": { "type": "number", "description": "Withdrawable earnings balance in BDT" }
+      },
+      "required": ["id", "name", "gender", "district", "address", "rating", "verified", "productCount", "salesCount", "avatar", "phone", "status", "balance"]
+    },
+    "Product": {
+      "title": "Product Item",
+      "description": "Represents a single agricultural product available for purchase in the marketplace",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique product code identifier" },
+        "title": { "type": "string", "description": "Detailed title/name of product in Bengali/English" },
+        "description": { "type": "string", "description": "Nutritional value or agricultural description" },
+        "price": { "type": "number", "description": "Original retail unit price in BDT" },
+        "discountPrice": { "type": "number", "description": "Optional lower discounted promotional price in BDT" },
+        "category": { "type": "string", "description": "Category matches CATEGORIES list id" },
+        "farmerId": { "type": "string", "description": "Document ID of linked farmer" },
+        "farmerName": { "type": "string", "description": "Name of linked farmer" },
+        "rating": { "type": "number", "description": "Average user rating" },
+        "stock": { "type": "number", "description": "Available stock quantity in Kg/Pcs" },
+        "images": { "type": "array", "description": "3 to 5 high-fidelity image URLs" },
+        "isVerified": { "type": "boolean", "description": "True if linked farmer is verified" },
+        "isReadyToCook": { "type": "boolean", "description": "True if ready to cook product preset" },
+        "isFeatured": { "type": "boolean", "description": "True if highlight on main home window" }
+      },
+      "required": ["id", "title", "description", "price", "category", "farmerId", "farmerName", "rating", "stock", "images", "isVerified", "isReadyToCook"]
+    },
+    "Order": {
+      "title": "Purchase Order",
+      "description": "Represents an invoice purchase order detail",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Generated unique order code" },
+        "trackingNumber": { "type": "string", "description": "Delivery tracking code" },
+        "customerId": { "type": "string", "description": "UID of purchaser customer" },
+        "customerName": { "type": "string", "description": "Full name of customer" },
+        "customerPhone": { "type": "string", "description": "Mobile number of customer" },
+        "customerAddress": { "type": "string", "description": "Full delivery shipping details" },
+        "totalPrice": { "type": "number", "description": "Sum of prices of all items purchased" },
+        "status": { "type": "string", "enum": ["Pending", "Confirmed", "Processing", "Packed", "Shipped", "Out for delivery", "Delivered"] },
+        "paymentMethod": { "type": "string", "enum": ["COD", "bKash", "Nagad"] },
+        "paymentTxId": { "type": "string", "description": "Mobile financial service transition reference ID" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of order creation" }
+      },
+      "required": ["id", "trackingNumber", "customerId", "customerName", "customerPhone", "customerAddress", "totalPrice", "status", "paymentMethod", "createdAt"]
+    },
+    "Review": {
+      "title": "Product Review",
+      "description": "Represents feedback on a particular product written by public users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique review code" },
+        "customerName": { "type": "string" },
+        "avatar": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "productName": { "type": "string" },
+        "location": { "type": "string" },
+        "isVerifiedPurchase": { "type": "boolean" }
+      },
+      "required": ["id", "customerName", "avatar", "rating", "comment", "productName", "location", "isVerifiedPurchase"]
+    },
+    "User": {
+      "title": "User Account Profile",
+      "description": "Represents user authentication credentials (local simulation)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "phone": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string", "enum": ["Admin", "Farmer", "Customer"] },
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "farmerId": { "type": "string" },
+        "district": { "type": "string" },
+        "status": { "type": "string" },
+        "nid": { "type": "string" },
+        "nidImage": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["id", "phone", "role", "name", "address"]
+    },
+    "WithdrawalRequest": {
+      "title": "Liquidity Withdrawal",
+      "description": "Represents a payout request made by a farmer to transfer balance to MFS",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "farmerId": { "type": "string" },
+        "farmerName": { "type": "string" },
+        "amount": { "type": "number" },
+        "method": { "type": "string", "enum": ["bKash", "Nagad", "Bank Transfer"] },
+        "details": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected", "Paid"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "farmerId", "farmerName", "amount", "method", "details", "status", "createdAt"]
+    },
+    "Category": {
+      "title": "Category Presets",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nameBn": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "icon": { "type": "string" }
+      },
+      "required": ["id", "nameBn", "nameEn", "icon"]
+    },
+    "Banner": {
+      "title": "Promotional Banner CMS",
+      "type": "object",
+      "properties": {
+        "image": { "type": "string" },
+        "titleBn": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "subtitleBn": { "type": "string" },
+        "subtitleEn": { "type": "string" }
+      },
+      "required": ["image", "titleBn", "titleEn", "subtitleBn", "subtitleEn"]
+    }
+  },
+  "firestore": {
+    "/farmers/{farmerId}": {
+      "schema": "Farmer",
+      "description": "Collection of our registered farmers"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of all items available for sale in the marketplace"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of all placed orders on the marketplace"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Collection of feedback reviews left by customers on our fresh produce"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Accounts registry of customers, farmers, and administrators"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": "WithdrawalRequest",
+      "description": "Withdrawal tickets logging farmer requests"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Customizable list of product types"
+    },
+    "/banners/{bannerId}": {
+      "schema": "Banner",
+      "description": "Hero carousel slides for marketing campaigns"
+    }
+  }
+}

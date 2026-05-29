@@ -1,0 +1,6 @@
+{
+  "name": "Krishok Bazar",
+  "description": "Premium direct-to-farmer Bangladeshi agricultural e-commerce marketplace preventing middlemen exploitation.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

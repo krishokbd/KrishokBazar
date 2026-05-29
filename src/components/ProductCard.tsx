@@ -1,0 +1,155 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from 'react';
+import { Product } from '../types';
+import { useApp } from '../AppContext';
+import { Star, ShoppingCart, Eye, Landmark } from 'lucide-react';
+
+interface ProductCardProps {
+  product: Product;
+  onOpenQuickView: (product: Product) => void;
+  onEditProduct?: (product: Product) => void;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, onEditProduct }) => {
+  const { addToCart, currentUser } = useApp();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart(product, 1);
+  };
+
+  const hasDiscount = !!product.discountPrice;
+  const originalPrice = product.price;
+  const displayPrice = product.discountPrice || product.price;
+
+  return (
+    <div 
+      onClick={() => onOpenQuickView(product)}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-xl hover:border-emerald-250 hover:scale-[1.015] active:scale-[0.995] transition-all cursor-pointer h-full"
+    >
+      {/* ADMIN CONTROL PANEL HEADER */}
+      {currentUser?.role === 'Admin' && onEditProduct && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 flex items-center justify-between text-[9px] font-black text-amber-850 uppercase shrink-0">
+          <span>🛡️ ADMIN CONTROL</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditProduct(product);
+            }}
+            className="rounded bg-amber-500 hover:bg-amber-600 text-white px-2 py-0.5 font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 active:scale-95"
+          >
+            ✏️ EDIT
+          </button>
+        </div>
+      )}
+
+      {/* BADGES & COVERS CONTAINER */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+        <img
+          src={product.images[0]}
+          alt={product.title}
+          className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108"
+          referrerPolicy="no-referrer"
+        />
+
+        {/* VERIFIED BADGE */}
+        {product.isVerified && (
+          <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[9px] font-bold tracking-wide text-white uppercase shadow-md border border-emerald-500">
+            ✔ Verified Farmer
+          </span>
+        )}
+
+        {/* READY TO COOK BADGE */}
+        {product.isReadyToCook && (
+          <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase shadow">
+            🍳 Ready-to-Cook
+          </span>
+        )}
+
+        {/* DISCOUNT BADGE */}
+        {hasDiscount && (
+          <span className="absolute left-3 bottom-3 z-10 inline-flex items-center rounded-lg bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white shadow">
+            -{Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
+          </span>
+        )}
+
+        {/* HOVER QUICK VIEW BUTTON */}
+        <div className="absolute inset-0 bg-black/25 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button 
+            type="button"
+            className="rounded-full bg-white/95 p-3 text-emerald-700 shadow-lg hover:scale-110 active:scale-95 transition-all"
+          >
+            <Eye className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* TEXT CONTENT CONTAINER */}
+      <div className="flex flex-1 flex-col p-4">
+        {/* Category + Star Rating Row */}
+        <div className="flex items-center justify-between gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+          <span>{product.category}</span>
+          <div className="flex items-center gap-0.5 text-amber-500">
+            <Star className="h-3 w-3 fill-amber-500 shrink-0" />
+            <span className="text-gray-600 font-mono mt-0.5">{product.rating}</span>
+          </div>
+        </div>
+
+        {/* Title */}
+        <h3 className="mt-1.5 text-xs sm:text-sm font-bold text-gray-800 tracking-tight leading-snug line-clamp-2 font-sans group-hover:text-emerald-700 transition-colors">
+          {product.title}
+        </h3>
+
+        {/* Farmer credit reference */}
+        <div className="mt-1.5 flex items-center gap-1 flex-wrap text-[11px] text-gray-500 font-medium">
+          <Landmark className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+          <span className="truncate max-w-[130px]" title={product.farmerName}>
+            কৃষক: <strong className="text-gray-700 font-bold">{product.farmerName}</strong>
+          </span>
+          {product.isVerified && (
+            <span className="inline-flex items-center gap-0.5 rounded bg-blue-50 px-1 py-0.5 text-[8px] font-black text-blue-600 border border-blue-100 shrink-0 ml-0.5" title="Verified Farmer">
+              ✔ ভেরিফাইড
+            </span>
+          )}
+        </div>
+
+        {/* Price + Cart Bottom Section */}
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2 border-t border-gray-50">
+          {/* Pricing display */}
+          <div className="flex flex-col">
+            {hasDiscount && (
+              <span className="text-[10px] text-gray-400 line-through font-mono">
+                ৳{originalPrice}
+              </span>
+            )}
+            <span className="text-sm font-black text-emerald-700 font-sans flex items-baseline">
+              ৳{displayPrice}
+              <span className="text-[10px] text-gray-400 font-medium ml-0.5 font-mono">
+                /{product.images[0].includes('pcs') || product.title.includes('পিস') || product.title.includes('টি') || product.title.includes('জোড়া') || product.title.includes('box') ? 'পিস' : 'কেজি'}
+              </span>
+            </span>
+          </div>
+
+          {/* Add to Cart button */}
+          <button
+            onClick={handleAddToCart}
+            disabled={product.stock <= 0}
+            className={`flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-all cursor-pointer ${
+              product.stock > 0
+                ? 'bg-gradient-to-r from-emerald-600 to-green-500 text-white hover:from-emerald-700 hover:to-green-600 shadow-md hover:scale-[1.03]'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
+            {product.stock > 0 ? 'যোগ করুন' : 'স্টক শেষ'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

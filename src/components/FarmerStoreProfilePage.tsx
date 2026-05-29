@@ -1,0 +1,328 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
+import { useApp } from '../AppContext';
+import { Farmer, Product, Review } from '../types';
+import { 
+  ArrowLeft, 
+  MapPin, 
+  Star, 
+  ShieldCheck, 
+  Phone, 
+  Store, 
+  Apple, 
+  Leaf, 
+  Award, 
+  Calendar, 
+  CheckCircle2, 
+  MessageSquare, 
+  Users,
+  Grid
+} from 'lucide-react';
+import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
+import { ProductCard } from './ProductCard';
+
+interface FarmerStoreProfilePageProps {
+  farmerId: string;
+  onBack: () => void;
+  onSelectProduct: (productId: string) => void;
+}
+
+export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({ 
+  farmerId, 
+  onBack, 
+  onSelectProduct 
+}) => {
+  const { farmers, products, reviews } = useApp();
+  const [selectedSubCategory, setSelectedSubCategory] = useState('all');
+
+  const farmer = farmers.find(f => f.id === farmerId);
+
+  // Auto Scroll to Top on entry
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [farmerId]);
+
+  if (!farmer) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 text-center">
+        <h3 className="text-xl font-bold text-gray-700">দুঃখিত, কৃষকের স্টোর পাওয়া যায়নি!</h3>
+        <button onClick={onBack} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-emerald-700">
+          <ArrowLeft className="h-4 w-4" /> তালিকায় ফিরে যান
+        </button>
+      </div>
+    );
+  }
+
+  // Filter crops produced by this specific farmer
+  const farmerProducts = products.filter(p => p.farmerId === farmerId);
+  const farmerProductsFiltered = farmerProducts.filter(
+    p => selectedSubCategory === 'all' || p.category === selectedSubCategory
+  );
+
+  // Dynamic grown categories list based on actual items
+  const grownCategories = Array.from(new Set(farmerProducts.map(p => p.category)));
+
+  // Reviews associated with this farmer's products
+  const farmerCropsTitles = farmerProducts.map(p => p.title);
+  const farmerReviews = reviews.filter(
+    r => farmerCropsTitles.some(title => r.productName === title || title.includes(r.productName))
+  );
+
+  return (
+    <section className="py-8 bg-gray-50 min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* UPPER NAVIGATION BAR */}
+        <div className="mb-6">
+          <button 
+            onClick={onBack}
+            className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-100 px-4 py-2 text-xs font-bold text-gray-700 shadow-sm hover:bg-gray-50 active:scale-98 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4 text-emerald-600" />
+            কৃষকদের তালিকায় ফিরে যান
+          </button>
+        </div>
+
+        {/* HERO BANNER & AVATAR BLOCK */}
+        <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm mb-8">
+          
+          {/* Cover Graphic Decoration */}
+          <div className="h-32 sm:h-48 w-full bg-gradient-to-r from-emerald-800 via-emerald-600 to-green-500 relative flex items-end p-6">
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-300 via-emerald-900 to-black"></div>
+            
+            {/* Corner Badge */}
+            <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-wider hidden sm:block">
+              🌾 Direct Partner Store
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8 relative pt-0">
+            {/* Avatar positioning overlay */}
+            <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-12 sm:-mt-16 mb-6">
+              <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-white bg-white shadow overflow-hidden shrink-0 mx-auto md:mx-0">
+                <img 
+                  src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
+                  alt={farmer.name}
+                  className="h-full w-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+
+              <div className="text-center md:text-left flex-1">
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 justify-center md:justify-start">
+                  <h1 className="text-2xl sm:text-3xl font-black text-gray-800 leading-none font-sans">
+                    {farmer.name}
+                  </h1>
+                  
+                  {farmer.verified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-black text-blue-700 shadow-sm shrink-0">
+                      <ShieldCheck className="h-4 w-4 fill-blue-600 text-white shrink-0" />
+                      ✔ ভেরিফাইড খামারি (Verified Farmer)
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 text-xs text-gray-500 font-medium">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4 text-emerald-600 shrink-0" />
+                    {farmer.district}, বাংলাদেশ
+                  </span>
+                  <span>•</span>
+                  <div className="flex items-center gap-0.5 text-amber-500 font-bold">
+                    <Star className="h-4 w-4 fill-amber-500 shrink-0" /> {farmer.rating} রেটিং
+                  </div>
+                  <span>•</span>
+                  <span>{farmerProducts.length}টি ফসল</span>
+                  <span>•</span>
+                  <span className="text-emerald-700 font-bold">{farmer.salesCount}টি ফসল সরবরাহ</span>
+                </div>
+              </div>
+
+              {/* Contact / Connection box */}
+              <div className="shrink-0 flex justify-center mt-2.5 md:mt-0">
+                <a 
+                  href={`tel:${farmer.phone}`}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-5 py-3 text-xs font-bold text-white shadow-md active:scale-98 transition-all"
+                >
+                  <Phone className="h-4 w-4" />
+                  সরাসরি যোগাযোগ: {farmer.phone}
+                </a>
+              </div>
+            </div>
+
+            {/* Farm Story Narrative */}
+            <div className="border-t border-gray-150 pt-6">
+              <h3 className="text-xs font-extrabold text-gray-800 uppercase tracking-widest flex items-center gap-1">
+                <Award className="h-4.5 w-4.5 text-emerald-600" /> খামারির উৎপত্তির গল্প ও নীতি
+              </h3>
+              <p className="mt-2.5 text-xs sm:text-sm text-gray-600 leading-relaxed font-sans max-w-4xl">
+                {farmer.bio || "আমি একজন গর্বিত স্থানীয় কৃষক। কৃষক বাজার প্লাটফর্মের মাধ্যমে আমি আমার জমিতে অর্গানিক উপায়ে উৎপাদিত সম্পূর্ণ সুস্থ উপাদানে ভরা তাজা ফসল আপনাদের কাছে সরাসরি পৌঁছে দিচ্ছি। কোনো প্রকার কেমিক্যাল বা সংরক্ষক ব্যবহার না করে ফসল সরাসরি বাসের মাঠে আপনাদের জন্য তুলে পাঠানো হবে।"}
+              </p>
+            </div>
+
+            {/* Certificates or Credentials Highlights */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-150 pt-6">
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                <div>
+                  <h4 className="text-[11px] font-bold text-gray-800">শতভাগ তাজা সংগ্রহ</h4>
+                  <p className="text-[9px] text-gray-400 font-sans mt-0.5 leading-none">১২ ঘন্টার ফাস্ট ও নিরাপদ ডেলিভারি</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                <Calendar className="h-5 w-5 text-blue-600 shrink-0" />
+                <div>
+                  <h4 className="text-[11px] font-bold text-gray-800">নিবন্ধিত অংশীদারিত্ব</h4>
+                  <p className="text-[9px] text-gray-400 font-sans mt-0.5 leading-none">দীর্ঘ ১ বছরের ওপর বিশ্বস্ত সম্পর্ক</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                <Users className="h-5 w-5 text-indigo-600 shrink-0" />
+                <div>
+                  <h4 className="text-[11px] font-bold text-gray-800">প্রান্তিক কৃষক ক্ষমতায়ন</h4>
+                  <p className="text-[9px] text-gray-400 font-sans mt-0.5 leading-none">১০০% শেয়ার সরাসরি কৃষকের হাতে</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* PRIMARY BENTO LAYOUT GRID */}
+        <div className="lg:flex lg:gap-8 items-start">
+          
+          {/* CROP PRODUCTS GRID - 70% WIDTH */}
+          <div className="lg:w-3/4">
+            
+            {/* Products Filter Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white border border-gray-100 rounded-2xl p-4 mb-6 shadow-sm gap-3">
+              <h2 className="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-1.5 leading-none">
+                <Grid className="h-4.5 w-4.5 text-emerald-600" />
+                কৃষকের উৎপাদিত সতেজ পণ্যসমূহ ({farmerProductsFiltered.length})
+              </h2>
+
+              {/* Micro grown category filter */}
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => setSelectedSubCategory('all')}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                    selectedSubCategory === 'all' 
+                      ? 'bg-emerald-600 text-white shadow' 
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  সব ফসল
+                </button>
+                {grownCategories.map((catId) => (
+                  <button
+                    key={catId}
+                    onClick={() => setSelectedSubCategory(catId)}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer uppercase ${
+                      selectedSubCategory === catId 
+                        ? 'bg-emerald-600 text-white shadow' 
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {catId}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Actual catalog array */}
+            {farmerProductsFiltered.length === 0 ? (
+              <div className="text-center py-16 bg-white border border-gray-100 rounded-3xl shadow-sm text-gray-400">
+                কোনো পণ্য খুঁজে পাওয়া যায়নি।
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                {farmerProductsFiltered.map((p) => (
+                  <ProductCard 
+                    key={p.id}
+                    product={p}
+                    onOpenQuickView={() => onSelectProduct(p.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+          </div>
+
+          {/* HISTORIC REVIEWS / RATINGS SUMMARY CARD - 30% WIDTH */}
+          <div className="lg:w-1/4 mt-8 lg:mt-0 space-y-6">
+            
+            {/* Store Rating summary block */}
+            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm text-center">
+              <h3 className="text-xs font-black text-gray-800 uppercase tracking-wide">স্টোরের রেটিং ও রিভিউ</h3>
+              
+              <div className="mt-4 flex flex-col items-center">
+                <span className="text-4xl sm:text-5xl font-black text-emerald-800 font-mono">
+                  {farmer.rating}
+                </span>
+                
+                <div className="mt-2 flex text-amber-500">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`h-4.5 w-4.5 ${
+                        i < Math.floor(farmer.rating) ? 'fill-amber-500 text-amber-500' : 'text-gray-150'
+                      }`} 
+                    />
+                  ))}
+                </div>
+
+                <p className="text-[10px] text-gray-400 font-sans mt-2">
+                  (১০০% আসল ও সরাসরি ক্রেতাদের মতামত থেকে সংগৃহীত)
+                </p>
+              </div>
+            </div>
+
+            {/* Live review comments list snippet */}
+            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+              <h3 className="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5 mb-4">
+                <MessageSquare className="h-4.5 w-4.5 text-emerald-600" />
+                ক্রেতাদের প্রতিক্রিয়া ({farmerReviews.length})
+              </h3>
+
+              {farmerReviews.length === 0 ? (
+                <p className="text-[11px] text-gray-400 text-center py-6">
+                  এই খামারি বা উদ্যোক্তার পণ্যের ওপরে এখনো কোনো রিভিউ জমা পড়েনি।
+                </p>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                  {farmerReviews.map((rev) => (
+                    <div key={rev.id} className="border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-450 font-sans">
+                        <span className="text-gray-700 font-black">{rev.customerName}</span>
+                        <span>•</span>
+                        <span>{rev.location}</span>
+                      </div>
+                      <div className="flex text-amber-500 mt-1">
+                        {[...Array(rev.rating)].map((_, s) => (
+                          <Star key={s} className="h-2.5 w-2.5 fill-amber-500 text-amber-500 shrink-0" />
+                        ))}
+                      </div>
+                      <p className="mt-1 text-[11px] text-gray-550 leading-relaxed font-sans italic">
+                        "{rev.comment}"
+                      </p>
+                      <span className="text-[9px] text-emerald-700 font-bold block mt-1">
+                        আইটেম: {rev.productName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  );
+};
