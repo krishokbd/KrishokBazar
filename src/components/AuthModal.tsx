@@ -23,6 +23,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   const [loginRole, setLoginRole] = useState<'Customer' | 'Farmer' | 'Admin'>('Customer');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [showAdminRole, setShowAdminRole] = useState(false);
+  const [titleClickCount, setTitleClickCount] = useState(0);
+
+  const handleTitleClick = () => {
+    setTitleClickCount(prev => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setShowAdminRole(true);
+        setLoginRole('Admin');
+      }
+      return next;
+    });
+  };
 
   // Customer registration state
   const [custName, setCustName] = useState('');
@@ -157,7 +170,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
             <X className="h-4 w-4" />
           </button>
           
-          <span className="text-[10px] font-black tracking-widest uppercase bg-emerald-700/60 text-emerald-50 px-2.5 py-1 rounded-lg">🌱 কৃষক বাজার (Krishok Bazar)</span>
+          <span 
+            onClick={handleTitleClick}
+            className="text-[10px] font-black tracking-widest uppercase bg-emerald-700/60 text-emerald-50 px-2.5 py-1 rounded-lg cursor-pointer select-none active:scale-95 transition-transform inline-block"
+            title="৫ বার ক্লিক করে গোপন এডমিন পোর্টাল আনলক করুন"
+          >
+            🌱 কৃষক বাজার (Krishok Bazar)
+          </span>
           <h3 className="text-xl sm:text-2xl font-black font-sans mt-2">নিরাপদ ডোরস্টেপ এগ্রি-মার্কেট</h3>
           <p className="mt-1 text-xs text-emerald-100/90 leading-relaxed font-sans">১০০% মধ্যসত্বভোগী মুক্ত সরাসরি কৃষক কেনাবেচা। মোবাইল নাম্বারের সাহায্যে সহজে নিবন্ধন ও লগইন সম্পন্ন করুন।</p>
         </div>
@@ -223,11 +242,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
               {/* Role switcher tags */}
               <div>
                 <label className="block text-[10px] uppercase font-black text-gray-400 mb-2 tracking-wider">ড্যাশবোর্ড রোল নির্বাচন করুন:</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className={`grid ${showAdminRole ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
                   {[
                     { role: 'Customer', label: '🛒 সম্মানিত ক্রেতা' },
                     { role: 'Farmer', label: '🌾 অংশীদার কৃষক' },
-                    { role: 'Admin', label: '👑 প্রধান এডমিন' }
+                    ...(showAdminRole ? [{ role: 'Admin', label: '👑 প্রধান এডমিন' }] : [])
                   ].map((x) => (
                     <button
                       key={x.role}
@@ -238,7 +257,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
                         setSuccessMsg('');
                         if (x.role === 'Admin') {
                           setPhone('01931355398');
-                          setPassword('password');
+                          setPassword('Ajzakir@2020');
                         } else if (x.role === 'Farmer') {
                           setPhone('01712345100');
                         } else {
@@ -267,7 +286,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
                     required
                     placeholder="১১ ডিজিটের মোবাইল নম্বর দিন"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPhone(val);
+                      if (val === '01931355398' || val === '01939052257' || val === 'admin') {
+                        setShowAdminRole(true);
+                        setLoginRole('Admin');
+                      }
+                    }}
                     className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-700 outline-none focus:border-emerald-500"
                   />
                 </div>

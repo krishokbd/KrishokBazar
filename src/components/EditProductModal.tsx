@@ -353,6 +353,40 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                   />
                 </div>
               </div>
+
+              {/* Instant Multi-Image Preview Strip */}
+              <div className="pt-2 border-t border-gray-100">
+                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">তাত্ক্ষণিক ইমেজ গ্যালারি প্রিভিউ (Live Gallery Preview)</span>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { url: image1, label: '১ম ছবি' },
+                    { url: image2, label: '২য় ছবি' },
+                    { url: image3, label: '৩য় ছবি' }
+                  ].map((x, index) => (
+                    <div key={index} className="relative aspect-video sm:h-20 rounded-xl overflow-hidden border border-gray-150 bg-gray-50 flex items-center justify-center group shadow-xs">
+                      {x.url ? (
+                        <img 
+                          src={x.url} 
+                          alt={x.label} 
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+                          }}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-[9px] text-gray-400">
+                          <Image className="h-4.5 w-4.5 mb-1 text-gray-300" />
+                          <span>ফাঁকা</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[7px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs font-sans">
+                        {x.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Submit Action Block */}

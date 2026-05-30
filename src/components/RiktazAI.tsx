@@ -36,6 +36,14 @@ export const RiktazAI: React.FC = () => {
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [recordingField, setRecordingField] = useState<'chat' | 'prodTitle' | 'prodContext' | 'dietNote' | null>(null);
 
+  // Active focused field mapping state
+  const [focusedField, setFocusedField] = useState<'chat' | 'prodTitle' | 'prodContext' | 'dietNote'>('chat');
+  const focusedFieldRef = useRef<'chat' | 'prodTitle' | 'prodContext' | 'dietNote'>('chat');
+
+  // Global voice-to-text mode toggling state
+  const [globalVoiceActive, setGlobalVoiceActive] = useState(false);
+  const globalVoiceActiveRef = useRef(false);
+
   const recognitionRef = useRef<any>(null);
   const chatInputRef = useRef('');
   const handsFreeRef = useRef(false);
@@ -53,6 +61,18 @@ export const RiktazAI: React.FC = () => {
   useEffect(() => {
     recordingFieldRef.current = recordingField || 'chat';
   }, [recordingField]);
+
+  useEffect(() => {
+    focusedFieldRef.current = focusedField;
+    // In global voice mode, keep recordingField synced with the focusedField
+    if (globalVoiceActive) {
+      setRecordingField(focusedField);
+    }
+  }, [focusedField, globalVoiceActive]);
+
+  useEffect(() => {
+    globalVoiceActiveRef.current = globalVoiceActive;
+  }, [globalVoiceActive]);
 
   // Handle Speech Recognition initiation
   useEffect(() => {
@@ -82,7 +102,11 @@ export const RiktazAI: React.FC = () => {
 
         const text = finalTranscript || interimTranscript;
         if (text) {
-          const currentTarget = recordingFieldRef.current;
+          // If globalVoiceActive is true, map dynamically to the currently active focused field
+          const currentTarget = globalVoiceActiveRef.current 
+            ? focusedFieldRef.current 
+            : recordingFieldRef.current;
+
           if (currentTarget === 'chat') {
             setChatInput(text);
           } else if (currentTarget === 'prodTitle') {
@@ -105,13 +129,17 @@ export const RiktazAI: React.FC = () => {
           setSpeechError(`ত্রুটি: ${event.error}`);
         }
         setIsListening(false);
-        setRecordingField(null);
+        // If in global voice mode, don't clear the recording field on momentary pause
+        if (!globalVoiceActiveRef.current) {
+          setRecordingField(null);
+        }
       };
 
       rec.onend = () => {
         setIsListening(false);
-        const lastField = recordingFieldRef.current;
-        setRecordingField(null);
+        const lastField = globalVoiceActiveRef.current 
+          ? focusedFieldRef.current 
+          : recordingFieldRef.current;
 
         // Auto-send exclusively triggers on chat inputs when handsFree is toggled
         if (lastField === 'chat' && handsFreeRef.current) {
@@ -119,6 +147,23 @@ export const RiktazAI: React.FC = () => {
           if (finalRecordedText.trim()) {
             handleSendCustomMessage(finalRecordedText);
           }
+        }
+
+        // If global voice mode is active, restart listening for the currently focused field!
+        if (globalVoiceActiveRef.current) {
+          setRecordingField(focusedFieldRef.current);
+          try {
+            // Short timeout to avoid calling start while a stop operation is still winding down in the browser engine
+            setTimeout(() => {
+              if (globalVoiceActiveRef.current && rec) {
+                rec.start();
+              }
+            }, 150);
+          } catch (e) {
+            console.error('Failed to restart speech recognition:', e);
+          }
+        } else {
+          setRecordingField(null);
         }
       };
 
@@ -131,6 +176,11 @@ export const RiktazAI: React.FC = () => {
     if (!SpeechRecognition) {
       setSpeechError('আপনার ব্রাউজারে স্পিচ রিকগনিশন সমর্থন করে না। ক্রোম বা সাফারি ব্যবহার করুন।');
       return;
+    }
+
+    // Turn off global mode if we manually trigger a specific field listening toggle
+    if (globalVoiceActive) {
+      setGlobalVoiceActive(false);
     }
 
     if (isListening) {
@@ -148,6 +198,48 @@ export const RiktazAI: React.FC = () => {
         }
       } catch (err) {
         console.error('Failed to start speech recognition:', err);
+      }
+    }
+  };
+
+  const toggleGlobalVoiceActive = async () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechError('আপনার ব্রাউজারে স্পিচ রিকগনিশন সমর্থন করে না। ক্রোম বা সাফারি ব্যবহার করুন।');
+      return;
+    }
+
+    if (globalVoiceActive) {
+      setGlobalVoiceActive(false);
+      setRecordingField(null);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    } else {
+      setSpeechError(null);
+      try {
+        // Explicitly check/request microphone permissions using modern navigator API
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop the stream right away to release the hardware, since SpeechRecognition will request its own session
+        stream.getTracks().forEach(track => track.stop());
+
+        setGlobalVoiceActive(true);
+        setRecordingField(focusedFieldRef.current);
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.start();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      } catch (err: any) {
+        console.error('Microphone permission or start failure:', err);
+        setSpeechError('মাইক্রোফোন ব্যবহারের অনুমতি পাওয়া যায়নি। অনুগ্রহ করে ব্রাউজার পারমিশন দিন।');
+        setGlobalVoiceActive(false);
       }
     }
   };
@@ -367,12 +459,37 @@ export const RiktazAI: React.FC = () => {
               </div>
             </div>
             
-            <button 
-              onClick={() => setIsOpen(false)}
-              className="rounded-full bg-black/10 p-1 text-white/95 hover:bg-black/20 cursor-pointer"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleGlobalVoiceActive}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide uppercase transition-all shadow-sm cursor-pointer border ${
+                  globalVoiceActive
+                    ? 'bg-rose-600 border-rose-400 text-white animate-pulse'
+                    : 'bg-emerald-750 border-emerald-500/50 text-emerald-100 hover:text-white'
+                }`}
+                title="গ্লোবাল ভয়েস-টু-টেক্সট অন/অফ করুন"
+              >
+                {globalVoiceActive ? (
+                  <>
+                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
+                    <span>ভয়েস অন</span>
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-3 w-3 animate-pulse" />
+                    <span>ভয়েস অফ</span>
+                  </>
+                )}
+              </button>
+
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="rounded-full bg-black/10 p-1 text-white/95 hover:bg-black/20 cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Quick Action Selection Tabs */}
@@ -502,6 +619,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: আম, আলু, বাগদা চিংড়ি"
                       value={prodTitleWord}
                       onChange={(e) => setProdTitleWord(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('prodTitle');
+                        if (globalVoiceActive) {
+                          setRecordingField('prodTitle');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 py-2.5 text-xs outline-none focus:border-emerald-500"
                     />
                     <button
@@ -530,6 +653,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: রাজশাহী বাঘা খামার, রাসায়নিক মুক্ত"
                       value={prodContext}
                       onChange={(e) => setProdContext(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('prodContext');
+                        if (globalVoiceActive) {
+                          setRecordingField('prodContext');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 py-2.5 text-xs outline-none focus:border-emerald-500"
                     />
                     <button
@@ -587,6 +716,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: সুন্দরবনের খলিসা মধু, পদ্মার ইলিশ"
                       value={prodTitleWord}
                       onChange={(e) => setProdTitleWord(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('prodTitle');
+                        if (globalVoiceActive) {
+                          setRecordingField('prodTitle');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 py-2.5 text-xs outline-none focus:border-emerald-500"
                     />
                     <button
@@ -614,6 +749,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: কাঠের চাকে জমানো মৌয়ালদের সংগৃহীত"
                       value={prodContext}
                       onChange={(e) => setProdContext(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('prodContext');
+                        if (globalVoiceActive) {
+                          setRecordingField('prodContext');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 p-2.5 text-xs outline-none focus:border-emerald-500 h-16 resize-none"
                     />
                     <button
@@ -671,6 +812,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: দেশী কচি লাউ, তাজা শোল মাছ"
                       value={prodTitleWord}
                       onChange={(e) => setProdTitleWord(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('prodTitle');
+                        if (globalVoiceActive) {
+                          setRecordingField('prodTitle');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 py-2.5 text-xs outline-none focus:border-emerald-500"
                     />
                     <button
@@ -699,6 +846,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: শুধুমাত্র জৈব সার ব্যবহার করেছি"
                       value={prodContext}
                       onChange={(e) => setProdContext(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('prodContext');
+                        if (globalVoiceActive) {
+                          setRecordingField('prodContext');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 py-2.5 text-xs outline-none focus:border-emerald-500"
                     />
                     <button
@@ -770,6 +923,12 @@ export const RiktazAI: React.FC = () => {
                       placeholder="যেমন: লাল চালের ভাত, ডায়াবেটিক রোগী আছে, বেশি মাছ"
                       value={dietNote}
                       onChange={(e) => setDietNote(e.target.value)}
+                      onFocus={() => {
+                        setFocusedField('dietNote');
+                        if (globalVoiceActive) {
+                          setRecordingField('dietNote');
+                        }
+                      }}
                       className="w-full rounded-xl border border-gray-200 pl-10 pr-2.5 py-2.5 text-xs outline-none focus:border-emerald-500"
                     />
                     <button
@@ -826,6 +985,12 @@ export const RiktazAI: React.FC = () => {
                     placeholder="যেমন: সজনে পাতা, কালোজিরা মধু, টক দই"
                     value={prodTitleWord}
                     onChange={(e) => setProdTitleWord(e.target.value)}
+                    onFocus={() => {
+                      setFocusedField('prodTitle');
+                      if (globalVoiceActive) {
+                        setRecordingField('prodTitle');
+                      }
+                    }}
                     className="w-full rounded-xl border border-gray-200 p-2.5 text-xs outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -903,6 +1068,12 @@ export const RiktazAI: React.FC = () => {
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
+                onFocus={() => {
+                  setFocusedField('chat');
+                  if (globalVoiceActive) {
+                    setRecordingField('chat');
+                  }
+                }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendCustomMessage()}
                 placeholder="রিকতাজকে যেকোনো প্রশ্ন বাংলায় করুন..."
                 disabled={isLoading}

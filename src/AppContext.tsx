@@ -499,6 +499,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const login = (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string) => {
     // 1. ADMIN GATEWAY
     if (role === 'Admin') {
+      if (password !== 'Ajzakir@2020') {
+        return { success: false, message: 'ভুল এডমিন পাসওয়ার্ড!' };
+      }
       if (phone === '01931355398' || phone === '01939052257' || phone === 'admin') {
         const adminUser: User = {
           id: 'admin-user',

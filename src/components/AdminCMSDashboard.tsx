@@ -13,7 +13,8 @@ import {
   Edit, 
   Trash,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Image
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
@@ -684,9 +685,33 @@ export const AdminCMSDashboard: React.FC = () => {
                             type="text"
                             value={adminProdImages[0] || ''}
                             onChange={(e) => setAdminProdImages([e.target.value, ...adminProdImages.slice(1)])}
-                            className="w-full bg-white rounded-xl border border-gray-200 p-2 text-gray-500 text-[10px]"
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2 text-gray-500 text-[10px] shadow-xs outline-none focus:border-emerald-500"
                             placeholder="ইমেজ ওয়েব লিংক এড্রেস"
                           />
+                          {/* Instantly displayed image preview component */}
+                          <div className="mt-2 text-left">
+                            {adminProdImages[0] ? (
+                              <div className="relative rounded-2xl overflow-hidden border border-emerald-100 h-24 w-full bg-slate-50 flex items-center justify-center transition-all group shadow-sm hover:border-emerald-300">
+                                <img 
+                                  src={adminProdImages[0]} 
+                                  alt="Live Product Preview" 
+                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60';
+                                  }}
+                                />
+                                <div className="absolute top-1.5 left-1.5 bg-black/60 text-white text-[8px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded backdrop-blur-xs font-mono">
+                                  Live Preview (তাত্ক্ষণিক প্রাকদর্শন)
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="border border-dashed border-gray-250 rounded-2xl h-24 w-full flex flex-col items-center justify-center bg-gray-50 text-[11px] text-gray-400">
+                                <Image className="h-4.5 w-4.5 mb-1.5 text-gray-300 animate-pulse" />
+                                <span>URL দিলে সতেজ ছবি এখানে দৃশ্যমান হবে</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
