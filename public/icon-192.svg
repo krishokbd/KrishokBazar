@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0fdf4" />
+      <stop offset="100%" stop-color="#dcfce7" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="192" height="192" rx="48" fill="url(#bgGrad)"/>
+  <!-- Circle Accent -->
+  <circle cx="96" cy="96" r="68" fill="none" stroke="#10b981" stroke-width="4.5" stroke-dasharray="6 4.5" />
+  <!-- Leaf Vector -->
+  <g transform="translate(55, 51) scale(0.375)">
+    <!-- Main Leaf Body Left -->
+    <path d="M110 20 C10 80 5 190 110 220 C110 220 110 120 110 20 Z" fill="url(#leafGrad)" />
+    <!-- Main Leaf Body Right -->
+    <path d="M110 20 C210 80 215 190 110 220 C110 220 110 120 110 20 Z" fill="#047857" opacity="0.85" />
+    <!-- Center Vein -->
+    <path d="M110 20 L110 230" stroke="#a7f3d0" stroke-width="6" stroke-linecap="round" />
+    <!-- Side Veins -->
+    <path d="M110 80 Q140 100 170 90" stroke="#a7f3d0" stroke-width="4" fill="none" stroke-linecap="round" />
+    <!-- Side Veins Left -->
+    <path d="M110 100 Q80 120 50 110" stroke="#a7f3d0" stroke-width="4" fill="none" stroke-linecap="round" />
+    <path d="M110 130 Q145 150 165 145" stroke="#a7f3d0" stroke-width="4" fill="none" stroke-linecap="round" />
+    <path d="M110 150 Q75 170 55 165" stroke="#a7f3d0" stroke-width="4" fill="none" stroke-linecap="round" />
+  </g>
+  <!-- Beautiful Agro Text Element -->
+  <text x="96" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="900" font-size="13" fill="#065f46" text-anchor="middle" letter-spacing="0.75">KRISHOK BAZAR</text>
+</svg>

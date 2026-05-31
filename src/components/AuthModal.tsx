@@ -19,7 +19,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   
   // States
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('Ajzakir@2020');
   const [loginRole, setLoginRole] = useState<'Customer' | 'Farmer' | 'Admin'>('Customer');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -40,13 +40,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   // Customer registration state
   const [custName, setCustName] = useState('');
   const [custPhone, setCustPhone] = useState('');
-  const [custPassword, setCustPassword] = useState('');
+  const [custPassword, setCustPassword] = useState('Ajzakir@2020');
   const [custAddress, setCustAddress] = useState('');
 
   // Farmer registration state
   const [farmerName, setFarmerName] = useState('');
   const [farmerPhone, setFarmerPhone] = useState('');
-  const [farmerPassword, setFarmerPassword] = useState('');
+  const [farmerPassword, setFarmerPassword] = useState('Ajzakir@2020');
   const [farmerDistrict, setFarmerDistrict] = useState('Rajshahi');
   const [farmerAddress, setFarmerAddress] = useState('');
   const [farmerNid, setFarmerNid] = useState('');

@@ -154,6 +154,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             }`}>
               {product.stock > 0 ? `স্টক আছে: ${product.stock} কেজি` : 'স্টক শেষ'}
             </span>
+
+            {product.harvestDate && (
+              <>
+                <span className="text-gray-200">|</span>
+                <span className="text-amber-800 font-extrabold bg-amber-50 border border-amber-100 px-2 py-0.5 rounded text-[11px] font-sans">
+                  📅 সংগ্রহ: {product.harvestDate}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Pricing Box */}

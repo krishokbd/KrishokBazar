@@ -398,7 +398,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <span className="text-gray-200">|</span>
 
                 {/* COLOR-CODED ACCESSIBLE STOCK INDICATOR */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-gray-500 font-medium">পণ্য স্থিতি:</span>
                   {product.stock > 0 ? (
                     product.stock < 10 ? (
@@ -416,6 +416,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-[11px] font-black text-red-750">
                       <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                       স্টক আউট
+                    </span>
+                  )}
+
+                  {product.harvestDate && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-250 px-2.5 py-0.5 text-[11px] font-black text-amber-800">
+                      📅 ফসল সংগ্রহ: {product.harvestDate}
                     </span>
                   )}
                 </div>

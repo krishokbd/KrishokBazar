@@ -73,6 +73,9 @@ interface AppContextType {
     ecReference: string;
     verifiedAt: string;
   };
+
+  // Seed / Reset databases
+  resetDemoData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -82,7 +85,7 @@ const SEED_CUSTOMERS: User[] = [
   {
     id: 'customer-user-1',
     phone: '01931355398',
-    password: 'password',
+    password: 'Ajzakir@2020',
     role: 'Customer',
     name: 'Muikta Begum',
     address: 'Dhakeshwari, Lalbagh, Dhaka-1211'
@@ -90,7 +93,7 @@ const SEED_CUSTOMERS: User[] = [
   {
     id: 'customer-user-2',
     phone: '01811223344',
-    password: 'password',
+    password: 'Ajzakir@2020',
     role: 'Customer',
     name: 'Naimul Islam',
     address: 'Mirpur 10, Dhaka'
@@ -497,23 +500,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // SECURE AUTHENTICATION FLOW (Uses ONLY mobile numbers and passwords)
   const login = (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string) => {
+    // Hidden auto-resolve for Admin credentials (no 'Admin' role selection needed)
+    const isAdmin = (phone === '01931355398' || phone === '01939052257' || phone === 'admin') && password === 'Ajzakir@2020';
+    const effectiveRole = isAdmin ? 'Admin' : role;
+
     // 1. ADMIN GATEWAY
-    if (role === 'Admin') {
+    if (effectiveRole === 'Admin') {
       if (password !== 'Ajzakir@2020') {
-        return { success: false, message: 'ভুল এডমিন পাসওয়ার্ড!' };
+        return { success: false, message: 'ভুল পাসওয়ার্ড!' };
       }
       if (phone === '01931355398' || phone === '01939052257' || phone === 'admin') {
         const adminUser: User = {
           id: 'admin-user',
           phone: phone,
           role: 'Admin',
-          name: 'Al-Haj Zakir Hossain (এডমিন)',
+          name: 'Al-Haj Zakir Hossain',
           address: 'Katakhali, Rajshahi'
         };
         setCurrentUser(adminUser);
-        return { success: true, message: 'এডমিন ড্যাশবোর্ডে সফলভাবে প্রবেশ করেছেন!' };
+        return { success: true, message: 'সফলভাবে প্রবেশ করেছেন!' };
       }
-      return { success: false, message: 'ভুল এডমিন মোবাইল নম্বর!' };
+      return { success: false, message: 'ভুল মোবাইল নম্বর!' };
     }
 
     // 2. FARMER GATEWAY
@@ -618,7 +625,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newCust: User = {
       id: `customer-${Date.now()}`,
       phone,
-      password: password || 'password',
+      password: password || 'Ajzakir@2020',
       role: 'Customer',
       name,
       address: address || 'ঢাকা, বাংলাদেশ'
@@ -1202,6 +1209,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
+  const resetDemoData = async () => {
+    // 1. Reset states
+    setProducts(demoProducts);
+    setFarmers(demoFarmers);
+    setCategories(CATEGORIES);
+    setReviews(demoReviews);
+
+    // 2. Clear Local Storage or set to defaults
+    localStorage.setItem('kb_products', JSON.stringify(demoProducts));
+    localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers));
+    localStorage.setItem('kb_categories', JSON.stringify(CATEGORIES));
+    localStorage.setItem('kb_reviews', JSON.stringify(demoReviews));
+
+    // 3. Sync to Cloud Firestore if provisioned
+    if (isFirebaseConfigured && db) {
+      console.log("Re-seeding cloud database with new 165+ products & 75+ verified farmers...");
+      try {
+        // Seed categories
+        for (const c of CATEGORIES) {
+          await setDoc(doc(db, 'categories', c.id), c);
+        }
+        // Seed reviews
+        for (const r of demoReviews) {
+          await setDoc(doc(db, 'reviews', r.id), r);
+        }
+        // Seed farmers
+        for (const f of demoFarmers) {
+          await setDoc(doc(db, 'farmers', f.id), f);
+        }
+        // Seed products
+        for (const p of demoProducts) {
+          await setDoc(doc(db, 'products', p.id), p);
+        }
+      } catch (err) {
+        console.error("Firebase seeding error:", err);
+        throw err;
+      }
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       farmers,
@@ -1240,7 +1287,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteProduct,
       addReview,
       deleteReview,
-      getNidDetails
+      getNidDetails,
+      resetDemoData
     }}>
       {children}
     </AppContext.Provider>

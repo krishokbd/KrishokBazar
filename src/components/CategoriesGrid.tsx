@@ -18,12 +18,15 @@ const categoryThemeMap: Record<string, { bg: string; text: string; icon: string;
   vegetables: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'Leaf', border: 'border-emerald-100' },
   fish: { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'Fish', border: 'border-blue-100' },
   meat: { bg: 'bg-rose-50', text: 'text-rose-700', icon: 'Beef', border: 'border-rose-100' },
-  honey: { bg: 'bg-amber-50', text: 'text-amber-800', icon: 'Sparkles', border: 'border-amber-100' },
-  spices: { bg: 'bg-orange-50', text: 'text-orange-700', icon: 'Flame', border: 'border-orange-100' },
+  honey: { bg: 'bg-amber-50', text: 'text-amber-850', icon: 'Sparkles', border: 'border-amber-100' },
+  spices: { bg: 'bg-orange-50', text: 'text-orange-750', icon: 'Flame', border: 'border-orange-100' },
   organic: { bg: 'bg-teal-50', text: 'text-teal-700', icon: 'ShieldCheck', border: 'border-teal-100' },
   'ready-to-cook': { bg: 'bg-indigo-50', text: 'text-indigo-700', icon: 'ChefHat', border: 'border-indigo-100' },
   dairy: { bg: 'bg-sky-50', text: 'text-sky-700', icon: 'Milk', border: 'border-sky-100' },
-  grains: { bg: 'bg-yellow-50', text: 'text-yellow-800', icon: 'Wheat', border: 'border-yellow-100' }
+  grains: { bg: 'bg-yellow-50', text: 'text-yellow-800', icon: 'Wheat', border: 'border-yellow-105' },
+  rice: { bg: 'bg-lime-50', text: 'text-lime-700', icon: 'Wheat', border: 'border-lime-100' },
+  eggs: { bg: 'bg-amber-50', text: 'text-amber-700', icon: 'Egg', border: 'border-amber-100' },
+  greens: { bg: 'bg-green-50', text: 'text-green-700', icon: 'Sparkles', border: 'border-green-100' }
 };
 
 export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ selectedCategory, onSelectCategory }) => {

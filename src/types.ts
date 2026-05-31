@@ -20,6 +20,11 @@ export interface Farmer {
   nidImage?: string;
   status: 'Pending' | 'Approved' | 'Blocked';
   balance: number; // Earnings balance
+  farmLogo?: string;
+  farmType?: string;
+  story?: string;
+  gallery?: string[];
+  videoPlaceholder?: string;
 }
 
 export interface Product {
@@ -37,6 +42,8 @@ export interface Product {
   isVerified: boolean;
   isReadyToCook: boolean;
   isFeatured?: boolean;
+  harvestDate?: string;
+  farmName?: string;
 }
 
 export interface OrderItem {

@@ -14,7 +14,8 @@ import {
   Trash,
   CheckCircle2,
   AlertCircle,
-  Image
+  Image,
+  RefreshCw
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
@@ -42,8 +43,33 @@ export const AdminCMSDashboard: React.FC = () => {
     saveCategories,
     saveBanners,
     updateFarmer,
-    deleteReview
+    deleteReview,
+    resetDemoData
   } = useApp();
+
+  // Database re-seeding / reset state
+  const [resettingDb, setResettingDb] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+
+  const handleResetTo150DemoProducts = async () => {
+    if (!window.confirm("আপনি কি নিশ্চিতভাবে ডাটাবেজ রিসেট করতে চান? এটি পূর্বের সকল ডেমো ডাটা বদলে নতুন ১৬৫+ পণ্য এবং ৭৫+ ভেরিফাইড কৃষক যুক্ত করবে।")) {
+      return;
+    }
+    
+    setResettingDb(true);
+    setResetSuccess(false);
+
+    try {
+      await resetDemoData();
+      setResetSuccess(true);
+      setTimeout(() => setResetSuccess(false), 4500);
+    } catch (err) {
+      console.error(err);
+      alert("Error resetting database. Please check console logs.");
+    } finally {
+      setResettingDb(false);
+    }
+  };
 
   // Admin CMS active tab
   const [adminActiveTab, setAdminActiveTab] = useState<'farmers' | 'products' | 'categories' | 'banners' | 'reviews' | 'orders'>('farmers');
@@ -136,6 +162,48 @@ export const AdminCMSDashboard: React.FC = () => {
               <strong className="text-base font-bold text-blue-600 block mt-1">{orders.length}টি</strong>
             </div>
           </div>
+        </div>
+
+        {/* DATABASE RESEED NOTICE & BUTTON */}
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-150 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs select-none">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-red-55/10 text-red-700 flex items-center justify-center shrink-0">
+              <RefreshCw className={`h-5 w-5 ${resettingDb ? 'animate-spin' : ''}`} />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-red-950 uppercase tracking-wide">১৬৫+ ডেমো পণ্য ও ৭৫+ ভেরিফাইড খামারি রিসেট হাব</h4>
+              <p className="text-[10.5px] text-red-750/90 font-medium mt-0.5 leading-relaxed font-sans">
+                আপনার ইন-মেমোরি ও ক্লাউড ফায়ারস্টোর ডাটাবেজটিকে সতেজ করতে এবং বঙ্গীয় অঞ্চলের কৃষির ১৬৫+ ডেমো পণ্য ও ৭৫+ ভেরিফাইড পুরুষ ও নারী খামারিদের নতুন তালিকা দ্বারা প্রতিস্থাপন করতে ডানদিকের রিসেট বাটনটি ক্লিক করুন।
+              </p>
+            </div>
+          </div>
+          
+          <button
+            type="button"
+            disabled={resettingDb}
+            onClick={handleResetTo150DemoProducts}
+            className={`cursor-pointer rounded-xl px-5 py-2.5 text-xs font-black text-white shadow-md active:scale-98 transition-all shrink-0 flex items-center gap-1.5 ${
+              resetSuccess 
+                ? 'bg-emerald-600 hover:bg-emerald-700 ring-4 ring-emerald-50' 
+                : 'bg-red-650 hover:bg-red-700 ring-4 ring-red-50'
+            }`}
+          >
+            {resettingDb ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                রিসেট হচ্ছে...
+              </>
+            ) : resetSuccess ? (
+              <>
+                ✓ ডাটাবেজ রিসেট সফল হয়েছে!
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3.5 w-3.5" />
+                ফ্যাক্টরি রিসেট করুন (Reset Data)
+              </>
+            )}
+          </button>
         </div>
 
         {/* TAB SELECTORS */}

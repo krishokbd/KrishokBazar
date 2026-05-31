@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck } from 'lucide-react';
+import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck, WifiOff, Download, Bell } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
 interface HeaderProps {
@@ -30,6 +30,69 @@ export const Header: React.FC<HeaderProps> = ({
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
   const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // PWA states and listeners
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install: ${outcome}`);
+    setDeferredPrompt(null);
+  };
+
+  const handleTriggerPushNotification = async () => {
+    if (!('Notification' in window)) {
+      alert('আপনার ব্রাউজারটি পুশ নোটিফিকেশন সমর্থন করে না।');
+      return;
+    }
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission === 'granted') {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        registration.showNotification('কৃষক বাজার (Krishok Bazar)', {
+          body: 'সফলভাবে পুশ নোটিফিকেশন সক্রিয় করা হয়েছে! সতেজ অর্গানিক ফসলের নতুন অফার পান সাথে সাথেই।',
+          icon: '/icon-192.svg',
+          badge: '/icon-192.svg',
+          vibrate: [200, 100, 200],
+          data: { url: '/' }
+        } as any);
+      } else {
+        new Notification('কৃষক বাজার (Krishok Bazar)', {
+          body: 'সফলভাবে পুশ নোটিফিকেশন সক্রিয় করা হয়েছে!',
+          icon: '/icon-192.svg'
+        });
+      }
+    } else {
+      alert('নোটিফিকেশন অনুমতি প্রত্যাখ্যান করা হয়েছে। দয়া করে ব্রাউজার সেটিংসে এটি সক্রিয় করুন।');
+    }
+  };
 
   const handleNavClick = (view: string) => {
     setView(view);
@@ -122,10 +185,42 @@ export const Header: React.FC<HeaderProps> = ({
             >
               আমাদের কৃষক (Farmers)
             </button>
+            <button 
+              onClick={() => handleNavClick('our-story')}
+              className={`hover:text-emerald-600 transition-colors cursor-pointer ${currentView === 'our-story' ? 'text-emerald-600 border-b-2 border-emerald-600 py-1' : ''}`}
+            >
+              আমাদের গল্প (Our Story)
+            </button>
           </nav>
 
           {/* RIGHT ACTION BUTTONS */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* OFFLINE MODE INDICATOR */}
+            {isOffline && (
+              <span className="inline-flex items-center gap-1 bg-red-50 border border-red-150 text-red-600 text-[10px] font-bold px-2 py-1.5 rounded-xl animate-pulse">
+                <WifiOff className="h-3.5 w-3.5" /> অফলাইন
+              </span>
+            )}
+
+            {/* PWA INSTALL BUTTON */}
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallApp}
+                className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black px-2.5 py-1.5 rounded-xl transition-all shadow-sm cursor-pointer select-none"
+                title="কৃষক বাজার আমাদের অ্যাপ হিসেবে ইনস্টল করুন"
+              >
+                <Download className="h-3.5 w-3.5" /> অ্যাপ ইনস্টল
+              </button>
+            )}
+
+            {/* NOTIFICATION TEST TRIGGER */}
+            <button
+              onClick={handleTriggerPushNotification}
+              className="rounded-2xl border border-gray-100 p-2 text-gray-650 bg-gray-50/50 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition-all cursor-pointer"
+              title="পুশ নোটিফিকেশন চালু / টেস্ট করুন"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
             {/* SEARCH ICON FOR SCANNABLE MOBILE LAYOUT */}
             <button 
               onClick={() => handleNavClick('shop')}
@@ -175,7 +270,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="px-3 py-2.5">
                       <p className="font-bold text-gray-800 max-w-[140px] truncate">{currentUser.name}</p>
                       <span className="mt-0.5 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
-                        {currentUser.role === 'Admin' ? '👤 প্রধান এডমিন' : currentUser.role === 'Farmer' ? '🌱 অংশীদার কৃষক' : '🛍️ সম্মানিত ক্রেতা'}
+                        {currentUser.role === 'Admin' ? '👤 পরিচালক' : currentUser.role === 'Farmer' ? '🌱 অংশীদার কৃষক' : '🛍️ সম্মানিত ক্রেতা'}
                       </span>
                     </div>
 
@@ -186,7 +281,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
                         >
                           <Landmark className="h-4 w-4" />
-                          এডমিন প্যানেল
+                          পরিচালনা প্যানেল
                         </button>
                       )}
                       
@@ -283,6 +378,12 @@ export const Header: React.FC<HeaderProps> = ({
               className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'farmers' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
             >
               আমাদের কৃষক (Farmers)
+            </button>
+            <button 
+              onClick={() => handleNavClick('our-story')}
+              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'our-story' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
+            >
+              আমাদের গল্প (Our Story)
             </button>
           </nav>
         </div>

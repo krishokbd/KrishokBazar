@@ -20,7 +20,9 @@ import {
   CheckCircle2, 
   MessageSquare, 
   Users,
-  Grid
+  Grid,
+  Camera,
+  Video
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 import { ProductCard } from './ProductCard';
@@ -103,13 +105,21 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
           <div className="p-6 sm:p-8 relative pt-0">
             {/* Avatar positioning overlay */}
             <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-12 sm:-mt-16 mb-6">
-              <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-white bg-white shadow overflow-hidden shrink-0 mx-auto md:mx-0">
+              <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-white bg-white shadow overflow-hidden shrink-0 mx-auto md:mx-0 relative group">
                 <img 
                   src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
                   alt={farmer.name}
                   className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"
                 />
+                {farmer.farmLogo && (
+                  <img 
+                    src={farmer.farmLogo}
+                    alt="Farm Logo"
+                    className="absolute bottom-0 right-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full border-2 border-white object-cover shadow-sm"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
               </div>
 
               <div className="text-center md:text-left flex-1">
@@ -119,21 +129,36 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
                   </h1>
                   
                   {farmer.verified && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-black text-blue-700 shadow-sm shrink-0">
-                      <ShieldCheck className="h-4 w-4 fill-blue-600 text-white shrink-0" />
-                      ✔ ভেরিফাইড খামারি (Verified Farmer)
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-550/10 border border-blue-200 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 shadow-sm shrink-0">
+                      <ShieldCheck className="h-3.5 w-3.5 fill-blue-600 text-white shrink-0" />
+                      ভেরিফাইড (Verified)
                     </span>
                   )}
+
+                  {/* Gender badge support */}
+                  <span className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border shrink-0 ${
+                    farmer.gender === 'female'
+                      ? 'bg-pink-50 border-pink-200 text-pink-700'
+                      : 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  }`}>
+                    {farmer.gender === 'female' ? '👩‍🌾 নারী উদ্যোক্তা (Woman Entrepreneur)' : '👨‍🌾 ভেরিফাইড কৃষক'}
+                  </span>
                 </div>
 
-                <div className="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 text-xs text-gray-500 font-medium">
+                {farmer.farmType && (
+                  <p className="text-xs font-extrabold text-emerald-800 mt-1 font-sans">
+                    🌾 {farmer.farmType}
+                  </p>
+                )}
+
+                <div className="mt-2 flex flex-wrap justify-center md:justify-start items-center gap-x-3 gap-y-1.5 text-xs text-gray-500 font-medium font-sans">
                   <span className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                     {farmer.district}, বাংলাদেশ
                   </span>
                   <span>•</span>
                   <div className="flex items-center gap-0.5 text-amber-500 font-bold">
-                    <Star className="h-4 w-4 fill-amber-500 shrink-0" /> {farmer.rating} রেটিং
+                    <Star className="h-3.5 w-3.5 fill-amber-500 shrink-0" /> {farmer.rating} রেটিং
                   </div>
                   <span>•</span>
                   <span>{farmerProducts.length}টি ফসল</span>
@@ -159,8 +184,8 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
               <h3 className="text-xs font-extrabold text-gray-800 uppercase tracking-widest flex items-center gap-1">
                 <Award className="h-4.5 w-4.5 text-emerald-600" /> খামারির উৎপত্তির গল্প ও নীতি
               </h3>
-              <p className="mt-2.5 text-xs sm:text-sm text-gray-600 leading-relaxed font-sans max-w-4xl">
-                {farmer.bio || "আমি একজন গর্বিত স্থানীয় কৃষক। কৃষক বাজার প্লাটফর্মের মাধ্যমে আমি আমার জমিতে অর্গানিক উপায়ে উৎপাদিত সম্পূর্ণ সুস্থ উপাদানে ভরা তাজা ফসল আপনাদের কাছে সরাসরি পৌঁছে দিচ্ছি। কোনো প্রকার কেমিক্যাল বা সংরক্ষক ব্যবহার না করে ফসল সরাসরি বাসের মাঠে আপনাদের জন্য তুলে পাঠানো হবে।"}
+              <p className="mt-2.5 text-xs sm:text-sm text-gray-650 leading-relaxed font-sans max-w-4xl italic bg-emerald-50/20 p-4 rounded-2xl border border-emerald-100/50">
+                "{farmer.story || farmer.bio || "আমি একজন গর্বিত স্থানীয় কৃষক। কৃষক বাজার প্লাটফর্মের মাধ্যমে আমি আমার জমিতে অর্গানিক উপায়ে উৎপাদিত সম্পূর্ণ সুস্থ উপাদানে ভরা তাজা ফসল আপনাদের কাছে সরাসরি পৌঁছে দিচ্ছি।"}"
               </p>
             </div>
 
@@ -275,11 +300,55 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
                   ))}
                 </div>
 
-                <p className="text-[10px] text-gray-400 font-sans mt-2">
-                  (১০০% আসল ও সরাসরি ক্রেতাদের মতামত থেকে সংগৃহীত)
+                <p className="text-[10px] text-gray-400 font-sans mt-2 font-medium">
+                  (১০০% আসল সরাসরি ক্রেতাদের মতামত)
                 </p>
               </div>
             </div>
+
+            {/* Farmer Farm Gallery */}
+            {farmer.gallery && farmer.gallery.length > 0 && (
+              <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+                <h3 className="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5 mb-3">
+                  <Camera className="h-4.5 w-4.5 text-emerald-600" />
+                  খামারের দৃশ্য ও গ্যালারি
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {farmer.gallery.map((imgUrl, gIdx) => (
+                    <div key={gIdx} className="h-16 sm:h-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 relative group cursor-pointer">
+                      <img 
+                        src={imgUrl} 
+                        alt={`Gallery ${gIdx}`} 
+                        className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Farmer Video Tour */}
+            {farmer.videoPlaceholder && (
+              <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+                <h3 className="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5 mb-3">
+                  <Video className="h-4.5 w-4.5 text-emerald-600" />
+                  ভিডিও পরিচিতি (Farm Tour)
+                </h3>
+                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-150 shadow-sm relative group">
+                  <iframe 
+                    className="w-full h-full"
+                    src={farmer.videoPlaceholder} 
+                    title="Farm Tour Video" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                </div>
+                <span className="text-[9px] text-gray-400 font-medium block text-center mt-2">
+                  🎬 সোনালীতলা খামারের সুন্দর ড্রোন পরিচিতি ভিডিও
+                </span>
+              </div>
+            )}
 
             {/* Live review comments list snippet */}
             <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">

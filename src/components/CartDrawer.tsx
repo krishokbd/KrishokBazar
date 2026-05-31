@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../AppContext';
 import { X, Trash2, ShoppingBag, MapPin, Phone, User, CheckCircle, CreditCard, Gift } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -30,8 +31,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
       setAddress(currentUser.address);
     }
   }, [currentUser]);
-
-  if (!isOpen) return null;
 
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = totalAmount > 500 ? 0 : 60; // Free delivery for orders > 500 TK
@@ -65,11 +64,28 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-sm">
-      <div className="absolute inset-0 overflow-hidden" onClick={onClose} />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop Animation */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-      <div className="absolute inset-y-0 right-0 flex max-w-full pl-10">
-        <div className="w-screen max-w-md transform bg-white transition-all shadow-2xl flex flex-col h-full">
+          <div className="absolute inset-y-0 right-0 flex max-w-full pl-10 pointer-events-none">
+            {/* Drawer Sliding Panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full pointer-events-auto"
+            >
           
           {/* HEADER SECTION */}
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-5 sm:px-6 bg-gray-50/50">
@@ -279,8 +295,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
             </div>
           )}
 
+            </motion.div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
