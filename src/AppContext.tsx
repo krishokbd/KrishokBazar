@@ -4,8 +4,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner } from './types';
-import { demoFarmers, demoProducts, demoReviews, CATEGORIES } from './data';
+import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings } from './types';
+import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
@@ -25,6 +25,12 @@ interface AppContextType {
   banners: Banner[];
   saveCategories: (newCategories: Category[]) => void;
   saveBanners: (newBanners: Banner[]) => void;
+  siteSettings: SiteSettings;
+  saveSiteSettings: (settings: SiteSettings) => void;
+  blogs: BlogPost[];
+  addBlogPost: (postData: Omit<BlogPost, 'id' | 'publishedAt'>) => void;
+  editBlogPost: (postId: string, postData: Partial<BlogPost>) => void;
+  deleteBlogPost: (postId: string) => void;
 
   // Auth actions
   login: (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string) => { success: boolean; message: string; subStatus?: string };
@@ -157,6 +163,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [banners, setBanners] = useState<Banner[]>(() => {
     const saved = localStorage.getItem('kb_banners_cms');
     return saved ? JSON.parse(saved) : HERO_CAROUSEL_BANNERS;
+  });
+
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
+    const saved = localStorage.getItem('kb_site_settings');
+    return saved ? JSON.parse(saved) : DEFAULT_SITE_SETTINGS;
+  });
+
+  const [blogs, setBlogs] = useState<BlogPost[]>(() => {
+    const saved = localStorage.getItem('kb_blogs');
+    return saved ? JSON.parse(saved) : demoBlogs;
   });
 
   // Default orders block
@@ -1133,6 +1149,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBanners(newBanners);
   };
 
+  const saveSiteSettings = (settings: SiteSettings) => {
+    localStorage.setItem('kb_site_settings', JSON.stringify(settings));
+    setSiteSettings(settings);
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, 'settings', 'global'), settings).catch(() => {});
+    }
+  };
+
+  const addBlogPost = (postData: Omit<BlogPost, 'id' | 'publishedAt'>) => {
+    const newPost: BlogPost = {
+      ...postData,
+      id: `blog-${Date.now()}`,
+      publishedAt: new Date().toISOString()
+    };
+    const updated = [newPost, ...blogs];
+    localStorage.setItem('kb_blogs', JSON.stringify(updated));
+    setBlogs(updated);
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, 'blogs', newPost.id), newPost).catch(() => {});
+    }
+  };
+
+  const editBlogPost = (postId: string, postData: Partial<BlogPost>) => {
+    const updated = blogs.map(b => b.id === postId ? { ...b, ...postData } as BlogPost : b);
+    localStorage.setItem('kb_blogs', JSON.stringify(updated));
+    setBlogs(updated);
+    if (isFirebaseConfigured && db) {
+      updateDoc(doc(db, 'blogs', postId), postData).catch(() => {});
+    }
+  };
+
+  const deleteBlogPost = (postId: string) => {
+    const updated = blogs.filter(b => b.id !== postId);
+    localStorage.setItem('kb_blogs', JSON.stringify(updated));
+    setBlogs(updated);
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, 'blogs', postId)).catch(() => {});
+    }
+  };
+
   const updateFarmer = (farmerId: string, updatedData: Partial<Farmer>) => {
     if (isFirebaseConfigured && db) {
       updateDoc(doc(db, 'farmers', farmerId), updatedData).catch(err => {
@@ -1215,12 +1271,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setFarmers(demoFarmers);
     setCategories(CATEGORIES);
     setReviews(demoReviews);
+    setSiteSettings(DEFAULT_SITE_SETTINGS);
+    setBlogs(demoBlogs);
 
     // 2. Clear Local Storage or set to defaults
     localStorage.setItem('kb_products', JSON.stringify(demoProducts));
     localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers));
     localStorage.setItem('kb_categories', JSON.stringify(CATEGORIES));
     localStorage.setItem('kb_reviews', JSON.stringify(demoReviews));
+    localStorage.setItem('kb_site_settings', JSON.stringify(DEFAULT_SITE_SETTINGS));
+    localStorage.setItem('kb_blogs', JSON.stringify(demoBlogs));
 
     // 3. Sync to Cloud Firestore if provisioned
     if (isFirebaseConfigured && db) {
@@ -1241,6 +1301,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Seed products
         for (const p of demoProducts) {
           await setDoc(doc(db, 'products', p.id), p);
+        }
+        // Seed settings
+        await setDoc(doc(db, 'settings', 'global'), DEFAULT_SITE_SETTINGS);
+        // Seed blogs
+        for (const b of demoBlogs) {
+          await setDoc(doc(db, 'blogs', b.id), b);
         }
       } catch (err) {
         console.error("Firebase seeding error:", err);
@@ -1263,6 +1329,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       banners,
       saveCategories,
       saveBanners,
+      siteSettings,
+      saveSiteSettings,
+      blogs,
+      addBlogPost,
+      editBlogPost,
+      deleteBlogPost,
       login,
       logout,
       updateProfile,

@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Phone, MessageCircle, Facebook, Video, Youtube, HelpCircle } from 'lucide-react';
+import { useApp } from '../AppContext';
 
 export const FloatingSocials: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { siteSettings } = useApp();
 
-  // Social Links mapping
+  // Social Links mapping from dynamic siteSettings
   const links = {
-    whatsapp: 'https://wa.me/8801931355398',
-    facebook: 'https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/',
-    youtube: 'https://www.youtube.com/@KrishokBazarBD',
-    tiktok: 'https://www.tiktok.com/@krishokbazarbd',
-    messenger: 'https://m.me/61578459151972/',
-    tel: 'tel:01931355398'
+    whatsapp: `https://wa.me/88${siteSettings?.footerPhone?.replace(/\D/g, '') || '01931355398'}`,
+    facebook: siteSettings?.socialFacebook || 'https://facebook.com',
+    youtube: siteSettings?.socialYoutube || 'https://youtube.com',
+    tiktok: siteSettings?.socialTwitter || 'https://twitter.com',
+    messenger: `https://m.me/krishokbazar`,
+    tel: `tel:${siteSettings?.footerPhone || '01931355398'}`
   };
 
   return (

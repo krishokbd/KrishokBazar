@@ -121,3 +121,55 @@ export interface Banner {
   subtitleBn: string;
   subtitleEn: string;
 }
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  summary: string;
+  content: string; // Markdown supported
+  image: string;
+  author: string;
+  publishedAt: string;
+  category: string;
+  tags?: string[];
+}
+
+export interface SiteSettings {
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+  googleAnalyticsId: string;
+  socialFacebook: string;
+  socialYoutube: string;
+  socialTwitter: string;
+  socialInstagram: string;
+  paymentBkashNumber: string;
+  paymentNagadNumber: string;
+  paymentCodActive: boolean;
+  deliveryChargeDhaka: number;
+  deliveryChargeOutside: number;
+  deliveryFreeThreshold: number;
+  storyTitleBn: string;
+  storyTitleEn: string;
+  storySubtitleBn: string;
+  storySubtitleEn: string;
+  storyChallengeTitleBn: string;
+  storyChallengeTextBn: string;
+  storyModelTitleBn: string;
+  storyModelTextBn: string;
+  storyPillar1Title: string;
+  storyPillar1Text: string;
+  storyPillar2Title: string;
+  storyPillar2Text: string;
+  storyPillar3Title: string;
+  storyPillar3Text: string;
+  storyPillar4Title: string;
+  storyPillar4Text: string;
+  headerWelcomeBn: string;
+  headerWelcomeEn: string;
+  footerCopyrightBn: string;
+  footerCopyrightEn: string;
+  footerPhone: string;
+  footerEmail: string;
+  footerAddressBn: string;
+}

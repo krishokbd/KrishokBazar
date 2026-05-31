@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { Product, Farmer, Order, Review, Category, Banner } from '../types';
+import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings } from '../types';
 import { 
   Users, 
   Package, 
@@ -72,7 +72,28 @@ export const AdminCMSDashboard: React.FC = () => {
   };
 
   // Admin CMS active tab
-  const [adminActiveTab, setAdminActiveTab] = useState<'farmers' | 'products' | 'categories' | 'banners' | 'reviews' | 'orders'>('farmers');
+  const [adminActiveTab, setAdminActiveTab] = useState<'farmers' | 'products' | 'categories' | 'banners' | 'reviews' | 'orders' | 'customers' | 'blogs' | 'settings'>('farmers');
+
+  // Blog CMS states
+  const { blogs, addBlogPost, editBlogPost, deleteBlogPost, siteSettings, saveSiteSettings, registeredCustomers } = useApp();
+  const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
+  const [blogFormActive, setBlogFormActive] = useState(false);
+  const [blogFormTitle, setBlogFormTitle] = useState('');
+  const [blogFormSummary, setBlogFormSummary] = useState('');
+  const [blogFormContent, setBlogFormContent] = useState('');
+  const [blogFormCategory, setBlogFormCategory] = useState('নিরাপদ খাদ্য (Safe Food)');
+  const [blogFormAuthor, setBlogFormAuthor] = useState('');
+  const [blogFormImage, setBlogFormImage] = useState('');
+  const [blogFormTags, setBlogFormTags] = useState('');
+
+  // Site general settings draft state
+  const [settingsForm, setSettingsForm] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    if (siteSettings && !settingsForm) {
+      setSettingsForm(siteSettings);
+    }
+  }, [siteSettings]);
 
   // Categories editing state
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -267,6 +288,36 @@ export const AdminCMSDashboard: React.FC = () => {
             }`}
           >
             🛒 অর্ডার ও উত্তোলন ({orders.length})
+          </button>
+          <button
+            onClick={() => setAdminActiveTab('customers')}
+            className={`px-4.5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminActiveTab === 'customers'
+                ? 'bg-emerald-600 text-white shadow font-black'
+                : 'text-gray-600 hover:bg-gray-250/60 hover:text-gray-900 bg-white border border-gray-100'
+            }`}
+          >
+            👥 কাস্টমার ডাটা ({registeredCustomers?.length || 0})
+          </button>
+          <button
+            onClick={() => setAdminActiveTab('blogs')}
+            className={`px-4.5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminActiveTab === 'blogs'
+                ? 'bg-emerald-600 text-white shadow font-black'
+                : 'text-gray-600 hover:bg-gray-250/60 hover:text-gray-900 bg-white border border-gray-100'
+            }`}
+          >
+            📝 কৃষি ব্লগ CMS ({blogs?.length || 0})
+          </button>
+          <button
+            onClick={() => setAdminActiveTab('settings')}
+            className={`px-4.5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminActiveTab === 'settings'
+                ? 'bg-emerald-600 text-white shadow font-black'
+                : 'text-gray-600 hover:bg-gray-250/60 hover:text-gray-900 bg-white border border-gray-100'
+            }`}
+          >
+            ⚙️ সাইট সেটিংস ও গল্প
           </button>
         </div>
 
@@ -1587,6 +1638,680 @@ export const AdminCMSDashboard: React.FC = () => {
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* TAB 7: CUSTOMER LIST */}
+          {adminActiveTab === 'customers' && (
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
+              <div className="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-4">
+                <div>
+                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest font-sans">
+                    🌱 নিবন্ধিত কাস্টমার ডাটাবেস (Customer Database)
+                  </h2>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-normal font-sans">
+                    কৃষক বাজারে অ্যাকাউন্ট তৈরি করা সকল সাধারণ ক্রেতাদের বিবরণ ও ঠিকানা এখানে বিদ্যমান।
+                  </p>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-emerald-50 text-emerald-950 font-black border-b border-emerald-100">
+                      <th className="p-3">ক্রমিক নং</th>
+                      <th className="p-3">ক্রেতার নাম (Name)</th>
+                      <th className="p-3">মোবাইল নম্বর (Phone)</th>
+                      <th className="p-3">ডেলিভারি ঠিকানা (Address)</th>
+                      <th className="p-3">অ্যাকশন</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registeredCustomers && registeredCustomers.length > 0 ? (
+                      registeredCustomers.map((cust, index) => (
+                        <tr key={cust.id || index} className="border-b border-gray-50 hover:bg-emerald-50/20 font-sans">
+                          <td className="p-3 text-gray-400 font-mono font-bold">{index + 1}</td>
+                          <td className="p-3 font-semibold text-gray-800">{cust.name}</td>
+                          <td className="p-3 text-gray-500 font-mono">{cust.phone}</td>
+                          <td className="p-3 text-gray-600 max-w-xs truncate" title={cust.address || 'ঠিকানা দেওয়া হয়নি'}>
+                            {cust.address || <span className="text-gray-350 italic">কোনো ঠিকানা এখনো যোগ করা হয়নি</span>}
+                          </td>
+                          <td className="p-3">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-150">
+                              অ্যাক্টিভ মেম্বার
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-gray-400 font-bold">
+                          কোনো কাস্টমার নথি এখনো যুক্ত হয়নি।
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: AGRICULTURAL BLOG CMS */}
+          {adminActiveTab === 'blogs' && (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              {/* Form panel for creating/editing posts */}
+              <div className="xl:col-span-1 bg-white rounded-3xl border border-gray-100 p-6 shadow-sm self-start space-y-4">
+                <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider font-sans border-b border-gray-150 pb-3">
+                  {editingBlog ? '📝 ব্লগ আর্টিকেল সংশোধন করুন' : '➕ নতুন ব্লগ পোস্ট যুক্ত করুন'}
+                </h2>
+                
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">ব্লগ শিরোনাম (Title)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none font-medium"
+                      placeholder="যেমন: সতেজ ও রাসায়নিক মুক্ত শাকসবজি চেনার বুদ্ধি"
+                      value={blogFormTitle}
+                      onChange={(e) => setBlogFormTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">আইডিয়া বা ছোট সারসংক্ষেপ (Summary)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none"
+                      placeholder="হোমপেজে ব্লগ ব্লকে ছোট করে দেখানোর জন্য"
+                      value={blogFormSummary}
+                      onChange={(e) => setBlogFormSummary(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">ক্যাটাগরি বা বিষয় (Category)</label>
+                    <select
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white cursor-pointer font-sans outline-none"
+                      value={blogFormCategory}
+                      onChange={(e) => setBlogFormCategory(e.target.value)}
+                    >
+                      <option value="নিরাপদ খাদ্য (Safe Food)">নিরাপদ খাদ্য (Safe Food)</option>
+                      <option value="কৃষকের কথা (Farmer Stories)">কৃষকের কথা (Farmer Stories)</option>
+                      <option value="জৈব চাষাবাদ (Organic Farming)">জৈব চাষাবাদ (Organic Farming)</option>
+                      <option value="কৃষি উদ্যোক্তা (Agro Entrepreneur)">কৃষি উদ্যোক্তা (Agro Entrepreneur)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">লেখক / কৃষিবিদ নাম (Author)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none"
+                      placeholder="যেমন: কৃষিবিদ ড. হাফিজার"
+                      value={blogFormAuthor}
+                      onChange={(e) => setBlogFormAuthor(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">ব্লগ ব্যানার ইমেজ URL (Image Link)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none"
+                      placeholder="Unsplash বা অনলাইন ইমেজ লিঙ্ক..."
+                      value={blogFormImage}
+                      onChange={(e) => setBlogFormImage(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">ট্যাগসমূহ (কমা দিয়ে লিখুন)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none"
+                      placeholder="যেমন: অর্গানিক, নিরাপদ, বিষমুক্ত"
+                      value={blogFormTags}
+                      onChange={(e) => setBlogFormTags(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1 leading-none font-sans">মূল প্রবন্ধের বিবরণ (Article Content)</label>
+                    <textarea
+                      rows={7}
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none leading-relaxed"
+                      placeholder="বিস্তারিত প্রবন্ধ লিখুন। প্যারাগ্রাফগুলোর মধ্যে ৩-৪ লাইনের ফাঁকা রাখতে পারেন..."
+                      value={blogFormContent}
+                      onChange={(e) => setBlogFormContent(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    {editingBlog && (
+                      <button
+                        onClick={() => {
+                          setEditingBlog(null);
+                          setBlogFormTitle('');
+                          setBlogFormSummary('');
+                          setBlogFormContent('');
+                          setBlogFormAuthor('');
+                          setBlogFormImage('');
+                          setBlogFormTags('');
+                        }}
+                        className="flex-1 py-2.5 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer text-center font-sans border border-gray-200"
+                      >
+                        বাতিল
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (!blogFormTitle || !blogFormAuthor || !blogFormContent) {
+                          alert('দয়া করে শিরোনাম, লেখক এবং বিবরণ পূরণ করুন!');
+                          return;
+                        }
+                        const tagsArr = blogFormTags.split(',').map(t => t.trim()).filter(Boolean);
+                        const postData = {
+                          title: blogFormTitle,
+                          summary: blogFormSummary,
+                          content: blogFormContent,
+                          category: blogFormCategory,
+                          author: blogFormAuthor,
+                          image: blogFormImage || 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&auto=format&fit=crop&q=80',
+                          tags: tagsArr
+                        };
+
+                        if (editingBlog) {
+                          editBlogPost(editingBlog.id, postData);
+                          setEditingBlog(null);
+                          alert('আর্টিকেল সফলভাবে আপডেট করা হয়েছে!');
+                        } else {
+                          addBlogPost(postData);
+                          alert('নতুন কন্টেন্ট সফলভাবে যুক্ত করা হয়েছে!');
+                        }
+                        
+                        setBlogFormTitle('');
+                        setBlogFormSummary('');
+                        setBlogFormContent('');
+                        setBlogFormAuthor('');
+                        setBlogFormImage('');
+                        setBlogFormTags('');
+                      }}
+                      className="flex-2 py-2.5 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl cursor-pointer shadow text-center font-sans"
+                    >
+                      {editingBlog ? 'সংরক্ষণ করুন ✔' : 'পাবলিশ করুন ✔'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Master List of Posts */}
+              <div className="xl:col-span-2 space-y-4">
+                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
+                  <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4 font-sans">
+                    আর্টিকেল ও কন্টেন্ট মডারেটর ({blogs.length} টি পোস্ট)
+                  </h2>
+                  
+                  <div className="space-y-4 max-h-[700px] overflow-y-auto pr-1">
+                    {blogs.map((b) => (
+                      <div key={b.id} className="border border-gray-100 rounded-2xl p-4 bg-white flex flex-col sm:flex-row gap-4 hover:border-emerald-200 transition-colors shadow-xs">
+                        <div className="w-full sm:w-28 h-20 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                          <img
+                            src={b.image}
+                            alt="blog thumbnail"
+                            className="h-full w-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                        <div className="flex-1 space-y-1.5 font-sans">
+                          <div className="flex justify-between items-start gap-4">
+                            <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              {b.category}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-bold font-mono">
+                              {new Date(b.publishedAt).toLocaleDateString('bn-BD')}
+                            </span>
+                          </div>
+
+                          <h3 className="font-bold text-xs sm:text-sm text-gray-800">{b.title}</h3>
+                          <p className="text-[10.5px] text-gray-500 leading-normal line-clamp-2">{b.summary}</p>
+                          <span className="block text-[10px] text-gray-400 font-bold">লেখক: {b.author}</span>
+                          
+                          <div className="flex justify-end gap-2 pt-2 border-t border-gray-50 mt-2 font-sans">
+                            <button
+                              onClick={() => {
+                                setEditingBlog(b);
+                                setBlogFormTitle(b.title);
+                                setBlogFormSummary(b.summary);
+                                setBlogFormContent(b.content);
+                                setBlogFormCategory(b.category);
+                                setBlogFormAuthor(b.author);
+                                setBlogFormImage(b.image);
+                                setBlogFormTags(b.tags.join(', '));
+                              }}
+                              className="px-3 py-1.5 text-[10.5px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg cursor-pointer transition-colors"
+                            >
+                              সম্পাদনা
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm('আপনি কি নিশ্চিত যে এই কন্টেন্টটি আজীবনের জন্য মুছে ফেলতে চান?')) {
+                                  deleteBlogPost(b.id);
+                                }
+                              }}
+                              className="px-3 py-1.5 text-[10.5px] font-bold text-red-650 bg-red-50 hover:bg-red-100 rounded-lg cursor-pointer transition-colors border border-red-200"
+                            >
+                              মুছুন
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 9: SITE SETTINGS & MOVEMENT STORY */}
+          {adminActiveTab === 'settings' && settingsForm && (
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gray-150 pb-4 gap-4">
+                <div>
+                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest font-sans">
+                    ⚙️ সাইট সেটিংস, পেমেন্ট ও আমাদের গল্প সম্পাদক (Global CMS settings)
+                  </h2>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-normal font-sans">
+                    প্রয়োজনীয় মেটা ট্যাগ, এসইও, ফেসবুক মেথড, হোমপেজ টেক্সট এবং "আমাদের গল্প" এর মূল টেক্সট সম্বলিত ড্যাশবোর্ড কন্ট্রোল।
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    saveSiteSettings(settingsForm);
+                    alert('সকল গ্লোবাল কনফিগারেশন এবং স্টোরি সফলভাবে আপডেট করা হয়েছে!');
+                  }}
+                  className="px-5 py-2.5 rounded-xl text-white font-bold text-xs bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all shadow cursor-pointer font-sans"
+                >
+                  সব সেটিংস সেভ করুন ✔
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                {/* Section A: SEO Details */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 font-sans">
+                  <h3 className="font-black text-emerald-800 border-b border-gray-100 pb-2 uppercase tracking-wider">🌱 মেটা এসইও কনফিগারেশন</h3>
+                  
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">SEO ব্রাউজার টাইটেল (Title Tag)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500"
+                      value={settingsForm.seoTitle}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, seoTitle: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">SEO মেটা ডেসক্রিপশন (Meta Description)</label>
+                    <textarea
+                      rows={2}
+                      className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500"
+                      value={settingsForm.seoDescription}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, seoDescription: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">অনুসন্ধান কি-ওয়ার্ডস (SEO Keywords)</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500"
+                      value={settingsForm.seoKeywords}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, seoKeywords: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">Google Analytics ID</label>
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500 font-mono"
+                      value={settingsForm.googleAnalyticsId}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, googleAnalyticsId: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Section B: Delivery & Payment settings */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 font-sans">
+                  <h3 className="font-black text-emerald-800 border-b border-gray-100 pb-2 uppercase tracking-wider">💳 পেমেন্ট গেটওয়ে ও ডেলিভেরি নিয়মনীতি</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">বিকাশ মার্চেন্ট মোবাইল নম্বর</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500 font-mono"
+                        value={settingsForm.paymentBkashNumber}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, paymentBkashNumber: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">নগদ মার্চেন্ট মোবাইল নম্বর</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500 font-mono font-sans"
+                        value={settingsForm.paymentNagadNumber}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, paymentNagadNumber: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 py-1 leading-none">
+                    <input
+                      type="checkbox"
+                      id="cod_active"
+                      className="rounded text-emerald-500 cursor-pointer"
+                      checked={settingsForm.paymentCodActive}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, paymentCodActive: e.target.checked })}
+                    />
+                    <label htmlFor="cod_active" className="text-[10.5px] font-bold text-gray-600 cursor-pointer">Cash On Delivery (ক্যাশ অন ডেলিভারি) সক্রিয় রাখুন</label>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 border-t border-gray-100 pt-3 mt-1">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ডেলিভারি (ঢাকা)</label>
+                      <input
+                        type="number"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500"
+                        value={settingsForm.deliveryChargeDhaka}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, deliveryChargeDhaka: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ডেলিভারি (বাহির)</label>
+                      <input
+                        type="number"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500"
+                        value={settingsForm.deliveryChargeOutside}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, deliveryChargeOutside: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ফ্রি ডেলিভারি সীমা (৳)</label>
+                      <input
+                        type="number"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none focus:border-emerald-500 font-mono"
+                        value={settingsForm.deliveryFreeThreshold}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, deliveryFreeThreshold: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section C: Social handles / Headers Header welcome texts / Footer text */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 font-sans md:col-span-2">
+                  <h3 className="font-black text-emerald-800 border-b border-gray-100 pb-2 uppercase tracking-wider">🎭 সোশ্যাল লিংকস, ভাষার টেক্সট, কপিরাইট ও যোগাযোগের ঠিকানা</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ফেসবুক পেজ (FB Link)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.socialFacebook}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, socialFacebook: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ইউটিউব চ্যানেল (YouTube)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.socialYoutube}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, socialYoutube: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">টুইটার / লিঙ্ক (Twitter)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.socialTwitter}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, socialTwitter: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ইনস্টাগ্রাম অ্যাকাউন্ট (Insta)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.socialInstagram}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, socialInstagram: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 border-t border-gray-100 pt-3 mt-1">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">হটলাইন মোবাইল নম্বর</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none font-mono"
+                        value={settingsForm.footerPhone}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, footerPhone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">কন্টাক্ট ইমেইল (Email)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none font-mono"
+                        value={settingsForm.footerEmail}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, footerEmail: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">অফিস ঠিকানা (বাংলায়)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.footerAddressBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, footerAddressBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-gray-100 pt-3 mt-1">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">হেডার ওয়েলকাম মেসেজ (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.headerWelcomeBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, headerWelcomeBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ফুটার কপিরাইট নোটিশ (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.footerCopyrightBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, footerCopyrightBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section D: Premium "আমাদের গল্প" Page movement Story CMS content */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 font-sans md:col-span-2">
+                  <h3 className="font-black text-emerald-850 border-b border-gray-100 pb-2 uppercase tracking-wider flex items-center gap-1.5">
+                    📖 আমাদের গল্প (Movement Story) রিচ কন্টেন্ট CMS
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">প্রধান বাংলা টাইটেল (Title BN)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-white outline-none"
+                        value={settingsForm.storyTitleBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storyTitleBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">প্রধান ইংরেজি টাইটেল (Title EN)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-white outline-none"
+                        value={settingsForm.storyTitleEn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storyTitleEn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">বাংলা সাবটাইটেল (Subtitle BN)</label>
+                      <textarea
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-white outline-none"
+                        value={settingsForm.storySubtitleBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storySubtitleBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">ইংরেজি সাবটাইটেল (Subtitle EN)</label>
+                      <textarea
+                        rows={2}
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-white outline-none"
+                        value={settingsForm.storySubtitleEn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storySubtitleEn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">চ্যালেঞ্জ টাইটেল (Challenge Title BN)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.storyChallengeTitleBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storyChallengeTitleBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">মডেল ও লক্ষ্য টাইটেল (Model Title BN)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.storyModelTitleBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storyModelTitleBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">চ্যালেঞ্জিং প্রেক্ষাপট বডি টেক্সট (বাংলা)</label>
+                      <textarea
+                        rows={5}
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-white outline-none"
+                        value={settingsForm.storyChallengeTextBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storyChallengeTextBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 mb-1 leading-none">কৃষক বাজার ডিজিটাল সমাধান বডি টেক্সট (বাংলা)</label>
+                      <textarea
+                        rows={5}
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-white outline-none font-sans"
+                        value={settingsForm.storyModelTextBn}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, storyModelTextBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-3 space-y-3">
+                    <h4 className="text-[10px] font-bold uppercase text-emerald-800 tracking-wider">সোনার চতুর্ভুজ স্তম্ভ (The 4 Pillars of Story)</h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5 p-3.5 bg-white rounded-xl border border-gray-105">
+                        <input
+                          type="text"
+                          className="w-full font-bold text-xs text-gray-800 border-b border-gray-100 pb-1"
+                          value={settingsForm.storyPillar1Title}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar1Title: e.target.value })}
+                        />
+                        <textarea
+                          rows={2}
+                          className="w-full text-[10.5px] text-gray-500 mt-1 leading-relaxed outline-none"
+                          value={settingsForm.storyPillar1Text}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar1Text: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 p-3.5 bg-white rounded-xl border border-gray-105">
+                        <input
+                          type="text"
+                          className="w-full font-bold text-xs text-gray-800 border-b border-gray-100 pb-1"
+                          value={settingsForm.storyPillar2Title}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar2Title: e.target.value })}
+                        />
+                        <textarea
+                          rows={2}
+                          className="w-full text-[10.5px] text-gray-500 mt-1 leading-relaxed outline-none"
+                          value={settingsForm.storyPillar2Text}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar2Text: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 p-3.5 bg-white rounded-xl border border-gray-105">
+                        <input
+                          type="text"
+                          className="w-full font-bold text-xs text-gray-800 border-b border-gray-100 pb-1"
+                          value={settingsForm.storyPillar3Title}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar3Title: e.target.value })}
+                        />
+                        <textarea
+                          rows={2}
+                          className="w-full text-[10.5px] text-gray-500 mt-1 leading-relaxed outline-none"
+                          value={settingsForm.storyPillar3Text}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar3Text: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5 p-3.5 bg-white rounded-xl border border-gray-105">
+                        <input
+                          type="text"
+                          className="w-full font-bold text-xs text-gray-800 border-b border-gray-100 pb-1"
+                          value={settingsForm.storyPillar4Title}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar4Title: e.target.value })}
+                        />
+                        <textarea
+                          rows={2}
+                          className="w-full text-[10.5px] text-gray-500 mt-1 leading-relaxed outline-none"
+                          value={settingsForm.storyPillar4Text}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar4Text: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-4 border-t border-gray-100 font-sans">
+                <button
+                  onClick={() => {
+                    saveSiteSettings(settingsForm);
+                    alert('সকল গ্লোবাল কনফিগারেশন এবং স্টোরি সফলভাবে আপডেট করা হয়েছে!');
+                  }}
+                  className="px-6 py-3 rounded-xl text-white font-bold text-xs bg-emerald-600 hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer"
+                >
+                  সব পরিবর্তন সংরক্ষণ করুন ✔
+                </button>
+              </div>
             </div>
           )}
 
