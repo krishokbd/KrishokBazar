@@ -32,6 +32,19 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
     }
   }, [currentUser]);
 
+  // Listen to buy now events
+  React.useEffect(() => {
+    const handleOpenCart = (e: any) => {
+      if (e.detail?.openCheckout) {
+        setIsCheckingOut(true);
+      } else {
+        setIsCheckingOut(false);
+      }
+    };
+    window.addEventListener('open-cart-drawer', handleOpenCart);
+    return () => window.removeEventListener('open-cart-drawer', handleOpenCart);
+  }, []);
+
   const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryFee = totalAmount > 500 ? 0 : 60; // Free delivery for orders > 500 TK
   const grandTotal = totalAmount + deliveryFee;

@@ -17,6 +17,7 @@ export const RiktazAI: React.FC = () => {
   const { currentUser } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'suggest_title' | 'write_description' | 'suggest_price' | 'grocery_estimation' | 'healthy_suggestions'>('chat');
+  const [suggestionTab, setSuggestionTab] = useState<'buyer' | 'farmer'>('buyer');
   
   // Custom chat states
   const [chatInput, setChatInput] = useState('');
@@ -1009,6 +1010,107 @@ export const RiktazAI: React.FC = () => {
 
           {/* CHAT INPUT AREA FOOTER */}
           <div className="p-4 bg-white border-t border-gray-150 space-y-2">
+
+            {/* SUGGESTED QUESTIONS MODULE */}
+            {activeTab === 'chat' && (
+              <div className="border-b border-gray-100 pb-3 mb-2 space-y-2 font-sans">
+                {/* Switch Tabs */}
+                <div className="flex items-center justify-between gap-2.5">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">🤔 একটু সাহায্য লাগবে? (Suggestions):</span>
+                  <div className="flex bg-gray-100 rounded-lg p-0.5 border border-gray-200 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setSuggestionTab('buyer')}
+                      className={`px-2 py-1 rounded-md text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 leading-none ${
+                        suggestionTab === 'buyer'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      আমি ক্রেতা 🛒
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSuggestionTab('farmer')}
+                      className={`px-2 py-1 rounded-md text-[9px] font-black transition-all cursor-pointer flex items-center gap-1 leading-none ${
+                        suggestionTab === 'farmer'
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      আমি কৃষক 🚜
+                    </button>
+                  </div>
+                </div>
+
+                {/* Suggestions List */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-[85px] overflow-y-auto pr-0.5 custom-scrollbar">
+                  {suggestionTab === 'buyer' ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("আজকের কম্বো বাস্কেটে কী আছে?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        আজকের কম্বো বাস্কেটে কী আছে?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("আমার অর্ডার ট্র্যাক করব কীভাবে?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        আমার অর্ডার ট্র্যাক করব কীভাবে?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("বিকাশ/নগদে পেমেন্ট কীভাবে করব?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        বিকাশ/নগদে পেমেন্ট কীভাবে করব?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("সাপ্তাহিক সবজি সাবস্ক্রিপশন কী?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        সাপ্তাহিক সবজি সাবস্ক্রিপশন কী?
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("আমার ফসলের সঠিক দাম কীভাবে পাব?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        আমার ফসলের সঠিক দাম কীভাবে পাব?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("এই সপ্তাহে কোন সবজির চাহিদা বেশি?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        এই সপ্তাহে কোন সবজির চাহিদা বেশি?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("কৃষক ড্যাশবোর্ডে পণ্য আপলোড কীভাবে করব?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        কৃষক ড্যাশবোর্ডে পণ্য আপলোড কীভাবে করব?
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSendCustomMessage("কৃষক বাজার আমার পণ্য কীভাবে সংগ্রহ করবে?")}
+                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                      >
+                        কৃষক বাজার আমার পণ্য কীভাবে সংগ্রহ করবে?
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Real-time microphone listening visual or error indicator */}
             {(isListening || speechError || handsFree) && (

@@ -28,12 +28,157 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+const getStatusRank = (status: Order['status']): number => {
+  switch (status) {
+    case 'Pending': return 0;
+    case 'Confirmed':
+    case 'Processing': return 1;
+    case 'Packed': return 2;
+    case 'Shipped':
+    case 'Out for delivery': return 3;
+    case 'Delivered': return 4;
+    default: return 0;
+  }
+};
+
+const getNextStatus = (currentStatus: Order['status']): Order['status'] | null => {
+  switch (currentStatus) {
+    case 'Pending': return 'Confirmed';
+    case 'Confirmed': return 'Processing';
+    case 'Processing': return 'Packed';
+    case 'Packed': return 'Shipped';
+    case 'Shipped': return 'Out for delivery';
+    case 'Out for delivery': return 'Delivered';
+    case 'Delivered': return null;
+    default: return 'Confirmed';
+  }
+};
+
+interface Step {
+  rank: number;
+  title: string;
+  subtitle: string;
+  desc: string;
+}
+
+const OrderTrackerStepper: React.FC<{ order: Order }> = ({ order }) => {
+  const currentRank = getStatusRank(order.status);
+
+  // Define steps
+  const steps: Step[] = [
+    { rank: 1, title: 'অর্ডার নিশ্চিত', subtitle: 'Confirmed', desc: 'আপনার অর্ডারটি আমরা পেয়েছি এবং প্রস্তুতি শুরু করেছি।' },
+    { rank: 2, title: 'প্যাকিং সম্পন্ন', subtitle: 'Packed', desc: 'খামার থেকে তাজা ফসল সংগ্রহ করে নিরাপদ প্যাকেজিং করা হচ্ছে।' },
+    { rank: 3, title: 'শিপিং ও ট্রানজিট', subtitle: 'Shipped', desc: 'আমাদের নিবেদিত ডেলিভারি রাইডার আপনার ঠিকানার উদ্দেশ্যে রওনা দিয়েছেন।' },
+    { rank: 4, title: 'ডেলিভারি সম্পন্ন', subtitle: 'Delivered', desc: 'শতভাগ সতেজ ও রাসায়নিক মুক্ত ফসল আপনার ঠিকানায় পৌঁছে দেওয়া হয়েছে।' },
+  ];
+
+  // Helper code inside to determine step state
+  const getStepState = (stepRank: number) => {
+    if (currentRank > stepRank) return 'completed';
+    if (currentRank === stepRank) return 'active';
+    if (stepRank === 1 && currentRank === 0) return 'active'; // Pending covers step 1 active
+    return 'upcoming';
+  };
+
+  const getProgressPercentage = () => {
+    if (currentRank <= 1) return 0;
+    if (currentRank === 2) return 33.33;
+    if (currentRank === 3) return 66.66;
+    if (currentRank === 4) return 100;
+    return 0;
+  };
+
+  return (
+    <div className="w-full py-4 px-1 select-none">
+      {/* Horizontal Progress Track */}
+      <div className="relative flex items-center justify-between w-full">
+        {/* Background Grey Path */}
+        <div className="absolute left-[8%] right-[8%] top-[18px] h-1 bg-gray-150 rounded-full -z-0" />
+        {/* Active Colored Path */}
+        <div 
+          className="absolute left-[8%] top-[18px] h-1 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full transition-all duration-700 ease-out -z-0"
+          style={{ width: `calc(${getProgressPercentage()}% - (${getProgressPercentage()}% * 0.16))` }}
+        />
+
+        {/* Individual Step Nodes */}
+        {steps.map((step) => {
+          const state = getStepState(step.rank);
+          const isCompleted = state === 'completed';
+          const isActive = state === 'active';
+
+          return (
+            <div key={step.rank} className="flex flex-col items-center flex-1 relative z-10 select-none">
+              {/* Stepper Dot Indicator */}
+              <div 
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-500 ring-4 ${
+                  isCompleted 
+                    ? 'bg-emerald-600 text-white ring-emerald-100/50 border-2 border-emerald-500' 
+                    : isActive 
+                      ? 'bg-amber-555 text-white bg-amber-500 ring-amber-100/50 border-2 border-amber-400 animate-pulse' 
+                      : 'bg-white text-gray-400 ring-gray-100/30 border-2 border-gray-200'
+                }`}
+              >
+                {isCompleted ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-white" />
+                ) : (
+                  <span className="text-xs font-black font-sans">{step.rank}</span>
+                )}
+              </div>
+
+              {/* Step Labels */}
+              <div className="text-center mt-3 max-w-[120px] font-sans">
+                <p className={`text-[11px] font-black leading-tight ${
+                  isActive 
+                    ? 'text-amber-800' 
+                    : isCompleted 
+                      ? 'text-emerald-805 text-emerald-800' 
+                      : 'text-gray-400 font-semibold'
+                }`}>
+                  {step.title}
+                </p>
+                <span className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wider block mt-0.5">
+                  {step.subtitle}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Current Active Step Banner details */}
+      <div className="mt-8 bg-emerald-50/45 border border-emerald-100/40 rounded-2xl p-4 sm:p-5 flex gap-4 items-start font-sans">
+        <div className={`p-2.5 rounded-xl shrink-0 ${currentRank === 4 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+          {currentRank === 4 ? (
+            <CheckCircle2 className="h-6 w-6" />
+          ) : currentRank === 3 ? (
+            <Truck className="h-6 w-6" />
+          ) : currentRank === 2 ? (
+            <Package className="h-6 w-6" />
+          ) : (
+            <Clock className="h-6 w-6 opacity-85" />
+          )}
+        </div>
+        <div className="space-y-1">
+          <h4 className="font-extrabold text-xs sm:text-sm text-gray-800 block text-left">
+            {currentRank === 4 ? '🌱 ডেলিভারি সম্পন্ন হয়েছে' : currentRank === 3 ? '🚴 রোড ট্রানজিটে চলমান' : currentRank === 2 ? '📦 ইকো-প্যাকিং চলছে' : '🌱 অর্ডার বুকিং নিশ্চিত'}
+          </h4>
+          <p className="text-[11.5px] text-gray-500 leading-relaxed text-left font-sans font-medium">
+            {steps[currentRank <= 1 ? 0 : currentRank - 1]?.desc}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const OrderHistory: React.FC = () => {
-  const { currentUser, orders: contextOrders } = useApp();
+  const { currentUser, orders: contextOrders, updateOrderStatus } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
 
   const fetchOrders = async () => {
     if (!currentUser) return;
@@ -56,6 +201,7 @@ export const OrderHistory: React.FC = () => {
       } else {
         // Fallback to local storage / context synced orders if Firebase is not fully configured
         const filtered = contextOrders.filter(o => o.customerId === currentUser.id);
+        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setOrders(filtered);
       }
     } catch (err) {
@@ -63,6 +209,7 @@ export const OrderHistory: React.FC = () => {
       setError("অর্ডার রেকর্ডসমূহ লোড করা সম্ভব হয়নি। দয়া করে আবার চেষ্টা করুন।");
       // safe fallback
       const filtered = contextOrders.filter(o => o.customerId === currentUser.id);
+      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setOrders(filtered);
     } finally {
       setLoading(false);
@@ -72,6 +219,34 @@ export const OrderHistory: React.FC = () => {
   useEffect(() => {
     fetchOrders();
   }, [currentUser, contextOrders]);
+
+  // Handle auto simulation sync effect
+  useEffect(() => {
+    let timer: any;
+    if (isSimulating && trackingOrderId) {
+      timer = setInterval(() => {
+        const orderToUpdate = orders.find(o => o.id === trackingOrderId);
+        if (orderToUpdate) {
+          const next = getNextStatus(orderToUpdate.status);
+          if (next) {
+            updateOrderStatus(trackingOrderId, next);
+          } else {
+            setIsSimulating(false);
+          }
+        } else {
+          setIsSimulating(false);
+        }
+      }, 7000); // Trigger leap sync every 7 seconds
+    }
+    return () => clearInterval(timer);
+  }, [isSimulating, trackingOrderId, orders, updateOrderStatus]);
+
+  // Set default tracker order ID once orders list finishes loading
+  useEffect(() => {
+    if (orders.length > 0 && !trackingOrderId) {
+      setTrackingOrderId(orders[0].id);
+    }
+  }, [orders, trackingOrderId]);
 
   if (!currentUser) {
     return (
@@ -171,7 +346,7 @@ export const OrderHistory: React.FC = () => {
 
       {loading ? (
         <div className="py-16 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-r-transparent align-[-0.125em]" />
           <p className="text-xs text-gray-400 font-semibold mt-3">অর্ডার রেকর্ডসমূহ লোড হচ্ছে...</p>
         </div>
       ) : orders.length === 0 ? (
@@ -183,58 +358,149 @@ export const OrderHistory: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-gray-150">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-150">
-                <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">অর্ডার আইডি</th>
-                <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">তারিখ ও সময়</th>
-                <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">টাকার পরিমাণ</th>
-                <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">পেমেন্ট পদ্ধতি</th>
-                <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">বর্তমান অবস্থা</th>
-                <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">বিস্তারিত</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors text-xs text-gray-700">
-                  <td className="px-5 py-4 text-center font-mono font-bold text-emerald-800">
-                    {order.id}
-                  </td>
-                  <td className="px-4 py-4 font-semibold text-gray-600">
-                    {new Date(order.createdAt).toLocaleString('bn-BD', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </td>
-                  <td className="px-4 py-4 font-bold text-gray-800">
-                    ৳{order.totalPrice} BDT
-                  </td>
-                  <td className="px-4 py-4 font-semibold">
-                    <span className="inline-flex items-center gap-1 text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
-                      <CreditCard className="h-3 w-3 text-emerald-600" />
-                      {order.paymentMethod}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    {getStatusBadge(order.status)}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 transition-colors cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      দেখুন
-                    </button>
-                  </td>
+        <div className="space-y-10">
+          {/* REAL-TIME DYNAMIC VISUAL ORDER TRACKER BAR AREA */}
+          <div className="p-5 sm:p-6 bg-gradient-to-br from-emerald-50/30 via-white to-gray-50/40 rounded-3xl border border-emerald-100/60 shadow-xs relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -z-10" />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <div>
+                  <h3 className="text-xs sm:text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
+                    রিয়েল-টাইম অর্ডার ট্র্যাকিং সিস্টেম
+                  </h3>
+                  <p className="text-[10px] sm:text-[11px] text-gray-400 font-semibold font-sans mt-0.5">আপনার সতেজ ফসলের নিরাপত্তা ও প্যাকেজিং স্ট্যাটাস লাইভ দেখুন</p>
+                </div>
+              </div>
+
+              {/* Order selector dropdown */}
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[10px] sm:text-xs font-bold text-gray-400">অর্ডার নির্বাচন করুন:</span>
+                <select
+                  value={trackingOrderId || ''}
+                  onChange={(e) => {
+                    setTrackingOrderId(e.target.value);
+                    setIsSimulating(false);
+                  }}
+                  className="rounded-xl border border-emerald-100 bg-white py-1.5 px-3 text-[11px] sm:text-xs font-black text-emerald-800 outline-none focus:border-emerald-600 shadow-xs cursor-pointer select-none"
+                >
+                  {orders.map(o => (
+                    <option key={o.id} value={o.id}>
+                      অর্ডার: {o.id} ({o.status === 'Delivered' ? 'সম্পন্ন' : 'চলমান'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {(() => {
+              const activeOrder = orders.find(o => o.id === trackingOrderId) || orders[0];
+              if (!activeOrder) return null;
+
+              return (
+                <div className="space-y-4">
+                  <OrderTrackerStepper order={activeOrder} />
+
+                  {/* Real-time sync tracker simulation panel */}
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] sm:text-xs font-mono font-black bg-emerald-100 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
+                        কুরিয়ার ট্র্যাকিং নং: {activeOrder.trackingNumber || 'TRK-981242-DH'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                      <button
+                        onClick={() => {
+                          const next = getNextStatus(activeOrder.status);
+                          if (next) {
+                            updateOrderStatus(activeOrder.id, next);
+                          } else {
+                            updateOrderStatus(activeOrder.id, 'Confirmed');
+                          }
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-[11px] font-black px-4.5 py-2.5 rounded-2xl transition-all shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
+                        title="পরবর্তী ধাপে নিয়ে টেস্ট করতে ক্লিক করুন"
+                      >
+                        <RotateCw className="w-3.5 h-3.5" />
+                        ধাপ পরিবর্তন করুন (Simulate Status)
+                      </button>
+
+                      <button
+                        onClick={() => setIsSimulating(!isSimulating)}
+                        className={`font-sans text-[11px] font-black px-4.5 py-2.5 rounded-2xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                          isSimulating 
+                            ? 'bg-amber-500 text-white hover:bg-amber-600 border border-amber-400' 
+                            : 'bg-gray-100 hover:bg-gray-150 text-gray-700 border border-gray-200'
+                        }`}
+                      >
+                        <span className={`block w-2.5 h-2.5 rounded-full ${isSimulating ? 'bg-white animate-ping' : 'bg-gray-400'}`} />
+                        {isSimulating ? 'লাইভ সিমুলেশন চলছে...' : 'অটো-সিমুলেশন ট্রায়াল (Auto Sync)'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-gray-150">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-150">
+                  <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">অর্ডার আইডি</th>
+                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">তারিখ ও সময়</th>
+                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">টাকার পরিমাণ</th>
+                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">পেমেন্ট পদ্ধতি</th>
+                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">বর্তমান অবস্থা</th>
+                  <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">বিস্তারিত</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors text-xs text-gray-700">
+                    <td className="px-5 py-4 text-center font-mono font-bold text-emerald-800">
+                      {order.id}
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-gray-600">
+                      {new Date(order.createdAt).toLocaleString('bn-BD', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td className="px-4 py-4 font-bold text-gray-800">
+                      ৳{order.totalPrice} BDT
+                    </td>
+                    <td className="px-4 py-4 font-semibold">
+                      <span className="inline-flex items-center gap-1 text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
+                        <CreditCard className="h-3 w-3 text-emerald-600" />
+                        {order.paymentMethod}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      {getStatusBadge(order.status)}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 transition-colors cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        দেখুন
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -264,19 +530,24 @@ export const OrderHistory: React.FC = () => {
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               
-              {/* Tracker Badge and Meta */}
-              <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-emerald-50/55 rounded-2xl border border-emerald-100">
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-gray-400 block uppercase font-mono">Courier Tracking Number</span>
-                  <span className="text-xs font-black text-gray-800 font-mono tracking-wider flex items-center gap-1">
-                    <Truck className="h-4 w-4 text-emerald-600" />
-                    {selectedOrder.trackingNumber || 'TRK-PENDING'}
-                  </span>
+              {/* Tracker Badge and Meta / Embedded visual Stepper inside modal */}
+              <div className="p-5 bg-emerald-50/45 rounded-3xl border border-emerald-150/60 shadow-xs space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-emerald-100/50 pb-4">
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] font-bold text-gray-400 block uppercase font-sans">Courier Tracking Number</span>
+                    <span className="text-xs font-black text-emerald-900 font-mono tracking-wider flex items-center gap-1">
+                      <Truck className="h-4 w-4 text-emerald-600" />
+                      {selectedOrder.trackingNumber || 'TRK-981242-DH'}
+                    </span>
+                  </div>
+                  <div className="space-y-0.5 sm:text-right">
+                    <span className="text-[9px] font-bold text-gray-400 block uppercase font-sans">সর্বশেষ ট্র্যাকিং স্ট্যাটাস</span>
+                    <div className="mt-0.5">{getStatusBadge(selectedOrder.status)}</div>
+                  </div>
                 </div>
-                <div className="space-y-1 sm:text-right">
-                  <span className="text-[10px] font-bold text-gray-400 block uppercase">অর্ডারের বর্তমান অবস্থা</span>
-                  <div className="mt-0.5">{getStatusBadge(selectedOrder.status)}</div>
-                </div>
+
+                {/* Progressive Visual Stepper inside detail viewer! */}
+                <OrderTrackerStepper order={selectedOrder} />
               </div>
 
               {/* Grid block info */}

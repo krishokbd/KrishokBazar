@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck, WifiOff, Download, Bell } from 'lucide-react';
+import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck, WifiOff, Download, Bell, MapPin } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
 interface HeaderProps {
@@ -137,8 +137,14 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
+          {/* LOCATION BADGE REQUISITE */}
+          <div className="hidden lg:flex items-center gap-1.5 rounded-xl border border-emerald-100 bg-emerald-50 px-2.5 py-1.5 text-xs font-bold text-emerald-800 shrink-0 select-none">
+            <MapPin className="h-4 w-4 text-emerald-600 shrink-0 animate-pulse" />
+            <span className="font-sans leading-none mt-0.5">ঢাকা জেলা (Dhaka Zone)</span>
+          </div>
+
           {/* SEARCH COMPONENT */}
-          <div className="hidden md:flex flex-1 max-w-md relative">
+          <div className="hidden md:flex flex-1 max-w-sm relative">
             <div className="relative w-full">
               <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-gray-400" />
               <input
@@ -160,36 +166,66 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* NAVIGATION LINKS - DESKTOP */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-gray-600">
+          <nav className="hidden lg:flex items-center gap-3.5 xl:gap-5 text-[12px] font-extrabold text-gray-600 shrink-0">
             <button 
               onClick={() => handleNavClick('home')}
-              className={`hover:text-emerald-600 transition-colors cursor-pointer ${currentView === 'home' ? 'text-emerald-600 border-b-2 border-emerald-600 py-1' : ''}`}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'home' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              হোম (Home)
+              হোম
             </button>
             <button 
               onClick={() => handleNavClick('shop')}
-              className={`hover:text-emerald-600 transition-colors cursor-pointer ${currentView === 'shop' ? 'text-emerald-600 border-b-2 border-emerald-600 py-1' : ''}`}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'shop' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              সব পণ্য (Shop)
+              সব পণ্য
+            </button>
+            <button 
+              onClick={() => {
+                setView('home');
+                setTimeout(() => {
+                  document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+              }}
+              className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
+            >
+              কম্বো বাস্কেট
             </button>
             <button 
               onClick={() => handleNavClick('ready-to-cook')}
-              className={`hover:text-emerald-600 transition-colors cursor-pointer ${currentView === 'ready-to-cook' ? 'text-emerald-600 border-b-2 border-emerald-600 py-1' : ''}`}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'ready-to-cook' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              রেডি-টু-কুক (Ready-Cook)
+              রেডি-টু-কুক
             </button>
             <button 
               onClick={() => handleNavClick('farmers')}
-              className={`hover:text-emerald-600 transition-colors cursor-pointer ${currentView === 'farmers' ? 'text-emerald-600 border-b-2 border-emerald-600 py-1' : ''}`}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'farmers' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              আমাদের কৃষক (Farmers)
+              ভেরিফাইড কৃষক
+            </button>
+            <button 
+              onClick={() => {
+                setView('home');
+                setTimeout(() => {
+                  document.getElementById('agro-blogs')?.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+              }}
+              className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
+            >
+              ব্লগ
             </button>
             <button 
               onClick={() => handleNavClick('our-story')}
-              className={`hover:text-emerald-600 transition-colors cursor-pointer ${currentView === 'our-story' ? 'text-emerald-600 border-b-2 border-emerald-600 py-1' : ''}`}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'our-story' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              আমাদের গল্প (Our Story)
+              আমাদের গল্প
+            </button>
+            <button 
+              onClick={() => {
+                document.getElementById('footer-contact')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
+            >
+              যোগাযোগ
             </button>
           </nav>
 
@@ -354,7 +390,7 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </div>
 
-          <nav className="flex flex-col gap-2 font-semibold text-gray-600">
+          <nav className="flex flex-col gap-1 font-bold text-xs text-gray-650">
             <button 
               onClick={() => handleNavClick('home')}
               className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'home' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
@@ -368,23 +404,60 @@ export const Header: React.FC<HeaderProps> = ({
               সব পণ্য (Shop)
             </button>
             <button 
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setView('home');
+                setTimeout(() => {
+                  document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+              }}
+              className="text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+            >
+              কম্বো বাস্কেট (Combo Basket)
+            </button>
+            <button 
               onClick={() => handleNavClick('ready-to-cook')}
               className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'ready-to-cook' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
             >
-              রেডি-টু-কুক (Ready-to-Cook)
+              রেডি-টু-কুক (Ready To Cook)
             </button>
             <button 
               onClick={() => handleNavClick('farmers')}
               className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'farmers' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
             >
-              আমাদের কৃষক (Farmers)
+              ভেরিফাইড কৃষক (Verified Farmers)
+            </button>
+            <button 
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setView('home');
+                setTimeout(() => {
+                  document.getElementById('agro-blogs')?.scrollIntoView({ behavior: 'smooth' });
+                }, 150);
+              }}
+              className="text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+            >
+              ব্লগ (Blog)
             </button>
             <button 
               onClick={() => handleNavClick('our-story')}
               className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'our-story' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
             >
-              আমাদের গল্প (Our Story)
+              আমাদের গল্প (About Our Story)
             </button>
+            <button 
+              onClick={() => {
+                setMobileMenuOpen(false);
+                document.getElementById('footer-contact')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+            >
+              যোগাযোগ (Contact)
+            </button>
+            <div className="border-t border-gray-100 my-1 pt-2 px-3 flex items-center gap-1.5 text-emerald-800 text-[11px] font-bold">
+              <MapPin className="h-4 w-4 text-emerald-600 shrink-0 animate-pulse" />
+              <span>ডেলিভারি জোন: ঢাকা জেলা (Dhaka)</span>
+            </div>
           </nav>
         </div>
       )}

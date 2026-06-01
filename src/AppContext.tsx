@@ -9,6 +9,7 @@ import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { logAnalyticsEvent } from './lib/analytics';
 
 interface AppContextType {
   farmers: Farmer[];
@@ -46,7 +47,7 @@ interface AppContextType {
   clearCart: () => void;
 
   // Order actions
-  placeOrder: (name: string, phone: string, address: string, paymentMethod: 'COD' | 'bKash' | 'Nagad', paymentTxId?: string) => Order;
+  placeOrder: (name: string, phone: string, address: string, paymentMethod?: 'COD' | 'bKash' | 'Nagad', paymentTxId?: string) => Order;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
 
   // Withdrawal actions
@@ -724,6 +725,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // CART STATE MGMT
   const addToCart = (product: Product, quantity: number) => {
+    logAnalyticsEvent('add_to_cart', {
+      item_id: product.id,
+      item_name: product.title,
+      price: product.discountPrice || product.price,
+      quantity: quantity
+    });
     setCart(prev => {
       const existing = prev.find(item => item.productId === product.id);
       if (existing) {
@@ -767,7 +774,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     name: string,
     phone: string,
     address: string,
-    paymentMethod: 'COD' | 'bKash' | 'Nagad',
+    paymentMethod?: 'COD' | 'bKash' | 'Nagad',
     paymentTxId?: string
   ) => {
     const finalCart = [...cart];
@@ -785,10 +792,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       products: finalCart,
       totalPrice: total,
       status: 'Pending',
-      paymentMethod,
-      paymentTxId,
+      paymentMethod: paymentMethod || 'COD',
       createdAt: new Date().toISOString()
     };
+
+    logAnalyticsEvent('purchase', {
+      transaction_id: newOrder.id,
+      value: total,
+      currency: 'BDT',
+      items_count: finalCart.length,
+      payment_method: paymentMethod || 'COD'
+    });
+
+    if (paymentTxId) {
+      newOrder.paymentTxId = paymentTxId;
+    }
 
     if (isFirebaseConfigured && db) {
       setDoc(doc(db, 'orders', newOrder.id), newOrder).catch(err => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
+import { getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
 import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings } from '../types';
 import { 
   Users, 
@@ -73,6 +74,17 @@ export const AdminCMSDashboard: React.FC = () => {
 
   // Admin CMS active tab
   const [adminActiveTab, setAdminActiveTab] = useState<'farmers' | 'products' | 'categories' | 'banners' | 'reviews' | 'orders' | 'customers' | 'blogs' | 'settings'>('farmers');
+
+  const [analyticsLogs, setAnalyticsLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    setAnalyticsLogs(getAnalyticsEvents());
+    const handleEventsUpdate = () => {
+      setAnalyticsLogs(getAnalyticsEvents());
+    };
+    window.addEventListener('kb-analytics-event', handleEventsUpdate);
+    return () => window.removeEventListener('kb-analytics-event', handleEventsUpdate);
+  }, []);
 
   // Blog CMS states
   const { blogs, addBlogPost, editBlogPost, deleteBlogPost, siteSettings, saveSiteSettings, registeredCustomers } = useApp();
@@ -2298,6 +2310,70 @@ export const AdminCMSDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Live Real-time Firebase Analytics Event Stream */}
+              <div className="bg-slate-900 text-slate-100 rounded-3xl border border-slate-800 p-6 shadow-xl space-y-4 font-sans">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                      <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-widest leading-none mt-0.5">
+                        📊 ফায়ারবেস অ্যানালিটিক্স রিয়েল-টাইম ইভেন্ট লাইভ স্ট্রিম (Firebase Analytics Live Logs)
+                      </h3>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1.5 leading-normal">
+                      কাস্টমারের লাইভ ট্রাফিক, প্রোডাক্ট কার্ট অ্যাক্টিভিটি, এবং সেলস কনভারশন ফানেল সেকেন্ডে সেকেন্ডে ট্র্যাক করার জন্য লাইভ হাব।
+                    </p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearAnalyticsEvents();
+                        setAnalyticsLogs([]);
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white border border-slate-700 hover:bg-slate-800 text-[10px] font-bold transition-all cursor-pointer font-sans"
+                    >
+                      ক্লিয়ার লগ
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-[200px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                  {analyticsLogs.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-slate-500 italic">
+                      কোন অ্যাক্টিভিটি লগ সনাক্ত করা হয়নি। অ্যাপের সাধারণ ট্রাফিক জেনারেট করতে অন্যান্য ফিচার ও সব পণ্য ট্যাব ব্রাউজ করুন।
+                    </div>
+                  ) : (
+                    analyticsLogs.map((log: any) => (
+                      <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] gap-2 font-mono">
+                        <div className="flex items-start gap-2.5">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase text-white shrink-0 mt-0.5 ${
+                            log.eventName === 'purchase' ? 'bg-emerald-600' :
+                            log.eventName === 'add_to_cart' ? 'bg-sky-600' :
+                            log.eventName === 'screen_view' ? 'bg-violet-600' : 'bg-slate-700'
+                          }`}>
+                            {log.eventName}
+                          </span>
+                          <div className="space-y-1">
+                            <p className="text-slate-300 font-semibold">{log.id}</p>
+                            <div className="text-[10px] text-slate-400 flex flex-wrap gap-x-3">
+                              {Object.entries(log.params).map(([k, v]) => (
+                                <span key={k} className="inline-block">
+                                  <strong className="text-slate-500">{k}:</strong> {String(v)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-slate-500 shrink-0 self-end sm:self-center">
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 

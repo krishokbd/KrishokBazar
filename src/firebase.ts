@@ -9,10 +9,10 @@ import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 // Detect if are using the placeholder credentials or real project keys
-export const isFirebaseConfigured = 
-  firebaseConfig && 
+export let isFirebaseConfigured = 
+  !!(firebaseConfig && 
   firebaseConfig.apiKey && 
-  firebaseConfig.apiKey !== 'dummy-api-key-for-building-only';
+  firebaseConfig.apiKey !== 'dummy-api-key-for-building-only');
 
 let firebaseApp;
 let firestoreDb;
@@ -21,14 +21,33 @@ let firebaseAuth;
 if (isFirebaseConfigured) {
   try {
     firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    firestoreDb = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId || '(default)');
+    
+    // Resilient Firestore initialization
+    try {
+      if (firebaseConfig.firestoreDatabaseId) {
+        firestoreDb = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+      } else {
+        firestoreDb = getFirestore(firebaseApp);
+      }
+    } catch (firestoreError) {
+      console.warn("Firestore with custom ID failed or unavailable. Retrying with default ID...", firestoreError);
+      try {
+        firestoreDb = getFirestore(firebaseApp);
+      } catch (defaultFirestoreError) {
+        console.error("Firestore is completely unavailable on this Firebase project:", defaultFirestoreError);
+        throw defaultFirestoreError;
+      }
+    }
+
     firebaseAuth = getAuth(firebaseApp);
     
     // Asynchronously validate live backend connectivity
     const testConnection = async () => {
       try {
-        await getDocFromServer(doc(firestoreDb, 'test', 'connection'));
-        console.log("Firebase Connection verified successfully.");
+        if (firestoreDb) {
+          await getDocFromServer(doc(firestoreDb, 'test', 'connection'));
+          console.log("Firebase Connection verified successfully.");
+        }
       } catch (error) {
         if (error instanceof Error && error.message.includes('the client is offline')) {
           console.error("Please check your Firebase configuration or connection status.");
@@ -37,7 +56,10 @@ if (isFirebaseConfigured) {
     };
     testConnection();
   } catch (err) {
-    console.error("Error initializing live Firebase application SDK:", err);
+    console.error("Error initializing live Firebase application SDK. Reverting to local state fallback:", err);
+    isFirebaseConfigured = false;
+    firestoreDb = undefined;
+    firebaseAuth = undefined;
   }
 }
 

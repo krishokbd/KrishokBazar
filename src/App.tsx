@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './AppContext';
+import { logAnalyticsEvent } from './lib/analytics';
 import { Header } from './components/Header';
 import { HeroCarousel } from './components/HeroCarousel';
 import { CategoriesGrid } from './components/CategoriesGrid';
@@ -19,6 +20,7 @@ import { AdminCMSDashboard } from './components/AdminCMSDashboard';
 import { OrderHistory } from './components/OrderHistory';
 import { RiktazAI } from './components/RiktazAI';
 import { FloatingSocials } from './components/FloatingSocials';
+import { AppEntryFlow } from './components/AppEntryFlow';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
   ShieldCheck, 
@@ -51,9 +53,66 @@ import {
   Facebook,
   Youtube,
   Twitter,
-  Instagram
+  Instagram,
+  ShoppingCart,
+  PhoneCall,
+  ShoppingBag
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from './assets';
+
+const COMBO_BASKETS: Product[] = [
+  {
+    id: 'cb1',
+    title: 'সাপ্তাহিক রেশনের বাজেট কম্বো বাস্কেট',
+    description: 'গোল লাল আলু ২ কেজি, তাল বেগুন ১ কেজি, দেশী পেঁয়াজ ১ কেজি, রসুনের সেরা কোয়ালিটি ২৫০ গ্রাম, তাজা ধনে পাতা ২৫০ গ্রাম, কাঁচামরিচ ২৫০ গ্রাম, নরম কচি লম্বা লাউ ১টি।',
+    price: 550,
+    discountPrice: 490,
+    category: 'ready-to-cook',
+    farmerId: 'f5',
+    farmerName: 'Fazle Rabbi',
+    farmName: 'Fazle Rabbi অর্গানিক এগ্রো',
+    rating: 4.9,
+    stock: 25,
+    images: ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80'],
+    isVerified: true,
+    isReadyToCook: true,
+    harvestDate: 'May 30, 2026'
+  },
+  {
+    id: 'cb2',
+    title: 'ফ্যামিলি সাইজ প্রিমিয়াম সবজি কম্বো বাস্কেট',
+    description: 'গোল কড়া সাদা ফুলকপি ২টি, তাজা কচি বাঁধাকপি ২টি, লাল আলু ৩ কেজি, নরম তাল বেগুন ২ কেজি, মিষ্টি তাজা গাজর ১ কেজি, লাল টমেটো ২ কেজি, কচি পটল ১ কেজি, কড়া সুগন্ধি লেবু ১ ডজন।',
+    price: 980,
+    discountPrice: 850,
+    category: 'ready-to-cook',
+    farmerId: 'f12',
+    farmerName: 'Ayesha Begum',
+    farmName: 'Ayesha Begum অর্গানিক এগ্রো',
+    rating: 4.8,
+    stock: 18,
+    images: ['https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80'],
+    isVerified: true,
+    isReadyToCook: true,
+    harvestDate: 'May 29, 2026'
+  },
+  {
+    id: 'cb3',
+    title: 'ফিটনেস ও ওয়েট লস গ্রিন কম্বো বাস্কেট',
+    description: 'মিষ্টি কচি পেঁপে ২ কেজি, রসালো টাটকা শসা ২ কেজি, বড় তেতো করলা ১ কেজি, কচি মিষ্টি পানি লাউ ১টি, ডাঁটা শাক ৩ আঁটি, লাল শাক ৩ আঁটি, টক সুগন্ধি লেবু ১ ডজন।',
+    price: 780,
+    discountPrice: 690,
+    category: 'ready-to-cook',
+    farmerId: 'f23',
+    farmerName: 'Sultana Razia',
+    farmName: 'Sultana Razia অর্গানিক এগ্রো',
+    rating: 5.0,
+    stock: 15,
+    images: ['https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80'],
+    isVerified: true,
+    isReadyToCook: true,
+    harvestDate: 'May 30, 2026'
+  }
+];
 
 const AppContent: React.FC = () => {
   const { 
@@ -77,7 +136,8 @@ const AppContent: React.FC = () => {
     deleteFarmer,
     updateWithdrawallStatus,
     getNidDetails,
-    siteSettings
+    siteSettings,
+    addToCart
   } = useApp();
 
   // Route state
@@ -87,6 +147,7 @@ const AppContent: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
+  const [entryCompleted, setEntryCompleted] = useState(true);
 
   // Modals state
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -304,6 +365,199 @@ const AppContent: React.FC = () => {
     setFeedbackRating(5);
   };
 
+  const [isOfflineState, setIsOfflineState] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOfflineState(false);
+    const handleOffline = () => setIsOfflineState(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // 1. Initial load path parser and popstate listener for SEO-friendly URLs
+  React.useEffect(() => {
+    const path = window.location.pathname;
+    let initialView: any = 'home';
+    if (path === '/shop') initialView = 'shop';
+    else if (path === '/ready-to-cook') initialView = 'ready-to-cook';
+    else if (path === '/farmers') initialView = 'farmers';
+    else if (path === '/dashboard') initialView = 'customer-dashboard';
+    else if (path === '/farmer-portal') initialView = 'farmer-dashboard';
+    else if (path === '/admin') initialView = 'admin';
+    else if (path === '/our-story') initialView = 'our-story';
+
+    setView(initialView);
+
+    const handlePopState = () => {
+      const p = window.location.pathname;
+      let matchedView: any = 'home';
+      if (p === '/shop') matchedView = 'shop';
+      else if (p === '/ready-to-cook') matchedView = 'ready-to-cook';
+      else if (p === '/farmers') matchedView = 'farmers';
+      else if (p === '/dashboard') matchedView = 'customer-dashboard';
+      else if (p === '/farmer-portal') matchedView = 'farmer-dashboard';
+      else if (p === '/admin') matchedView = 'admin';
+      else if (p === '/our-story') matchedView = 'our-story';
+      
+      setView(matchedView);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // 2. Sync active view back to URL path and log Firebase Analytics screen_view on changes
+  React.useEffect(() => {
+    let path = '/';
+    if (currentView === 'shop') path = '/shop';
+    else if (currentView === 'ready-to-cook') path = '/ready-to-cook';
+    else if (currentView === 'farmers') path = '/farmers';
+    else if (currentView === 'customer-dashboard') path = '/dashboard';
+    else if (currentView === 'farmer-dashboard') path = '/farmer-portal';
+    else if (currentView === 'admin') path = '/admin';
+    else if (currentView === 'our-story') path = '/our-story';
+    else if (currentView === 'product-details') path = `/product/${selectedProductId || 'item'}`;
+    else if (currentView === 'farmer-store') path = `/farmer/${selectedFarmerStoreId || 'profile'}`;
+
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+
+    logAnalyticsEvent('screen_view', {
+      firebase_screen: currentView,
+      page_path: path,
+      user_role: currentUser?.role || 'Guest'
+    });
+  }, [currentView, selectedProductId, selectedFarmerStoreId, currentUser]);
+
+  // 3. Dynamic Page titles, Metadata tag updates, and JSON-LD schema generation for absolute SEO compliance
+  React.useEffect(() => {
+    if (!siteSettings) return;
+
+    let title = siteSettings.seoTitle || 'কৃষক বাজার';
+    let description = siteSettings.seoDescription || 'সরাসরি তৃণমূলের ভেরিফাইড কৃষকদের সাথে ক্রেতার সেতুবন্ধন।';
+    const keywords = siteSettings.seoKeywords || 'কৃষক বাজার, krishok bazar';
+
+    if (currentView === 'shop') {
+      title = `সব পণ্য | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
+      description = `তৃণমূল কৃষকদের সতেজ অর্গানিক শাকসবজি ও ফলমূল সরাসরি ঢাকায় হোম ডেলিভারি।`;
+    } else if (currentView === 'ready-to-cook') {
+      title = `রেডি-টু-কুক সবজি ও মাছ | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
+      description = `কর্মব্যস্ত জীবনের জন্য প্রাক-কাটা তাজা ধুয়ে নেওয়া পুষ্টিকর শাকসবজি ও মাছ।`;
+    } else if (currentView === 'farmers') {
+      title = `ভেরিফাইড কৃষক সমাজ | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
+      description = `যশোর, রাজশাহী ও বগুড়ার তৃণমূলের ভেরিফাইড সাধারণ কৃষকদের সাথে সরাসরি সম্পর্কের নির্ভরযোগ্য প্ল্যাটফর্ম।`;
+    } else if (currentView === 'our-story') {
+      title = `আমাদের বৈপ্লবিক গল্প ও লক্ষ্য | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
+      description = `সিন্ডিকেট ও কমিশন সংস্কৃতি ভেঙে অংশীদার চাষীদের সমৃদ্ধ করা এবং বিশুদ্ধ নিরাপদ খাবার পৌঁছে দেওয়াই আমাদের লক্ষ্য।`;
+    } else if (currentView === 'customer-dashboard') {
+      title = `আমার প্রোফাইল ও ট্র্যাকার | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
+    } else if (currentView === 'admin') {
+      title = `পরিচালনা প্যানেল (Global CRM CMS) | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
+    } else if (currentView === 'product-details' && selectedProductId) {
+      const prod = products.find(p => p.id === selectedProductId);
+      if (prod) {
+        title = `${prod.title} - কৃষক বাজার`;
+        description = prod.description;
+      }
+    } else if (currentView === 'farmer-store' && selectedFarmerStoreId) {
+      const farm = farmers.find(f => f.id === selectedFarmerStoreId);
+      if (farm) {
+        title = `কৃষক ${farm.name} এর দোকান | কৃষক বাজার`;
+        description = farm.bio || `${farm.name} একজন ভেরিফাইড অংশীদার কৃষক।`;
+      }
+    }
+
+    document.title = title;
+    
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', description);
+
+    let metaKey = document.querySelector('meta[name="keywords"]');
+    if (!metaKey) {
+      metaKey = document.createElement('meta');
+      metaKey.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKey);
+    }
+    metaKey.setAttribute('content', keywords);
+
+    const oldSchema = document.getElementById('kb-structured-schema');
+    if (oldSchema) oldSchema.remove();
+
+    const schemaData: any = {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      "name": "কৃষক বাজার (Krishok Bazar)",
+      "description": description,
+      "url": window.location.origin,
+      "logo": `${window.location.origin}/icon-192.svg`,
+      "telephone": siteSettings.footerPhone || "01931355398",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": siteSettings.footerAddressBn || "মিরপুর ১০, ঢাকা",
+        "addressLocality": "Dhaka",
+        "addressRegion": "Dhaka",
+        "postalCode": "1216",
+        "addressCountry": "BD"
+      }
+    };
+
+    if (currentView === 'product-details' && selectedProductId) {
+      const prod = products.find(p => p.id === selectedProductId);
+      if (prod) {
+        schemaData["@type"] = "Product";
+        schemaData["name"] = prod.title;
+        schemaData["image"] = prod.images?.[0] || prod.image;
+        schemaData["description"] = prod.description;
+        schemaData["offers"] = {
+          "@type": "Offer",
+          "priceCurrency": "BDT",
+          "price": prod.discountPrice || prod.price,
+          "itemCondition": "https://schema.org/NewCondition",
+          "availability": prod.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+        };
+      }
+    }
+
+    const script = document.createElement('script');
+    script.id = 'kb-structured-schema';
+    script.type = 'application/ld+json';
+    script.innerHTML = JSON.stringify(schemaData, null, 2);
+    document.head.appendChild(script);
+
+  }, [currentView, siteSettings, selectedProductId, selectedFarmerStoreId, products, farmers]);
+
+  React.useEffect(() => {
+    const handleOpenCart = () => {
+      setIsCartOpen(true);
+    };
+    window.addEventListener('open-cart-drawer', handleOpenCart);
+    return () => window.removeEventListener('open-cart-drawer', handleOpenCart);
+  }, []);
+
+  if (!entryCompleted) {
+    return (
+      <AppEntryFlow 
+        onComplete={(loc, lang) => {
+          if (loc.district) {
+            // Preset geographic filter based on user selection!
+            const matchedName = loc.district.split(' ')[0] || 'all';
+            setSelectedDistrict(matchedName);
+          }
+          setEntryCompleted(true);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Header 
@@ -347,6 +601,20 @@ const AppContent: React.FC = () => {
             }}
             onEditProduct={setEditingProduct}
           />
+        )}
+
+        {/* CHIEF ADMIN DASHBOARD */}
+        {currentView === 'admin' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <AdminCMSDashboard />
+          </div>
+        )}
+
+        {/* CUSTOMER DASHBOARD */}
+        {currentView === 'customer-dashboard' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <OrderHistory />
+          </div>
         )}
 
         {/* STANDALONE PUBLIC FARMER STORE PROFILE */}
@@ -410,6 +678,167 @@ const AppContent: React.FC = () => {
                 </div>
               </div>
             </section>
+
+            {/* COMBO BASKET SECTION */}
+            <section id="combo-basket" className="py-12 bg-white border-t border-gray-100 scroll-mt-20">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-xl mx-auto mb-10">
+                  <span className="text-xs font-black tracking-widest text-emerald-600 uppercase">পারিবারিক সাশ্রয়ী প্যাকেজ</span>
+                  <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-1.5 leading-snug">
+                    সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-2 font-medium">
+                    দালাল ছাড়াই সরাসরি কৃষকের মাঠের বাছাই করা তাজা ফসল এবং শাকসবজি নিয়ে তৈরি বিশেষ পারিবারিক বাস্কেট প্যাকেজ
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {COMBO_BASKETS.map((basket) => {
+                    const originalPrice = basket.price;
+                    const displayPrice = basket.discountPrice || basket.price;
+                    const hasDiscount = !!basket.discountPrice;
+                    const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${basket.title}" কম্বো বাস্কেটটি কিনতে চাই।\nমূল্য: ৳${displayPrice}`);
+                    const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
+
+                    return (
+                      <div 
+                        key={basket.id}
+                        className="group flex flex-col overflow-hidden rounded-2xl border border-gray-150/60 bg-white hover:border-emerald-250 hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
+                      >
+                        {/* Img portion */}
+                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-50">
+                          <img
+                            src={basket.images[0]}
+                            alt={basket.title}
+                            className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-105"
+                            referrerPolicy="no-referrer"
+                          />
+                          <span className="absolute left-3 top-3 z-10 rounded-lg bg-emerald-600 px-2.5 py-1 text-[9px] font-black tracking-wide text-white uppercase shadow-md">
+                            🎯 সেরা ডিল
+                          </span>
+                          {hasDiscount && (
+                            <span className="absolute right-3 top-3 z-10 rounded-lg bg-red-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md animate-pulse">
+                              {Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Text portion */}
+                        <div className="flex flex-1 flex-col p-5">
+                          <h3 className="text-sm sm:text-base font-black text-gray-800 font-sans group-hover:text-emerald-700 transition-colors">
+                            {basket.title}
+                          </h3>
+                          <p className="mt-2 text-xs text-gray-500 font-medium leading-relaxed flex-1">
+                            {basket.description}
+                          </p>
+                          <div className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 font-bold border-t border-gray-50 pt-2.5">
+                            📍 কৃষক: <span className="text-gray-600 underline font-black">{basket.farmerName}</span> (ভেরিফাইড)
+                          </div>
+
+                          {/* Pricing row */}
+                          <div className="mt-4 flex items-center justify-between gap-1.5 border-t border-gray-50 pt-3">
+                            <div className="flex flex-col">
+                              {hasDiscount && (
+                                <span className="text-[10px] text-gray-400 line-through font-mono">
+                                  ৳{originalPrice}
+                                </span>
+                              )}
+                              <span className="text-base font-black text-emerald-700 font-sans">
+                                ৳{displayPrice} <span className="text-[10px] font-medium text-gray-400">/বাস্কেট</span>
+                              </span>
+                            </div>
+
+                            {/* Cart keeping button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(basket, 1);
+                              }}
+                              className="rounded-xl px-3 py-2 text-[11px] font-extrabold shadow-sm bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 transition-all cursor-pointer flex items-center gap-1"
+                            >
+                              <ShoppingCart className="h-3.5 w-3.5" />
+                              কার্টে রাখুন
+                            </button>
+                          </div>
+
+                          {/* Order grids */}
+                          <div className="grid grid-cols-2 gap-2 pt-2.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(basket, 1);
+                                window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: { openCheckout: true } }));
+                              }}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-2.5 py-2 text-[10.5px] font-extrabold text-white shadow-sm hover:scale-[1.02] transition-all cursor-pointer"
+                            >
+                              <ShoppingBag className="h-3 w-3 shrink-0" />
+                              এখনই কিনুন
+                            </button>
+                            <a
+                              href={whatsappUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-green-500 hover:bg-green-600 px-2.5 py-2 text-[10.5px] font-extrabold text-white shadow-sm hover:scale-[1.02] transition-all cursor-pointer text-center text-sans"
+                            >
+                              <PhoneCall className="h-3 w-3 shrink-0" />
+                              WhatsApp অর্ডার
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+
+            {/* VERIFIED FARMERS SECTION */}
+            <section className="py-12 bg-gray-50 border-t border-gray-100">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <span className="text-xs font-black tracking-widest text-emerald-600 uppercase">শতভাগ বিশ্বস্ত উৎপাদক</span>
+                    <h2 className="text-lg sm:text-2xl font-black text-gray-800 font-sans mt-0.5">ভেরিফাইড কৃষক ও উদ্যোক্তা</h2>
+                  </div>
+                  <button onClick={() => setView('farmers')} className="text-xs text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1">
+                    সব কৃষক দেখুন <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {farmers.filter(f => f.verified).slice(0, 4).map((farmer) => (
+                    <div 
+                      key={farmer.id}
+                      onClick={() => {
+                        setSelectedFarmerStoreId(farmer.id);
+                        setView('farmer-store');
+                      }}
+                      className="group p-5 bg-white rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-xl transition-all text-center cursor-pointer relative"
+                    >
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-emerald-100">
+                        <img 
+                          src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
+                          alt={farmer.name} 
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-0 right-1 bg-emerald-600 text-white p-0.5 rounded-full scale-90 border border-white">✔</span>
+                      </div>
+                      <h3 className="text-xs sm:text-sm font-black text-gray-800 group-hover:text-emerald-700 leading-tight">
+                        {farmer.name}
+                      </h3>
+                      <p className="text-[10px] text-gray-400 font-medium font-sans mt-0.5">
+                        📍 {farmer.district} জেলা
+                      </p>
+                      
+                      <div className="mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-center gap-1 text-[11px] font-bold text-gray-650">
+                        <span>সফল বিক্রি: <strong className="text-emerald-600">{farmer.salesCount || 0}টি</strong></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
           </div>
         )}
 
@@ -464,29 +893,23 @@ const AppContent: React.FC = () => {
                       <option value="meat">মাংস (Meat)</option>
                       <option value="honey">খাঁটি মধু (Honey)</option>
                       <option value="spices">মসলাপাতি (Spices)</option>
-                      <option value="organic">জৈব খাবার (Organic Products)</option>
+                      <option value="organic">জৈব খাবার (Organic)</option>
                       <option value="ready-to-cook">রেডি-টু-কুক (Ready-to-Cook)</option>
-                      <option value="dairy">দুগ্ধজাত (Dairy)</option>
-                      <option value="grains">শস্য ও ডাল (Grains)</option>
                     </select>
                   )}
                 </div>
               </div>
 
-              {/* Product Grid system */}
-              {getFilteredProducts().length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 text-center shadow-sm">
-                  <div className="h-16 w-16 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-4 animate-pulse">
-                    <BadgeAlert className="h-8 w-8" />
+              {/* Product Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                {getFilteredProducts().length === 0 ? (
+                  <div className="col-span-full py-16 text-center text-gray-500 font-semibold bg-white rounded-3xl border border-gray-100 shadow-sm font-sans flex flex-col items-center justify-center p-8 gap-3">
+                    <span className="text-4xl text-emerald-600 select-none">🌱</span>
+                    <p className="text-sm">দুঃখিত, এই ক্যাটাগরিতে বা অঞ্চলে বর্তমানে কোনো ফসল পাওয়া যায়নি।</p>
+                    <p className="text-[11px] text-gray-400">অনুগ্রহ করে অন্য ক্যাটাগরি বা জেলা নির্বাচন করে চেষ্টা করুন।</p>
                   </div>
-                  <h3 className="font-bold text-gray-700 font-sans">কোনো পণ্য খুঁজে পাওয়া যায়নি!</h3>
-                  <p className="text-xs text-gray-400 mt-1 max-w-sm leading-relaxed">
-                    অনুগ্রহ করে ক্যাটাগরি ও এরিয়া ফিল্টার পরিবর্তন করে বা সার্চ কিওয়ার্ড সঠিক করে আবার চেষ্টা করুন।
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                  {getFilteredProducts().map((p) => (
+                ) : (
+                  getFilteredProducts().map((p) => (
                     <ProductCard 
                       key={p.id} 
                       product={p} 
@@ -494,740 +917,17 @@ const AppContent: React.FC = () => {
                         setSelectedProductId(prod.id);
                         setView('product-details');
                       }} 
-                      onEditProduct={setEditingProduct}
+                      onEditProduct={setEditingProduct} 
                     />
-                  ))}
-                </div>
-              )}
-
-            </div>
-          </section>
-        )}
-
-        {/* FARMERS TAB - DIRECTORIES AND PROFILES */}
-        {currentView === 'farmers' && (
-          <section className="py-8 bg-gray-50">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              
-              <div className="border-b border-gray-200 pb-5 mb-6">
-                <span className="text-xs font-bold text-emerald-600 tracking-wider uppercase block">আমাদের কৃষি অংশীদারগণ</span>
-                <h1 className="text-2xl font-black text-gray-800 font-sans mt-0.5">তৃণমূলের সাহসী কৃষকের তালিকা</h1>
-                <p className="text-xs text-gray-400 mt-1 font-medium select-none">
-                  ৩০ জন তাজা পণ্য উৎপাদনকারীর সাথে সরাসরি যোগাযোগ করুন ও তাদের উৎপাদিত পণ্য কিনুন।
-                </p>
-              </div>
-
-              {/* Farmers directory search & filter row */}
-              <div className="mb-6 flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    placeholder="কৃষকের নাম লিখে খুঁজুন (যেমন: আব্দুর রহমান, আয়েশা বেগম)..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200/80 bg-white py-2.5 pl-4 pr-10 text-xs outline-none focus:border-emerald-500 shadow-sm font-sans"
-                  />
-                </div>
-                
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => setSelectedDistrict(e.target.value)}
-                  className="rounded-xl border border-gray-200/80 bg-white py-2.5 px-3.5 text-xs font-bold text-gray-600 outline-none focus:border-emerald-500 shadow-sm"
-                >
-                  <option value="all">সব জেলা বা এলাকা (All Districts)</option>
-                  <option value="Rajshahi">রাজশাহী (Rajshahi)</option>
-                  <option value="Jessore">যশোর (Jessore)</option>
-                  <option value="Rangpur">রংপুর (Rangpur)</option>
-                  <option value="Bogra">বগুড়া (Bogra)</option>
-                  <option value="Sylhet">সিলেট (Sylhet)</option>
-                  <option value="Comilla">কুমিল্লা (Comilla)</option>
-                  <option value="Dinajpur">দিনাজপুর (Dinajpur)</option>
-                  <option value="Barisal">বরিশাল (Barisal)</option>
-                  <option value="Mymensingh">ময়মনসিংহ (Mymensingh)</option>
-                  <option value="Kushtia">কুষ্টিয়া (Kushtia)</option>
-                </select>
-              </div>
-
-              {/* Farmer Profile Modal or Active detail section right below */}
-              {activeFarmerProfile && (
-                <div className="mb-8 rounded-3xl border border-emerald-100 bg-white p-6 sm:p-8 shadow-xl relative animate-in fade-in slide-in-from-top-4">
-                  <button 
-                    onClick={() => setActiveFarmerProfile(null)}
-                    className="absolute top-4 right-4 rounded-full bg-gray-100 p-1.5 text-gray-500 hover:bg-gray-200 cursor-pointer"
-                  >
-                    Close Profile ✕
-                  </button>
-
-                  <div className="md:flex md:items-start md:gap-8 border-b border-gray-100 pb-6 mb-6">
-                    {/* Farmer face photo */}
-                    <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full border-4 border-emerald-50 overflow-hidden bg-gray-50 shrink-0 mx-auto md:mx-0 shadow">
-                      <img 
-                        src={activeFarmerProfile.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
-                        alt={activeFarmerProfile.name}
-                        className="h-full w-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-
-                    <div className="text-center md:text-left flex-1 mt-4 md:mt-0">
-                      <div className="flex flex-col sm:flex-row items-center gap-2">
-                        <h2 className="text-xl sm:text-2xl font-black text-gray-800 font-sans">{activeFarmerProfile.name}</h2>
-                        
-                        {/* ABSOLUTE VERIFIED FARMER BADGE ON PROFILE */}
-                        {activeFarmerProfile.verified && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-black text-blue-700 shadow-sm">
-                            <ShieldCheck className="h-4 w-4 fill-blue-600 text-white shrink-0" />
-                            Verified Farmer (ভেরিফাইড কৃষক)
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-1.5 text-xs text-gray-500">
-                        <span className="flex items-center gap-1 font-semibold text-gray-700">
-                          <MapPin className="h-4 w-4 text-emerald-600" />
-                          {activeFarmerProfile.district}, বাংলাদেশ
-                        </span>
-                        <span>•</span>
-                        <span className="font-bold text-amber-500 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-lg">★ {activeFarmerProfile.rating} রেটিং</span>
-                        <span>•</span>
-                        <span>{activeFarmerProfile.productCount}টি একক ফসল</span>
-                        <span>•</span>
-                        <span className="text-emerald-700 font-bold">{activeFarmerProfile.salesCount} সফল বিক্রয়</span>
-                      </div>
-
-                      <p className="mt-3 text-xs text-gray-600 leading-relaxed font-sans max-w-2xl">
-                        {activeFarmerProfile.name} আমাদের বিশ্বস্ত জৈব ও রাসায়নিক মুক্ত চাষাবাদকারী অংশীদার। উনার উৎপাদিত ফসল শতভাগ নিখাদ ও তাজা। সরাসরি উনার খামার থেকে অর্ডারের উপর ভিত্তি করে ঢাকায় পণ্য নিয়ে আসা হবে।
-                      </p>
-
-                      <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-3">
-                        <a 
-                          href={`tel:${activeFarmerProfile.phone}`}
-                          className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 px-4 py-2.5 text-xs font-bold text-white shadow hover:scale-102 active:scale-98 transition-all"
-                        >
-                          <Phone className="h-4 w-4" />
-                          মোবাইল কল: {activeFarmerProfile.phone}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cultivated Crop List (Products by active farmer) */}
-                  <div>
-                    <h3 className="text-sm font-black text-gray-800 mb-4 uppercase tracking-wider block">উনার উৎপাদিত ফসলের সম্ভার ({getProductsByFarmer(activeFarmerProfile.id).length})</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                      {getProductsByFarmer(activeFarmerProfile.id).map((p) => (
-                        <ProductCard 
-                          key={p.id} 
-                          product={p} 
-                          onOpenQuickView={setQuickViewProduct} 
-                          onEditProduct={setEditingProduct}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Grid of all farmers */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {farmers
-                  .filter((f) => 
-                    (selectedDistrict === 'all' || f.district === selectedDistrict) &&
-                    (!searchQuery || f.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                  )
-                  .map((farmer) => (
-                    <div
-                      key={farmer.id}
-                      onClick={() => {
-                        setSelectedFarmerStoreId(farmer.id);
-                        setView('farmer-store');
-                      }}
-                      className={`rounded-2xl border p-5 bg-white shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between ${
-                        selectedFarmerStoreId === farmer.id ? 'border-emerald-500 ring-2 ring-emerald-500/10 shadow-lg' : 'border-gray-100 hover:border-emerald-200'
-                      }`}
-                    >
-                      <div>
-                        {/* Upper row: Avatar & badge */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="h-14 w-14 rounded-full bg-gray-50 border border-gray-150 overflow-hidden shrink-0">
-                            <img 
-                              src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
-                              alt={farmer.name} 
-                              className="h-full w-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-
-                          {/* ABSOLUTE VERIFIED FARMER BADGE ON LIST CARDS */}
-                          {farmer.verified ? (
-                            <span className="inline-flex items-center gap-0.5 rounded-lg bg-blue-50 border border-blue-200 px-2 py-0.5 text-[9px] font-black text-blue-700 tracking-wider">
-                              <ShieldCheck className="h-3.5 w-3.5 fill-blue-600 text-white shrink-0" />
-                              VERIFIED
-                            </span>
-                          ) : (
-                            <span className="rounded bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-400 border border-gray-150">
-                              PENDING
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Middle row: Name & area */}
-                        <h3 className="mt-4 font-bold text-gray-800 hover:text-emerald-700 transition-colors flex items-center gap-1 font-sans">
-                          {farmer.name}
-                        </h3>
-                        
-                        <span className="flex items-center gap-1 text-[11px] text-gray-400 font-bold mt-1 uppercase font-mono tracking-wider">
-                          <MapPin className="h-3 w-3 text-emerald-500" />
-                          {farmer.district}
-                        </span>
-
-                        {/* Brief stats bar */}
-                        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-50 pt-3 text-[10px] text-gray-500 font-mono text-center">
-                          <div>
-                            <span className="block font-sans text-gray-400 leading-none">রেটিং</span>
-                            <strong className="block text-amber-600 font-bold mt-1">★ {farmer.rating}</strong>
-                          </div>
-                          <div>
-                            <span className="block font-sans text-gray-400 leading-none">ফসল</span>
-                            <strong className="block text-gray-700 font-bold mt-1">{farmer.productCount}টি</strong>
-                          </div>
-                          <div>
-                            <span className="block font-sans text-gray-400 leading-none">বিক্রয়</span>
-                            <strong className="block text-emerald-600 font-bold mt-1">{farmer.salesCount}+</strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      <button 
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          setSelectedFarmerStoreId(farmer.id);
-                          setView('farmer-store');
-                        }}
-                        className="mt-4 w-full text-center rounded-xl bg-gray-50 hover:bg-emerald-50 hover:text-emerald-700 py-2.5 text-xs font-bold text-gray-600 transition-all border border-gray-100"
-                      >
-                        প্রোফাইল ও ফসল দেখুন
-                      </button>
-                    </div>
                   ))
-                }
+                )}
               </div>
 
             </div>
           </section>
         )}
 
-        {/* CUSTOMER DASHBOARD - muiktabegum@gmail.com */}
-        {currentView === 'customer-dashboard' && currentUser && (
-          <section className="py-8 bg-gray-50">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              
-              <div className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 bg-gradient-to-tr from-emerald-600 to-green-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-md">
-                    {currentUser.name.charAt(0)}
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-md uppercase tracking-wider font-mono">সম্মানিত ক্রেতা প্যানেল</span>
-                    <h1 className="text-xl sm:text-2xl font-black text-gray-800 leading-tight font-sans mt-1">{currentUser.name}</h1>
-                    <p className="text-xs text-gray-400 font-medium mt-0.5">নিবন্ধিত মোবাইল: {currentUser.phone}</p>
-                  </div>
-                </div>
-                
-                <div className="text-xs text-gray-600 bg-gray-50 border border-gray-150 p-4 rounded-2xl max-w-md w-full relative">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-bold text-gray-700 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-                      ডেলিভারি ঠিকানা ও গন্তব্য:
-                    </span>
-                    <button 
-                      onClick={() => {
-                        setIsEditingAddress(!isEditingAddress);
-                        setTempAddress(currentUser.address || '');
-                      }}
-                      className="text-[10px] font-bold text-emerald-700 hover:underline cursor-pointer"
-                    >
-                      {isEditingAddress ? 'বাতিল' : 'পরিবর্তন করুন'}
-                    </button>
-                  </div>
-
-                  {isEditingAddress ? (
-                    <div className="space-y-2 mt-2">
-                      <input 
-                        type="text" 
-                        value={tempAddress}
-                        onChange={(e) => setTempAddress(e.target.value)}
-                        className="w-full text-xs p-2 border border-gray-200 rounded-xl outline-none"
-                        placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা দিন"
-                      />
-                      <button 
-                        onClick={() => {
-                          updateProfile(currentUser.name, currentUser.phone, tempAddress);
-                          setIsEditingAddress(false);
-                        }}
-                        className="bg-emerald-600 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg hover:bg-emerald-700 cursor-pointer"
-                      >
-                        আপডেট করুন
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="leading-relaxed block font-semibold text-gray-650">{currentUser.address || 'কোনো ঠিকানা দেওয়া নেই'}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Dynamic Customer Statistics */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm text-center">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-gray-400">মোট অর্ডার</span>
-                  <strong className="block text-2xl font-black text-emerald-800 mt-1 font-mono">
-                    {orders.filter(o => o.customerId === currentUser.id).length} বার
-                  </strong>
-                </div>
-                <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm text-center">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-gray-400 font-sans">সর্বমোট কেনাকাটা</span>
-                  <strong className="block text-2xl font-black text-blue-700 mt-1 font-mono">
-                    ৳{orders.filter(o => o.customerId === currentUser.id && (o.status === 'Delivered' || o.status === 'Shipped' || o.status === 'Processing' || o.status === 'Packed')).reduce((total, o) => total + o.totalPrice, 0)} BDT
-                  </strong>
-                </div>
-                <div className="col-span-2 md:col-span-1 bg-white rounded-2xl border border-gray-100 p-4 shadow-sm text-center">
-                  <span className="text-[10px] uppercase font-black tracking-wider text-gray-400">ব্যবহৃত পেমেন্ট মেথড</span>
-                  <strong className="block text-xs font-bold text-gray-700 mt-2 font-mono">
-                    bKash / Nagad / COD
-                  </strong>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* Visual Tracker Stepper Container */}
-                <div className="lg:col-span-2 space-y-6">
-                  
-                  {/* TAB SELECTORS */}
-                  <div className="flex border-b border-gray-200 gap-6 px-1">
-                    <button 
-                      onClick={() => setCustomerDashboardTab('tracking')}
-                      className={`pb-3 text-xs sm:text-sm font-black uppercase tracking-wider relative cursor-pointer select-none transition-colors ${
-                        customerDashboardTab === 'tracking' ? 'text-emerald-700' : 'text-gray-400 hover:text-gray-650'
-                      }`}
-                    >
-                      📍 অর্ডার ট্র্যাকিং (Tracking)
-                      {customerDashboardTab === 'tracking' && (
-                        <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-emerald-600 rounded-full" />
-                      )}
-                    </button>
-                    <button 
-                      onClick={() => setCustomerDashboardTab('history')}
-                      className={`pb-3 text-xs sm:text-sm font-black uppercase tracking-wider relative cursor-pointer select-none transition-colors ${
-                        customerDashboardTab === 'history' ? 'text-emerald-700' : 'text-gray-400 hover:text-gray-650'
-                      }`}
-                    >
-                      📜 অর্ডারের ইতিহাস (History Table)
-                      {customerDashboardTab === 'history' && (
-                        <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-emerald-600 rounded-full" />
-                      )}
-                    </button>
-                  </div>
-
-                  {customerDashboardTab === 'tracking' ? (
-                    <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                    <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4 flex items-center justify-between">
-                      <span>📦 আমার অনলাইন অর্ডারসমূহ ও লাইভ ট্র্যাকিং</span>
-                      <span className="text-xs font-bold font-sans text-gray-400">অর্ডার সংখ্যা: {orders.filter(o => o.customerId === currentUser.id).length}টি</span>
-                    </h2>
-                    
-                    {orders.filter(o => o.customerId === currentUser.id).length === 0 ? (
-                      <div className="text-center py-10">
-                        <p className="text-xs text-gray-400">আপনি এখনো কোনো পণ্য ক্রয় করেননি। শপ পেইজে যান!</p>
-                        <button onClick={() => setView('shop')} className="mt-4 bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-xl">সব পণ্য ব্রাউজ করুন</button>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {orders.filter(o => o.customerId === currentUser.id).map((order) => {
-                          const steps = [
-                            { label: 'Pending', name: 'পেন্ডিং ⏱' },
-                            { label: 'Processing', name: 'প্রসেসিং 🌿' },
-                            { label: 'Packed', name: 'প্যাকেট সম্পন্ন 📦' },
-                            { label: 'Shipped', name: 'ডেলিভারিতে 🚴' },
-                            { label: 'Delivered', name: 'সম্পন্ন ✔' }
-                          ];
-
-                          const stepIndices: Record<string, number> = { Pending: 0, Processing: 1, Packed: 2, Shipped: 3, Delivered: 4 };
-                          const currentStepIndex = stepIndices[order.status] ?? 0;
-
-                          return (
-                            <div key={order.id} className="border border-gray-150 rounded-2xl p-5 bg-white space-y-4 shadow-xs">
-                              
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-2">
-                                <div>
-                                  <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="text-xs font-black text-emerald-800 uppercase tracking-widest">অর্ডার নং: {order.id}</span>
-                                    <span className="text-[10px] bg-gray-100 text-gray-500 font-mono px-2 py-0.5 rounded-lg border border-gray-200">
-                                      ট্র্যাকিং নং: {order.trackingNumber || 'TRK-GEN'}
-                                    </span>
-                                  </div>
-                                  <span className="block text-[10px] text-gray-400 font-mono mt-1">তারিখ ও সময়: {new Date(order.createdAt).toLocaleString()}</span>
-                                </div>
-                                <span className="text-[11px] font-black text-white bg-emerald-600 px-3 py-1 rounded-xl shrink-0 self-start sm:self-center">
-                                  ৳{order.totalPrice} ({order.paymentMethod === 'COD' ? 'ক্যাশ অন ডেলিভারি' : order.paymentMethod})
-                                </span>
-                              </div>
-
-                              {/* VISUAL STEPPER TRACKING LINES */}
-                              <div className="py-4">
-                                <div className="relative">
-                                  {/* Progress Line Bar Background */}
-                                  <div className="absolute top-2.5 left-[10%] w-[80%] h-1 bg-gray-205 rounded-full z-0">
-                                    <div 
-                                      className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500"
-                                      style={{ width: `${(currentStepIndex / 4) * 100}%` }}
-                                    />
-                                  </div>
-
-                                  {/* Stepper Dots Row */}
-                                  <div className="relative flex justify-between z-10 leading-none">
-                                    {steps.map((st, sIdx) => {
-                                      const isPassed = sIdx <= currentStepIndex;
-                                      const isCurrent = sIdx === currentStepIndex;
-                                      return (
-                                        <div key={st.label} className="flex flex-col items-center w-[18%] text-center">
-                                          <div className={`h-6 w-6 rounded-full flex items-center justify-center font-bold text-[10px] transition-all ${
-                                            isPassed 
-                                              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' 
-                                              : 'bg-gray-200 text-gray-400'
-                                          }`}>
-                                            {sIdx + 1}
-                                          </div>
-                                          <span className={`block text-[8px] sm:text-[9px] font-extrabold mt-2 ${
-                                            isCurrent ? 'text-emerald-700 font-black' : isPassed ? 'text-gray-700' : 'text-gray-400'
-                                          }`}>
-                                            {st.name}
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-
-                                </div>
-                              </div>
-
-                              {/* Order specific products lists */}
-                              <div className="bg-gray-50 rounded-xl p-3 text-xs space-y-1 text-gray-700 border border-gray-100">
-                                {order.products.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between items-center py-1">
-                                    <span className="font-semibold text-gray-700 max-w-[250px] truncate">{item.title}</span>
-                                    <span className="font-mono text-gray-400 shrink-0">৳{item.price} x {item.quantity}</span>
-                                  </div>
-                                ))}
-                              </div>
-
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    </div>
-                  ) : (
-                    <OrderHistory />
-                  )}
-                </div>
-
-                {/* Helpdesk support & info sidebar block */}
-                <div className="space-y-6">
-                  <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                    <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-3 font-sans">
-                      📢 কাস্টমার কেয়ার ও চাষী সাপোর্ট বাতায়ন
-                    </h3>
-                    <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                      কৃষক বাজার প্ল্যাটফর্ম কোনো মধ্যস্বত্বভোগী ছাড়াই সরাসরি রাজশাহী ও যশোর অঞ্চলের প্রান্তিক চাষী থেকে ফসল আপনার দোরগোড়ায় পৌঁছে দেয়। যেকোনো কাস্টমার সাপোর্ট বা ডেলিভারির সুনির্দিষ্ট তথ্যের প্রয়োজনে আমাদের অফিশিয়াল কল সেন্টারে যোগাযোগ করুন।
-                    </p>
-                    <div className="mt-4 pt-4 border-t border-gray-105 text-[11px] text-gray-650 space-y-2">
-                      <span className="block text-emerald-700 font-bold">📞 কাস্টমার কেয়ার: ০১৯৩৯-০৫২২৫৭</span>
-                      <span className="block text-indigo-700 font-bold">✉ সাপোর্ট মেইল: contact@krishokbazar.com.bd</span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* FARMER STOREFRONT DASHBOARD - mizan@farmer.com */}
-        {currentView === 'farmer-dashboard' && currentUser && (
-          <section className="py-8 bg-gray-50">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              
-              <div className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 bg-gradient-to-tr from-emerald-600 to-green-500 text-white rounded-2xl flex items-center justify-center">
-                    <Store className="h-8 w-8" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest font-mono bg-emerald-50 px-2 py-0.5 rounded">প্যানেল: অংশীদার কৃষক ড্যাশবোর্ড</span>
-                    
-                    <div className="flex items-center gap-2 mt-1">
-                      <h1 className="text-xl sm:text-2xl font-black text-gray-800 leading-tight font-sans mt-0.5">{currentUser.name}</h1>
-                      
-                      {/* VERIFIED FARMER BADGE ON ACTIVE OWNER DASHBOARD */}
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[9px] font-bold text-blue-700">
-                        <ShieldCheck className="h-3.5 w-3.5 fill-blue-600 text-white shrink-0" />
-                        Verified Partner
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-gray-500 font-medium mt-1">নিবন্ধিত মোবাইল: {currentUser.phone} • উৎপাদক এলাকা: {farmers.find(f => f.id === currentUser.farmerId)?.district || 'যশোর Sadar'}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => {
-                      setIsAddingProduct(!isAddingProduct);
-                      setEditingProdId(null);
-                    }}
-                    className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-5 py-3 text-xs font-bold text-white shadow-md cursor-pointer duration-200"
-                  >
-                    <Plus className="h-4 w-4" />
-                    নতুন ফসল / রেডি প্যাক যোগ করুন
-                  </button>
-                </div>
-              </div>
-
-              {/* Farmer dynamic stats calculations */}
-              {(() => {
-                const farmerId = currentUser.farmerId || 'f6';
-                const myCrops = products.filter(p => p.farmerId === farmerId);
-                const salesSum = myCrops.reduce((sum, p) => sum + (p.salesCount || 10), 0);
-                
-                const myOrders = orders.filter(o => o.products.some(p => p.farmerId === farmerId));
-                const uniqueClientsCount = Array.from(new Set(myOrders.map(o => o.customerId))).length;
-                
-                const balanceLedger = farmers.find(f => f.id === farmerId)?.balance || 0;
-                const totalIncomeMonthly = myOrders.filter(o => o.status !== 'Pending').reduce((sum, o) => {
-                  const share = o.products.filter(p => p.farmerId === farmerId).reduce((ps, item) => ps + (item.price * item.quantity), 0);
-                  return sum + share;
-                }, 0);
-
-                return (
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs text-center">
-                      <span className="text-[10px] uppercase font-black text-gray-400">মোট বিক্রয় (পরিমাণ)</span>
-                      <strong className="block text-xl font-mono text-emerald-800 font-black mt-1">{salesSum} কেজি/পিস</strong>
-                    </div>
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs text-center">
-                      <span className="text-[10px] uppercase font-black text-gray-400">মোট ক্রেতা সংখা</span>
-                      <strong className="block text-xl font-mono text-indigo-700 font-black mt-1">{uniqueClientsCount} জন</strong>
-                    </div>
-                    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-xs text-center">
-                      <span className="text-[10px] uppercase font-black text-gray-400">চলতি মাসের বেচাকেনা</span>
-                      <strong className="block text-xl font-mono text-blue-700 font-black mt-1">৳{totalIncomeMonthly} BDT</strong>
-                    </div>
-                    <div className="bg-white rounded-2xl border border-gray-150 p-4 bg-emerald-50/50 shadow-xs text-center border-dashed">
-                      <span className="text-[10px] uppercase font-black text-emerald-850">আমার ওয়ালেট ব্যালেন্স</span>
-                      <strong className="block text-xl font-mono text-emerald-700 font-black mt-1">৳{balanceLedger} BDT</strong>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                
-                {/* Balance Withdrawal Tool Panel */}
-                <div className="lg:col-span-1 space-y-6">
-                  <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                    <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-2 flex items-center gap-1">
-                      <Coins className="h-4 w-4 text-emerald-600" />
-                      টাকা উত্তোলন করুন (Wallet Ledger)
-                    </h3>
-                    <p className="text-[10px] text-gray-400 mb-4 leading-relaxed">
-                      কৃষক বাজার সরাসরি পেমেন্ট লিংকের মাধ্যমে আপনার অর্জিত অর্থ ব্যাংক, বিকাশ অথবা রকেটে ৫00 টাকার বেশি হলে ক্যাশ-আউট করুন।
-                    </p>
-
-                    {withdrawMsg && (
-                      <div className={`p-3 rounded-xl mb-4 text-xs font-semibold ${
-                        withdrawMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-250' : 'bg-red-50 text-red-650 border border-red-200'
-                      }`}>
-                        {withdrawMsg.text}
-                      </div>
-                    )}
-
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const farmerId = currentUser.farmerId || 'f6';
-                        const res = requestWithdrawal(farmerId, withdrawAmount, withdrawMethod, withdrawDetails);
-                        if (res.success) {
-                          setWithdrawMsg({ type: 'success', text: res.message });
-                          setWithdrawDetails('');
-                        } else {
-                          setWithdrawMsg({ type: 'error', text: res.message });
-                        }
-                        setTimeout(() => setWithdrawMsg(null), 5000);
-                      }}
-                      className="space-y-3.5 text-xs text-gray-700 select-none"
-                    >
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">টাকার পরিমাণ (সর্বনিম্ন ৳৫00):</label>
-                        <input 
-                          type="number" 
-                          required
-                          min={500}
-                          value={withdrawAmount}
-                          onChange={(e) => setWithdrawAmount(Math.max(0, Number(e.target.value)))}
-                          className="w-full rounded-xl border border-gray-150 p-2.5 outline-none focus:border-emerald-500 bg-gray-50 focus:bg-white"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">উত্তোলন করার মাধ্যম:</label>
-                        <select 
-                          value={withdrawMethod}
-                          onChange={(e) => setWithdrawMethod(e.target.value as any)}
-                          className="w-full rounded-xl border border-gray-155 p-2.5 outline-none focus:border-emerald-500 bg-gray-50 focus:bg-white font-sans text-gray-700 font-bold"
-                        >
-                          <option value="bKash">বিকাশ (bKash Wallet)</option>
-                          <option value="Nagad">নগদ (Nagad Wallet)</option>
-                          <option value="Bank Transfer">সরাসরি ব্যাংক অ্যাকাউন্ট (Bank)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">মেথড বিবরণ (যেমন: বিকাশ নাম্বার বা ব্যাংক তথ্য):</label>
-                        <textarea 
-                          required
-                          rows={2}
-                          value={withdrawDetails}
-                          onChange={(e) => setWithdrawDetails(e.target.value)}
-                          placeholder="বিকাশ পার্সোনাল নম্বর: ০১৭xxxxxxxx অথবা ডাচ বাংলা ব্যাক তথ্য"
-                          className="w-full rounded-xl border border-gray-150 p-2.5 outline-none focus:border-emerald-500 bg-gray-50 focus:bg-white leading-relaxed"
-                        />
-                      </div>
-
-                      <button 
-                        type="submit"
-                        className="w-full text-center rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 py-3 font-bold text-white shadow hover:shadow-md cursor-pointer duration-200 text-xs"
-                      >
-                        নতুন উত্তোলন আবেদন পাঠান
-                      </button>
-                    </form>
-                  </div>
-                </div>
-
-                {/* Left table showing farmer withdrawal history and requests status */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                    <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4">
-                      পেমেন্ট ও উত্তোলন ইতিহাস
-                    </h3>
-
-                    {withdrawalRequests.filter(w => w.farmerId === (currentUser.farmerId || 'f6')).length === 0 ? (
-                      <p className="text-xs text-gray-400 py-8 text-center bg-gray-50 rounded-2xl">আপনার এখনো কোনো টাকা উত্তোলন বা প্রসেসিং ইতিহাস নেই।</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse text-xs">
-                          <thead>
-                            <tr className="border-b border-gray-100 text-gray-400 uppercase tracking-widest text-[9px] font-bold">
-                              <th className="pb-3 font-bold">আবেদন আইডি</th>
-                              <th className="pb-3 font-bold">টাকার পরিমাণ</th>
-                              <th className="pb-3 font-bold">মাধ্যম</th>
-                              <th className="pb-3 font-bold">তারিখ</th>
-                              <th className="pb-3 font-bold text-right">ডেলিভারি স্থিতি</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {withdrawalRequests
-                              .filter(w => w.farmerId === (currentUser.farmerId || 'f6'))
-                              .map((req) => (
-                                <tr key={req.id} className="border-b border-gray-50">
-                                  <td className="py-3 font-mono font-bold text-gray-800">{req.id}</td>
-                                  <td className="py-3 font-mono text-emerald-800 font-bold">৳{req.amount} BDT</td>
-                                  <td className="py-3 font-sans font-semibold text-gray-600">{req.method}</td>
-                                  <td className="py-3 font-mono text-gray-400">{new Date(req.createdAt).toLocaleDateString()}</td>
-                                  <td className="py-3 text-right">
-                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
-                                      req.status === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                      req.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse' :
-                                      req.status === 'Approved' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-750 border-red-200'
-                                    }`}>
-                                      {req.status === 'Paid' ? 'পরিশোধিত' : req.status === 'Pending' ? 'রিভিউধীন' : req.status === 'Approved' ? 'অনুমোদিত' : 'বাতিলকৃত'}
-                                    </span>
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Add/edit crop overlay form */}
-              {isAddingProduct && (
-                <div className="mb-8 rounded-3xl border border-gray-100 bg-white p-6 sm:p-8 shadow-xl animate-in fade-in slide-in-from-top-4">
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-5">
-                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider block">{editingProdId ? 'ফসল বিবরণ সংস্কার করুন' : 'নতুন জৈব ফসলের তালিকা যোগ করুন'}</h3>
-                    <button 
-                      onClick={() => setIsAddingProduct(false)}
-                      className="text-xs text-gray-400 hover:text-gray-600"
-                    >
-                      বাতিল করুন ✕
-                    </button>
-                  </div>
-
-                  <form onSubmit={handleProductSubmit} className="space-y-4 text-xs select-none">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">ফসলের নাম (বাংলায় লিখুন):</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="যেমন: যশোরের সতেজ কচি টমেটো (তাজা)"
-                          value={newProdTitle}
-                          onChange={(e) => setNewProdTitle(e.target.value)}
-                          className="w-full rounded-xl border border-gray-150 py-2.5 px-3 bg-gray-50"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">উৎপাদন মূল্য (৳ কেজি/পিস):</label>
-                        <input
-                          type="number"
-                          required
-                          value={newProdPrice || ''}
-                          onChange={(e) => setNewProdPrice(Number(e.target.value))}
-                          className="w-full rounded-xl border border-gray-155 py-2.5 px-3 bg-gray-50"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">ছাড় মূল্য (ঐচ্ছিক):</label>
-                        <input
-                          type="number"
-                          value={newProdDiscountPrice}
-                          onChange={(e) => setNewProdDiscountPrice(e.target.value)}
-                          className="w-full rounded-xl border border-gray-155 py-2.5 px-3 bg-gray-50"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-gray-700 font-bold mb-1">ক্যাটাগরি বা শ্রেণীবিভাগ:</label>
-                        <select
-                          value={newProdCategory}
-                          onChange={(e) => setNewProdCategory(e.target.value)}
-                          className="w-full rounded-xl border border-gray-155 py-2.5 px-3 bg-gray-50 text-gray-650"
-                        >
-                          <option value="fruits">ফলমূল (Fruits)</option>
-                          <option value="vegetables">শাকসবজি (Vegetables)</option>
-                          <option value="fish">মাছ (Fish)</option>
-                          <option value="meat">মাংস (Meat)</option>
-                          <option value="honey">খাঁটি মধু (Honey)</option>
-                          <option value="spices">মসলাপাতি (Spices)</option>
-                          <option value="organic">জৈব খাব�        {/* OUR STORY / BLOG DEDICATED VIEW */}
+        {/* OUR STORY / BLOG DEDICATED VIEW */}
         {currentView === 'our-story' && (
           <div className="bg-white min-h-screen text-gray-800">
             {/* Elegant Header Banner */}
@@ -1338,88 +1038,6 @@ const AppContent: React.FC = () => {
                     </div>
                     <p className="text-xs text-gray-500 leading-relaxed block">
                       {siteSettings?.storyPillar4Text || 'কোনো মধ্যস্বত্বভোগী ছাড়াই চাষীরা যাতে নিজেই তার কঠোর মেহনতের মূল নির্ধারণ করতে পারেন আমরা তার ব্যবস্থা করেছি। সম্পূর্ণ লভ্যাংশ সরাসরি নিজস্ব ডিজিটাল ওয়ালেটে চাষীদের কাছে পৌঁছে দিয়ে তাদের স্বাবলম্বী করা আমাদের উদ্দেশ্য।'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100/50 flex gap-4 items-start">
-                      <span className="text-3xl text-emerald-700 select-none">🎯</span>
-                      <div>
-                        <h4 className="font-extrabold text-sm text-emerald-900 justify-start">শতভাগ নিজস্ব ওয়ালেট ক্ষমতায়ন</h4>
-                        <p className="text-xs text-gray-500 mt-1 leading-normal text-left">
-                          কোনো ফড়িয়া বা ব্রোকার চার্জ ছাড়া, সম্পূর্ণ লভ্যাংশ সরাসরি নিজস্ব ডিজিটাল ওয়ালেটে চাষীদের কাছে পৌঁছে দিয়ে তাদের মুখে অনাবিল হাসি নিশ্চিত করছি।
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-150 aspect-[4/3] bg-emerald-800">
-                    <img 
-                      src="https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&q=80&w=800" 
-                      alt="Bangladesh beautiful agriculture farm"
-                      className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent p-6 flex flex-col justify-end text-left">
-                      <span className="text-white text-xs font-mono font-bold block">মৌসুমী সতেজ খেত</span>
-                      <p className="text-emerald-250 text-xs font-semibold leading-relaxed block mt-1">সোনার বাংলায় তাজা ফলন তুলছেন আমাদের একজন অংশীদার কৃষক।</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Core Story Pillars Grid */}
-            <section className="py-16 bg-white border-t border-gray-100">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                  <span className="text-xs font-black text-emerald-600 tracking-wider uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 block w-max mx-auto">Our Pillars • লক্ষ্য ও নীতি</span>
-                  <h2 className="text-2xl sm:text-3.5xl font-extrabold text-gray-900 tracking-tight mt-3 block">আমাদের ৪টি মূল স্তম্ভ</h2>
-                  <p className="text-xs text-gray-500 mt-2 block">আমাদের প্রতিটি পদক্ষেপ এই চারটি দর্শনের উপর ভিত্তি করে পরিচালিত হয় যা আমাদের কৃষক ও ক্রেতাদের সমৃদ্ধ করে।</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
-                  {/* Pillar 1: Bangladesh agriculture */}
-                  <div className="bg-gray-50/50 hover:bg-emerald-50/10 border border-gray-105 rounded-3xl p-6 sm:p-8 hover:shadow-md transition-all space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl select-none">🌾</span>
-                      <h4 className="font-extrabold text-base text-gray-900 block">সোনার বাংলা ও উর্বর মৃত্তিকা</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed font-sans block">
-                      বাংলাদেশ সুজলা-সুফলা উর্বর পলল মাটির দেশ। আমাদের চাষীরা রোদে পুড়ে বৃষ্টিতে ভিজে পবিত্র ঘামের বিনিময়ে আমাদের জন্য মৌসুমী তাজা রসালো ফসল ফলান। সেই ফসল সরাসরি সংগ্রহ করাই আমাদের গর্ব।
-                    </p>
-                  </div>
-
-                  {/* Pillar 2: Middlemen problem */}
-                  <div className="bg-gray-50/50 hover:bg-emerald-50/10 border border-gray-105 rounded-3xl p-6 sm:p-8 hover:shadow-md transition-all space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl text-red-500 select-none">⚠️</span>
-                      <h4 className="font-extrabold text-base text-gray-900 block">দালাল ও মধ্যস্বত্ব ভোগী ব্যবস্থা</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed font-sans block">
-                      মাঠের উৎপাদক ফসল ৮ টাকায় বিক্রি করলেও আড়তদার ও ঘাটে ঘাটে মধ্যস্বত্বভোগীদের কৃত্রিম সংকটে ঢাকায় সাধারণ কাস্টমার তা ৮০ টাকায় ক্ষতিকর কেমিক্যালসহ কিনতে বাধ্য হন। আমরা এই কৃত্রিম সংকট ভেঙে দিয়েছি।
-                    </p>
-                  </div>
-
-                  {/* Pillar 3: Safe food mission */}
-                  <div className="bg-gray-50/50 hover:bg-emerald-50/10 border border-gray-105 rounded-3xl p-6 sm:p-8 hover:shadow-md transition-all space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl text-blue-500 select-none">🛡️</span>
-                      <h4 className="font-extrabold text-base text-gray-900 block">রাসায়নিক মুক্ত শতভাগ বিশুদ্ধতা</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed font-sans block">
-                      ক্ষতিকর কার্বাইড, ফরমালিন বা নোংরা প্রিজারভেটিভ বর্জন করে সরাসরি মাঠ থেকে তাজা ও নির্ভেজাল পুষ্টিকর খাবার আপনার পরিবারের কাছে দ্রুততম সময়ে ডেলিভারি করাই আমাদের লক্ষ্য। এজন্য রয়েছে আমাদের নিজস্ব কোয়ালিটি কন্ট্রোল টিম।
-                    </p>
-                  </div>
-
-                  {/* Pillar 4: Farmer empowerment */}
-                  <div className="bg-gray-50/50 hover:bg-emerald-50/10 border border-gray-105 rounded-3xl p-6 sm:p-8 hover:shadow-md transition-all space-y-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl text-amber-500 select-none">🤝</span>
-                      <h4 className="font-extrabold text-base text-gray-900 block">স্বাধীন ও ক্ষমতাবান আধুনিক চাষী</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed font-sans block">
-                      কোনো মধ্যস্বত্বভোগী ছাড়াই চাষীরা যাতে নিজেই তার কঠোর মেহনতের মূল নির্ধারণ করতে পারেন আমরা তার ব্যবস্থা করেছি। সম্পূর্ণ লভ্যাংশ সরাসরি নিজস্ব ডিজিটাল ওয়ালেটে চাষীদের কাছে পৌঁছে দিয়ে তাদের স্বাবলম্বী করা আমাদের উদ্দেশ্য।
                     </p>
                   </div>
                 </div>

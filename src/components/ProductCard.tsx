@@ -6,7 +6,7 @@
 import React from 'react';
 import { Product } from '../types';
 import { useApp } from '../AppContext';
-import { Star, ShoppingCart, Eye, Landmark } from 'lucide-react';
+import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -22,9 +22,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
     addToCart(product, 1);
   };
 
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart(product, 1);
+    window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: { openCheckout: true } }));
+  };
+
   const hasDiscount = !!product.discountPrice;
   const originalPrice = product.price;
   const displayPrice = product.discountPrice || product.price;
+
+  const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${product.title}" পণ্যটি অর্ডার করতে চাই।\nকৃষক: ${product.farmerName}\nমূল্য: ৳${displayPrice}`);
+  const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
 
   return (
     <div 
@@ -119,35 +128,61 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
         </div>
 
         {/* Price + Cart Bottom Section */}
-        <div className="mt-auto pt-3 flex items-center justify-between gap-2 border-t border-gray-50">
-          {/* Pricing display */}
-          <div className="flex flex-col">
-            {hasDiscount && (
-              <span className="text-[10px] text-gray-400 line-through font-mono">
-                ৳{originalPrice}
+        <div className="mt-auto pt-3 border-t border-gray-50 space-y-2">
+          {/* Top row: Price + Add to cart */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Pricing display */}
+            <div className="flex flex-col">
+              {hasDiscount && (
+                <span className="text-[10px] text-gray-400 line-through font-mono">
+                  ৳{originalPrice}
+                </span>
+              )}
+              <span className="text-sm font-black text-emerald-700 font-sans flex items-baseline">
+                ৳{displayPrice}
+                <span className="text-[10px] text-gray-400 font-medium ml-0.5 font-mono">
+                  /{product.images[0].includes('pcs') || product.title.includes('পিস') || product.title.includes('টি') || product.title.includes('জোড়া') || product.title.includes('box') ? 'পিস' : 'কেজি'}
+                </span>
               </span>
-            )}
-            <span className="text-sm font-black text-emerald-700 font-sans flex items-baseline">
-              ৳{displayPrice}
-              <span className="text-[10px] text-gray-400 font-medium ml-0.5 font-mono">
-                /{product.images[0].includes('pcs') || product.title.includes('পিস') || product.title.includes('টি') || product.title.includes('জোড়া') || product.title.includes('box') ? 'পিস' : 'কেজি'}
-              </span>
-            </span>
+            </div>
+
+            {/* Add to Cart button */}
+            <button
+              onClick={handleAddToCart}
+              disabled={product.stock <= 0}
+              className={`flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
+                product.stock > 0
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
+              {product.stock > 0 ? 'কার্টে রাখুন' : 'স্টক শেষ'}
+            </button>
           </div>
 
-          {/* Add to Cart button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={product.stock <= 0}
-            className={`flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-all cursor-pointer ${
-              product.stock > 0
-                ? 'bg-gradient-to-r from-emerald-600 to-green-500 text-white hover:from-emerald-700 hover:to-green-600 shadow-md hover:scale-[1.03]'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-            {product.stock > 0 ? 'যোগ করুন' : 'স্টক শেষ'}
-          </button>
+          {/* Bottom row: Buy Now + WhatsApp Order */}
+          {product.stock > 0 && (
+            <div className="grid grid-cols-2 gap-1.5 pt-1">
+              <button
+                onClick={handleBuyNow}
+                className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-2 py-1.5 text-[10px] font-extrabold text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <ShoppingBag className="h-3 w-3 shrink-0" />
+                এখনই কিনুন
+              </button>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center justify-center gap-1 rounded-xl bg-green-500 hover:bg-green-600 px-2 py-1.5 text-[10px] font-extrabold text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
+              >
+                <PhoneCall className="h-3 w-3 shrink-0" />
+                WhatsApp অর্ডার
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>
