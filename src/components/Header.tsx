@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery
 }) => {
-  const { currentUser, logout, cart } = useApp();
+  const { currentUser, logout, cart, language, toggleLanguage } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
@@ -171,13 +171,13 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => handleNavClick('home')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'home' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              হোম
+              {language === 'en' ? 'Home' : 'হোম'}
             </button>
             <button 
               onClick={() => handleNavClick('shop')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'shop' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              সব পণ্য
+              {language === 'en' ? 'All Products' : 'সব পণ্য'}
             </button>
             <button 
               onClick={() => {
@@ -188,36 +188,31 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
             >
-              কম্বো বাস্কেট
+              {language === 'en' ? 'Combo Basket' : 'কম্বো বাস্কেট'}
             </button>
             <button 
               onClick={() => handleNavClick('ready-to-cook')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'ready-to-cook' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              রেডি-টু-কুক
+              {language === 'en' ? 'Ready-to-Cook' : 'রেডি-টু-কুক'}
             </button>
             <button 
               onClick={() => handleNavClick('farmers')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'farmers' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              ভেরিফাইড কৃষক
+              {language === 'en' ? 'Verified Farmers' : 'ভেরিফাইড কৃষক'}
             </button>
             <button 
-              onClick={() => {
-                setView('home');
-                setTimeout(() => {
-                  document.getElementById('agro-blogs')?.scrollIntoView({ behavior: 'smooth' });
-                }, 150);
-              }}
-              className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
+              onClick={() => handleNavClick('blog')}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'blog' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              ব্লগ
+              {language === 'en' ? 'Blog' : 'ব্লগ'}
             </button>
             <button 
               onClick={() => handleNavClick('our-story')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'our-story' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              আমাদের গল্প
+              {language === 'en' ? 'Our Story' : 'আমাদের গল্প'}
             </button>
             <button 
               onClick={() => {
@@ -225,7 +220,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
             >
-              যোগাযোগ
+              {language === 'en' ? 'Contact' : 'যোগাযোগ'}
             </button>
           </nav>
 
@@ -263,6 +258,15 @@ export const Header: React.FC<HeaderProps> = ({
               className="p-2 text-gray-500 hover:text-emerald-600 md:hidden"
             >
               <Search className="h-5.5 w-5.5" />
+            </button>
+
+            {/* BILINGUAL LANGUAGE SWITCH */}
+            <button
+              onClick={toggleLanguage}
+              className="rounded-2xl border border-gray-100 px-3.5 py-2.5 text-xs font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-250 transition-all cursor-pointer flex items-center gap-1 shrink-0 select-none shadow-sm"
+              title="เปลี่ยนภาษา / Change Language / ভাষা পরিবর্তন করুন"
+            >
+              🌐 <span className="font-sans font-bold">{language === 'en' ? 'বাংলা' : 'ENGLISH'}</span>
             </button>
 
             {/* CART BUTTON WITH LIVE COUNT */}
@@ -428,16 +432,10 @@ export const Header: React.FC<HeaderProps> = ({
               ভেরিফাইড কৃষক (Verified Farmers)
             </button>
             <button 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setView('home');
-                setTimeout(() => {
-                  document.getElementById('agro-blogs')?.scrollIntoView({ behavior: 'smooth' });
-                }, 150);
-              }}
-              className="text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
+              onClick={() => handleNavClick('blog')}
+              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'blog' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
             >
-              ব্লগ (Blog)
+              {language === 'en' ? 'Blog' : 'ব্লগ (Blog)'}
             </button>
             <button 
               onClick={() => handleNavClick('our-story')}

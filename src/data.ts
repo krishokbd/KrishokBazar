@@ -612,6 +612,10 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   footerCopyrightEn: '© 2026 Krishok Bazar Bangladesh. All Rights Reserved. Empowering farmers, eating natural.',
   footerPhone: '01931355398',
   footerEmail: 'support@krishokbazar.org',
-  footerAddressBn: 'সোনারীতলা কৃষি টাওয়ার, লেভেল ৪, মিরপুর ১০ গোলচত্বর, ঢাকা-১২১৬'
+  footerAddressBn: 'সোনারীতলা কৃষি টাওয়ার, লেভেল ৪, মিরপুর ১০ গোলচত্বর, ঢাকা-১২১৬',
+  premiumMembershipPriceUSD: 5,
+  premiumMembershipPriceBDT: 600,
+  premiumFreeDeliveryActive: true,
+  premiumReadyToCookOptionActive: true
 };
 

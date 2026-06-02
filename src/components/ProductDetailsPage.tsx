@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { Product, Farmer, Review } from '../types';
+import { Product, Farmer, Review, getFormattedUnit } from '../types';
 import { 
   ArrowLeft, 
   Star, 
@@ -51,7 +51,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   onSelectProduct,
   onEditProduct
 }) => {
-  const { products, farmers, reviews, addToCart, addReview, currentUser } = useApp();
+  const { products, farmers, reviews, addToCart, addReview, currentUser, language } = useApp();
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [liked, setLiked] = useState(false);
@@ -404,12 +404,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     product.stock < 10 ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 border border-orange-200 px-2.5 py-0.5 text-[11px] font-black text-orange-850">
                         <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
-                        সীমিত স্টক (কয়েকটি কেজি অবশিষ্ট!)
+                        সীমিত স্টক (কয়েকটি {getFormattedUnit(product, language)} অবশিষ্ট!)
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-250 px-2.5 py-0.5 text-[11px] font-black text-emerald-800">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        স্টক রয়েছে: {product.stock} কেজি
+                        স্টক রয়েছে: {product.stock} {getFormattedUnit(product, language)}
                       </span>
                     )
                   ) : (
@@ -444,7 +444,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </>
                   )}
                   <span className="text-xs text-gray-405 font-bold ml-1">
-                    / প্রতি {product.title.includes('পিস') || product.title.includes('টি') || product.title.includes('জোড়া') || product.title.includes('box') ? 'পিস' : 'কেজি'}
+                    / প্রতি {getFormattedUnit(product, language)}
                   </span>
                 </div>
 
@@ -492,7 +492,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </button>
                   </div>
                   <span className="text-[11px] text-gray-450 font-sans font-bold">
-                    ({product.title.includes('পিস') || product.title.includes('টি') || product.title.includes('box') ? 'টি' : 'কেজি'} রিকুয়েস্ট করা হচ্ছে)
+                    ({getFormattedUnit(product, language)} রিকুয়েস্ট করা হচ্ছে)
                   </span>
                 </div>
               )}
@@ -936,7 +936,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
                       <div className="mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-between">
                         <span className="text-[12px] sm:text-[13px] font-black text-emerald-800 font-mono">
-                          ৳{pPrice} <span className="text-[10px] font-sans font-bold text-gray-400">/কেজি</span>
+                          ৳{pPrice} <span className="text-[10px] font-sans font-bold text-gray-400">/{getFormattedUnit(p, language)}</span>
                         </span>
                         
                         <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-150 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 px-2 py-1 rounded transition duration-200">
@@ -990,7 +990,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
                       <div className="mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-between">
                         <span className="text-[12px] sm:text-[13px] font-black text-emerald-800 font-mono">
-                          ৳{pPrice} <span className="text-[10px] font-sans font-bold text-gray-400">/কেজি</span>
+                          ৳{pPrice} <span className="text-[10px] font-sans font-bold text-gray-400">/{getFormattedUnit(p, language)}</span>
                         </span>
                         
                         <span className="text-[9px] font-bold text-emerald-850 bg-emerald-50 border border-emerald-150 group-hover:bg-emerald-600 group-hover:text-white group-hover:border-emerald-600 px-2.5 py-1 rounded transition duration-200">

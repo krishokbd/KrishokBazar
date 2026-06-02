@@ -44,6 +44,7 @@ export interface Product {
   isFeatured?: boolean;
   harvestDate?: string;
   farmName?: string;
+  unit?: string; // unit of measure e.g. kg, piece, 500g
 }
 
 export interface OrderItem {
@@ -83,6 +84,9 @@ export interface User {
   nid?: string;
   nidImage?: string;
   email?: string; // kept for backwards compatibility
+  subscriptionStatus?: 'none' | 'silver' | 'gold' | 'platinum' | 'farmer_partner';
+  subscriptionExpiry?: string;
+  gender?: 'male' | 'female';
 }
 
 export interface Review {
@@ -172,4 +176,89 @@ export interface SiteSettings {
   footerPhone: string;
   footerEmail: string;
   footerAddressBn: string;
+  premiumMembershipPriceUSD: number;
+  premiumMembershipPriceBDT: number;
+  premiumFreeDeliveryActive: boolean;
+  premiumReadyToCookOptionActive: boolean;
 }
+
+export interface Offer {
+  id: string;
+  titleBn: string;
+  titleEn: string;
+  descBn: string;
+  descEn: string;
+  ctaBn: string;
+  ctaEn: string;
+  tagBn: string;
+  tagEn: string;
+  image: string;
+  categorySlug?: string;
+  isCustom?: boolean;
+}
+
+export interface MembershipSubmission {
+  id: string;
+  phone: string;
+  txId: string;
+  categorySlug?: string;
+  amount: number;
+  customerName: string;
+  customerPhone: string;
+  status: 'Pending' | 'Approved' | 'Declined';
+  createdAt: string;
+}
+
+export const getFormattedUnit = (product: { unit?: string; title: string }, lang: 'bn' | 'en' = 'bn'): string => {
+  const u = product.unit ? product.unit.toLowerCase().trim() : '';
+  
+  if (lang === 'bn') {
+    if (u === 'kg') return 'কেজি';
+    if (u === 'piece' || u === 'pcs' || u === 'pc') return 'পিস';
+    if (u === 'bundle') return 'আঁটি';
+    if (u === 'dozen') return 'ডজন';
+    if (u === 'pair') return 'জোড়া';
+    if (u === 'box') return 'বক্স';
+    if (u.includes('pcs') || u.includes('pc') || u.includes('টি')) {
+      return u.replace('pcs', 'টি').replace('pc', 'টি').replace(' pcs', 'টি').replace(' pc', 'টি');
+    }
+    
+    // Convert numbers to Bangla
+    let bnUnit = u
+      .replace(/0/g, '০')
+      .replace(/1/g, '১')
+      .replace(/2/g, '২')
+      .replace(/3/g, '৩')
+      .replace(/4/g, '৪')
+      .replace(/5/g, '৫')
+      .replace(/6/g, '৬')
+      .replace(/7/g, '৭')
+      .replace(/8/g, '৮')
+      .replace(/9/g, '৯')
+      .replace('g', 'গ্রাম');
+    if (bnUnit) return bnUnit;
+
+    const t = product.title;
+    if (t.includes('পিস') || t.includes('টি') || t.includes('জোড়া') || t.includes('box')) {
+      return 'পিস';
+    }
+    return 'কেজি';
+  } else {
+    // English
+    if (u === 'kg') return 'kg';
+    if (u === 'piece' || u === 'pcs' || u === 'pc') return 'pc';
+    if (u === 'bundle') return 'bundle';
+    if (u === 'dozen') return 'dozen';
+    if (u === 'pair') return 'pair';
+    if (u === 'box') return 'box';
+    if (u) return u;
+    
+    const t = product.title;
+    if (t.includes('পিস') || t.includes('টি') || t.includes('জোড়া') || t.includes('box')) {
+      return 'pc';
+    }
+    return 'kg';
+  }
+};
+
+

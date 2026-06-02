@@ -38,10 +38,33 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
   onBack, 
   onSelectProduct 
 }) => {
-  const { farmers, products, reviews } = useApp();
+  const { farmers, products, reviews, updateFarmer, currentUser } = useApp();
   const [selectedSubCategory, setSelectedSubCategory] = useState('all');
+  
+  // Inline edit state
+  const [isEditingFarmer, setIsEditingFarmer] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDistrict, setEditDistrict] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editStory, setEditStory] = useState('');
+  const [editRating, setEditRating] = useState(4.5);
+  const [editFarmType, setEditFarmType] = useState('');
+  const [editSalesCount, setEditSalesCount] = useState(10);
 
   const farmer = farmers.find(f => f.id === farmerId);
+
+  // Sync state with farmer values
+  useEffect(() => {
+    if (farmer) {
+      setEditName(farmer.name);
+      setEditDistrict(farmer.district || 'ঢাকা');
+      setEditPhone(farmer.phone);
+      setEditStory(farmer.story || farmer.bio || '');
+      setEditRating(farmer.rating || 4.5);
+      setEditFarmType(farmer.farmType || 'জৈব কৃষি উদ্যোক্তা');
+      setEditSalesCount(farmer.salesCount || 10);
+    }
+  }, [farmer, isEditingFarmer]);
 
   // Auto Scroll to Top on entry
   useEffect(() => {
@@ -79,15 +102,140 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* UPPER NAVIGATION BAR */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
           <button 
+            type="button"
             onClick={onBack}
             className="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-100 px-4 py-2 text-xs font-bold text-gray-700 shadow-sm hover:bg-gray-50 active:scale-98 transition-all cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 text-emerald-600" />
             কৃষকদের তালিকায় ফিরে যান
           </button>
+
+          {/* ADMIN TOGGLE BUTTON */}
+          {(currentUser?.role === 'Admin' || (typeof window !== 'undefined' && window.location.hash === '#admin')) && (
+            <button
+              type="button"
+              onClick={() => setIsEditingFarmer(!isEditingFarmer)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold px-4.5 py-2 text-xs transition-all shadow-md active:scale-98 cursor-pointer"
+            >
+              🛡️ {isEditingFarmer ? 'সংশোধন প্যানেল বন্ধ করুন' : 'প্রোফাইল সংশোধন করুন (Inline Edit)'}
+            </button>
+          )}
         </div>
+
+        {/* INLINE ADMIN EDIT FORM PANEL */}
+        {isEditingFarmer && (
+          <div className="mb-8 p-6 rounded-3xl border border-amber-200 bg-amber-500/5 backdrop-blur-sm shadow-md animate-fade-in">
+            <h3 className="text-sm font-black text-amber-900 uppercase tracking-wider mb-4 flex items-center gap-1.5 border-b border-amber-200 pb-2">
+              <span>🛡️ খামারি প্রোফাইল লাইভ সংশোধন (Immediate Firebase Update)</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div>
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">খামারির নাম (Farmer Name)</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">অঞ্চল / জেলা (District)</label>
+                <input
+                  type="text"
+                  value={editDistrict}
+                  onChange={(e) => setEditDistrict(e.target.value)}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">ফোন নম্বর (Phone Link)</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">খামারের ধরণ (Farm Tag)</label>
+                <input
+                  type="text"
+                  value={editFarmType}
+                  onChange={(e) => setEditFarmType(e.target.value)}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">রেটিং (Rating: 1 - 5)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  max="5"
+                  value={editRating}
+                  onChange={(e) => setEditRating(Number(e.target.value))}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">ফসল সরবরাহ সংখ্যা (Sales Count)</label>
+                <input
+                  type="number"
+                  value={editSalesCount}
+                  onChange={(e) => setEditSalesCount(Number(e.target.value))}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400 font-mono"
+                />
+              </div>
+
+              <div className="md:col-span-3">
+                <label className="block text-[11px] font-extrabold text-amber-950/80 mb-1">খামারির উৎপত্তির গল্প (Story/Bio)</label>
+                <textarea
+                  value={editStory}
+                  onChange={(e) => setEditStory(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs text-gray-850 font-bold focus:outline-amber-400 leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsEditingFarmer(false)}
+                className="rounded-xl border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                বাতিল (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  updateFarmer(farmer.id, {
+                    name: editName,
+                    district: editDistrict,
+                    phone: editPhone,
+                    story: editStory,
+                    bio: editStory,
+                    rating: Number(editRating),
+                    farmType: editFarmType,
+                    salesCount: Number(editSalesCount),
+                  });
+                  setIsEditingFarmer(false);
+                }}
+                className="rounded-xl bg-gradient-to-r from-amber-600 to-amber-750 hover:from-amber-750 hover:to-amber-800 px-5.5 py-2 text-xs font-black text-white hover:scale-102 active:scale-98 transition-all shadow-md cursor-pointer"
+              >
+                💾 পরিবর্তনগুলি সংরক্ষণ করুন (Save Updates)
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* HERO BANNER & AVATAR BLOCK */}
         <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm mb-8">

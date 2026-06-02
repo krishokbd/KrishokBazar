@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Product } from '../types';
+import { Product, getFormattedUnit } from '../types';
 import { useApp } from '../AppContext';
 import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall } from 'lucide-react';
 
@@ -15,7 +15,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, onEditProduct }) => {
-  const { addToCart, currentUser } = useApp();
+  const { addToCart, currentUser, language } = useApp();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -41,18 +41,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-xl hover:border-emerald-250 hover:scale-[1.015] active:scale-[0.995] transition-all cursor-pointer h-full"
     >
       {/* ADMIN CONTROL PANEL HEADER */}
-      {currentUser?.role === 'Admin' && onEditProduct && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 py-2 flex items-center justify-between text-[9px] font-black text-amber-850 uppercase shrink-0">
-          <span>🛡️ ADMIN CONTROL</span>
+      {((currentUser?.role === 'Admin' || (typeof window !== 'undefined' && window.location.hash === '#admin')) && onEditProduct) && (
+        <div className="bg-amber-500/15 border-b border-amber-500/30 px-3 py-2 flex items-center justify-between text-[9px] font-black text-amber-900 uppercase shrink-0">
+          <span className="flex items-center gap-1">🛡️ Inline Edit Active</span>
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onEditProduct(product);
             }}
-            className="rounded bg-amber-500 hover:bg-amber-600 text-white px-2 py-0.5 font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="rounded bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-0.5 font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow"
           >
-            ✏️ EDIT
+            ✏️ সংশোধন করুন
           </button>
         </div>
       )}
@@ -141,7 +141,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
               <span className="text-sm font-black text-emerald-700 font-sans flex items-baseline">
                 ৳{displayPrice}
                 <span className="text-[10px] text-gray-400 font-medium ml-0.5 font-mono">
-                  /{product.images[0].includes('pcs') || product.title.includes('পিস') || product.title.includes('টি') || product.title.includes('জোড়া') || product.title.includes('box') ? 'পিস' : 'কেজি'}
+                  /{getFormattedUnit(product, language)}
                 </span>
               </span>
             </div>

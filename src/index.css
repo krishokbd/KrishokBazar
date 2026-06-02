@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@theme {
+  --color-emerald-50: #f3fbf6;
+  --color-emerald-100: #e2f6e9;
+  --color-emerald-200: #c4ebd0;
+  --color-emerald-300: #96dbaa;
+  --color-emerald-400: #5ebb7b;
+  --color-emerald-500: #44ad64; /* A lighter, fresher, more energetic light organic green instead of deep teal-green */
+  --color-emerald-600: #2d8e4c;
+  --color-emerald-750: #25773f;
+  --color-emerald-800: #1e6032;
+  --color-emerald-850: #19512b;
+  --color-emerald-900: #154323;
+  --color-emerald-950: #0e2d17;
+}

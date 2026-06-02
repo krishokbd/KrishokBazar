@@ -25,6 +25,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [image3, setImage3] = useState('');
   const [isReadyToCook, setIsReadyToCook] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [unit, setUnit] = useState('kg');
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -45,6 +46,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setImage3(product.images[2] || '');
       setIsReadyToCook(!!product.isReadyToCook);
       setIsFeatured(!!product.isFeatured);
+      setUnit(product.unit || 'kg');
       setConfirmDelete(false);
       setSuccessAnimation(false);
     }
@@ -89,6 +91,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       stock: Number(stock),
       isReadyToCook,
       isFeatured,
+      unit,
       images: [
         image1 || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500',
         image2 || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500',
@@ -205,7 +208,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
             </div>
 
             {/* Category, Stock, Features Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans">ক্যাটাগরি নির্ধারণ (Category)</label>
                 <select
@@ -227,15 +230,27 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans font-mono">স্টক পরিমাণ (Stock / Kg or Pcs)</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans font-mono">স্টক পরিমাণ (Stock)</label>
                 <input
                   type="number"
                   required
                   min="0"
                   value={stock}
                   onChange={(e) => setStock(Number(e.target.value))}
-                  placeholder="যেমন: ৫০ কেজি"
+                  placeholder="যেমন: ৫০"
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs outline-none focus:border-emerald-500 shadow-sm text-gray-700 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans">পরিমাপের একক (Unit)</label>
+                <input
+                  type="text"
+                  required
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder="kg, piece, dozen, 500g"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs outline-none focus:border-emerald-500 shadow-sm text-gray-700 font-bold font-sans"
                 />
               </div>
 

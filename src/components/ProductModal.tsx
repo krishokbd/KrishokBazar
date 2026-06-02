@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Product, Farmer } from '../types';
+import { Product, Farmer, getFormattedUnit } from '../types';
 import { useApp } from '../AppContext';
 import { X, Star, ShoppingCart, ShieldCheck, Phone, MapPin, Store, HelpCircle } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
@@ -17,7 +17,7 @@ interface ProductModalProps {
 }
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, onEditProduct }) => {
-  const { addToCart, farmers, currentUser } = useApp();
+  const { addToCart, farmers, currentUser, language } = useApp();
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
 
@@ -152,7 +152,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             <span className={`font-semibold ${
               product.stock > 10 ? 'text-emerald-600' : 'text-orange-600 animate-pulse'
             }`}>
-              {product.stock > 0 ? `স্টক আছে: ${product.stock} কেজি` : 'স্টক শেষ'}
+              {product.stock > 0 ? `${language === 'bn' ? 'স্টক আছে' : 'In Stock'}: ${product.stock} ${getFormattedUnit(product, language)}` : (language === 'bn' ? 'স্টক শেষ' : 'Out of stock')}
             </span>
 
             {product.harvestDate && (
@@ -176,7 +176,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                   ৳{originalPrice}
                 </span>
               )}
-              <span className="text-xs text-gray-400 font-medium">/কেজি</span>
+              <span className="text-xs text-gray-400 font-medium">/{getFormattedUnit(product, language)}</span>
             </div>
             <p className="mt-1 text-[10px] text-gray-400 leading-none">
               *কোনো কমিশন বা ফড়িয়া খরচ নেই, সরাসরি মাঠে প্রাপ্ত মূল্য

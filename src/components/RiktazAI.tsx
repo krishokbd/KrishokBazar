@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../AppContext';
+import { ProductCard } from './ProductCard';
 import { 
   MessageSquare, Sparkles, X, Send, Bot, HelpCircle, 
   Apple, DollarSign, Calendar, ChefHat, Type, ChevronLeft, ArrowRight,
-  Mic, MicOff
+  Mic, MicOff, Maximize2, Minimize2
 } from 'lucide-react';
 
 interface Message {
@@ -13,9 +14,15 @@ interface Message {
   timestamp: Date;
 }
 
-export const RiktazAI: React.FC = () => {
-  const { currentUser } = useApp();
+interface RiktazAIProps {
+  setView?: (view: any) => void;
+  setSelectedProductId?: (id: string | null) => void;
+}
+
+export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductId }) => {
+  const { currentUser, products } = useApp();
   const [isOpen, setIsOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'suggest_title' | 'write_description' | 'suggest_price' | 'grocery_estimation' | 'healthy_suggestions'>('chat');
   const [suggestionTab, setSuggestionTab] = useState<'buyer' | 'farmer'>('buyer');
   
@@ -388,12 +395,9 @@ export const RiktazAI: React.FC = () => {
       setDietNote('');
     }
   };
-
-  // Convert double-asterisk Markdown bold into React HTML
   const renderMessageText = (text: string) => {
     return text.split('\n').map((line, blockIdx) => {
       // Direct translation for bold syntax (**word**)
-      let replaced = line;
       let segments: React.ReactNode[] = [];
       let lastIndex = 0;
       const boldRegex = /\*\*(.*?)\*\*/g;
@@ -420,7 +424,10 @@ export const RiktazAI: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-24 right-5 sm:right-6 z-40 select-none">
+    <div className={isFullscreen 
+      ? "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm select-none p-4 font-sans"
+      : "fixed bottom-24 right-5 sm:right-6 z-40 select-none font-sans"
+    }>
       
       {/* 1. FLOATING CHAT TRIGGER MODULE */}
       {!isOpen && (
@@ -439,54 +446,63 @@ export const RiktazAI: React.FC = () => {
       {/* 2. CHAT POPUP LAYOUT BOX */}
       {isOpen && (
         <div 
-          className="w-full max-w-[340px] sm:w-[420px] sm:max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col max-h-[80vh] min-h-[480px]"
+          className={isFullscreen
+            ? "w-full max-w-5xl h-[85vh] rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col transition-all duration-300"
+            : "w-full max-w-[340px] sm:w-[420px] sm:max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col max-h-[80vh] min-h-[480px] transition-all duration-300"
+          }
           style={{ boxShadow: '0 25px 50px -12px rgba(6, 78, 59, 0.25)' }}
         >
           {/* Header Bar */}
-          <div className="bg-gradient-to-r from-emerald-800 to-emerald-650 px-5 py-4 text-white flex items-center justify-between">
+          <div className="bg-gradient-to-r from-emerald-800 to-emerald-650 px-5 py-4 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="rounded-xl bg-white/10 p-1.5 border border-white/15">
                 <Bot className="h-5 w-5 text-emerald-150 animate-bounce" />
               </div>
               <div>
-                <h4 className="text-sm font-black tracking-wide font-sans flex items-center gap-1">
+                <h4 className="text-sm font-black tracking-wide flex items-center gap-1">
                   Riktaz AI
                   <span className="text-[9px] bg-emerald-700/60 text-emerald-50 font-semibold px-1 rounded">সহকারী</span>
                 </h4>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                  <p className="text-[10px] text-emerald-100/90 font-medium">সম্পূর্ণ সচল • নিরাপদ এগ্রি-হেল্পার</p>
+                  <p className="text-[10px] text-emerald-100/90 font-medium font-sans">সম্পূর্ণ সচল • নিরাপদ এগ্রি-হেল্পার</p>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={toggleGlobalVoiceActive}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide uppercase transition-all shadow-sm cursor-pointer border ${
-                  globalVoiceActive
-                    ? 'bg-rose-600 border-rose-400 text-white animate-pulse'
-                    : 'bg-emerald-750 border-emerald-500/50 text-emerald-100 hover:text-white'
+                className={`rounded-full p-1.5 text-white/95 hover:bg-white/20 transition-all cursor-pointer flex items-center justify-center ${
+                  globalVoiceActive ? 'bg-red-500 border border-red-200 animate-pulse' : 'bg-white/10'
                 }`}
-                title="গ্লোবাল ভয়েস-টু-টেক্সট অন/অফ করুন"
+                title={globalVoiceActive ? "অটো ভয়েস ইনপুট বন্ধ করুন" : "অটো ভয়েস ইনপুট চালু করুন (যেকোনো ইনপুট ফিল্ডে সরাসরি কণ্ঠস্বরে লিখতে)"}
               >
                 {globalVoiceActive ? (
-                  <>
-                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
-                    <span>ভয়েস অন</span>
-                  </>
+                  <MicOff className="h-4 w-4" />
                 ) : (
-                  <>
-                    <Mic className="h-3 w-3 animate-pulse" />
-                    <span>ভয়েস অফ</span>
-                  </>
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
+
+              {/* MAXIMIZE / MINIMIZE BUTTON AS REQUESTED */}
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="rounded-full bg-white/10 p-1.5 text-white/95 hover:bg-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                title={isFullscreen ? "ছোট করুন (Minimize 🗕)" : "বড় করুন (Maximize 🗖)"}
+              >
+                {isFullscreen ? (
+                  <span className="text-sm font-bold select-none leading-none px-0.5">🗕</span>
+                ) : (
+                  <span className="text-sm font-bold select-none leading-none px-0.5">🗖</span>
                 )}
               </button>
 
               <button 
                 onClick={() => setIsOpen(false)}
-                className="rounded-full bg-black/10 p-1 text-white/95 hover:bg-black/20 cursor-pointer"
+                className="rounded-full bg-black/10 p-1.5 text-white/95 hover:bg-black/20 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -494,7 +510,7 @@ export const RiktazAI: React.FC = () => {
           </div>
 
           {/* Quick Action Selection Tabs */}
-          <div className="flex border-b border-gray-100 bg-gray-50/50 text-[10px] sm:text-xs overflow-x-auto whitespace-nowrap scrollbar-none">
+          <div className="flex border-b border-gray-100 bg-gray-50/50 text-[10px] sm:text-xs overflow-x-auto whitespace-nowrap scrollbar-none shrink-0">
             <button
               onClick={() => setActiveTab('chat')}
               className={`px-4 py-2.5 font-extrabold border-b-2 transition-all cursor-pointer ${
@@ -551,30 +567,93 @@ export const RiktazAI: React.FC = () => {
             {/* TAB 1: INTERACTIVE CHAT PORTAL */}
             {activeTab === 'chat' && (
               <div className="space-y-4">
-                {messages.map((m) => (
-                  <div 
-                    key={m.id} 
-                    className={`flex gap-2.5 max-w-[85%] ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
-                  >
-                    {m.sender === 'assistant' && (
-                      <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0 mt-0.5 text-xs">
-                        R
-                      </div>
-                    )}
+                {messages.map((m) => {
+                  const isAssistant = m.sender === 'assistant';
+                  
+                  // Extract product attachment IDs if there are special tags in m.text
+                  const foundProductIds: string[] = [];
+                  const tagRegex = /\[PRODUCT:([a-zA-Z0-9_-]+)\]/g;
+                  let match;
+                  while ((match = tagRegex.exec(m.text)) !== null) {
+                    foundProductIds.push(match[1]);
+                  }
+
+                  // Resolve from product list matching tags
+                  let attachedProducts = products.filter(p => foundProductIds.includes(p.id));
+                  
+                  // Fallback match based on keywords for organic interactions
+                  if (isAssistant && attachedProducts.length === 0) {
+                    const lowercaseText = m.text.toLowerCase();
+                    products.forEach(p => {
+                      const titleLower = p.title.toLowerCase();
+                      if (lowercaseText.includes(titleLower) || titleLower.split(' ').some(word => word.length > 2 && lowercaseText.includes(word))) {
+                        if (!attachedProducts.some(sp => sp.id === p.id)) {
+                          attachedProducts.push(p);
+                        }
+                      }
+                    });
+                    attachedProducts = attachedProducts.slice(0, 2); // limit to 2 for space optimization
+                  }
+
+                  // Clear raw tag tokens from visual view
+                  const cleanText = m.text.replace(/\[PRODUCT:([a-zA-Z0-9_-]+)\]/g, '');
+
+                  const handleProductClick = (prod: any) => {
+                    if (setView && setSelectedProductId) {
+                      setSelectedProductId(prod.id);
+                      setView('product-details');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setIsOpen(false); // hide chatbot so they can see dynamic target details
+                    }
+                  };
+
+                  return (
                     <div 
-                      className={`rounded-2xl px-4 py-3 text-xs sm:text-sm shadow-sm ${
-                        m.sender === 'user' 
-                          ? 'bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-tr-none' 
-                          : 'bg-white border border-emerald-50 text-gray-700 rounded-tl-none'
-                      }`}
+                      key={m.id} 
+                      className={`flex gap-2.5 max-w-[85%] ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
                     >
-                      {renderMessageText(m.text)}
-                      <p className={`text-[8px] mt-1.5 text-right font-mono ${m.sender === 'user' ? 'text-white/60' : 'text-gray-400'}`}>
-                        {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                      {m.sender === 'assistant' && (
+                        <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0 mt-0.5 text-xs">
+                          R
+                        </div>
+                      )}
+                      <div 
+                        className={`rounded-2xl px-4 py-3 text-xs sm:text-sm shadow-sm flex flex-col ${
+                          m.sender === 'user' 
+                            ? 'bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-tr-none' 
+                            : 'bg-white border border-emerald-50 text-gray-700 rounded-tl-none'
+                        }`}
+                      >
+                        <div>
+                          {renderMessageText(cleanText)}
+                        </div>
+
+                        {/* RENDER ATTACHED PRODUCT CARDS TO SUPPORT ONE-CLICK ADD TO CART DIRECTLY IN CHAT */}
+                        {isAssistant && attachedProducts.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-dashed border-emerald-100 space-y-2 select-text text-left">
+                            <p className="text-[9px] font-black tracking-wider text-emerald-800 uppercase flex items-center gap-1">
+                              <span>🛒</span> সম্পর্কিত পণ্য (তাত্ক্ষণিক বুক করুন বা কার্ট করুন):
+                            </p>
+                            <div className="grid grid-cols-1 gap-2.5 w-full min-w-[200px] sm:min-w-[260px]">
+                              {attachedProducts.map(prod => (
+                                <div key={prod.id} className="scale-95 origin-left text-left">
+                                  <ProductCard 
+                                    product={prod} 
+                                    onOpenQuickView={handleProductClick} 
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <p className={`text-[8px] mt-1.5 text-right font-mono ${m.sender === 'user' ? 'text-white/60' : 'text-gray-400'}`}>
+                          {m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 
                 {isLoading && (
                   <div className="flex gap-2.5 max-w-[85%]">
@@ -1049,31 +1128,24 @@ export const RiktazAI: React.FC = () => {
                     <>
                       <button
                         type="button"
-                        onClick={() => handleSendCustomMessage("আজকের কম্বো বাস্কেটে কী আছে?")}
+                        onClick={() => handleSendCustomMessage("পণ্যের নাম ও দামের তালিকা")}
                         className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
                       >
-                        আজকের কম্বো বাস্কেটে কী আছে?
+                        📊 পণ্যের নাম ও দামের তালিকা
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleSendCustomMessage("আমার অর্ডার ট্র্যাক করব কীভাবে?")}
+                        onClick={() => handleSendCustomMessage("বেস্ট সেলার (Best Seller) পণ্য কোনটি?")}
                         className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
                       >
-                        আমার অর্ডার ট্র্যাক করব কীভাবে?
+                        🔥 বেস্ট সেলার পণ্য কোনটি?
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleSendCustomMessage("বিকাশ/নগদে পেমেন্ট কীভাবে করব?")}
-                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
+                        onClick={() => handleSendCustomMessage("৩ জনের ফ্যামিলির ১ সপ্তাহের বাজার ও খরচ কত?")}
+                        className="text-left px-2.5 py-1.5 bg-col-2 gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] col-span-2 leading-snug tracking-tight"
                       >
-                        বিকাশ/নগদে পেমেন্ট কীভাবে করব?
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSendCustomMessage("সাপ্তাহিক সবজি সাবস্ক্রিপশন কী?")}
-                        className="text-left px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-100/60 rounded-xl transition-all font-bold hover:scale-[1.01] active:scale-[0.98] cursor-pointer text-[10px] sm:text-[11px] leading-snug tracking-tight"
-                      >
-                        সাপ্তাহিক সবজি সাবস্ক্রিপশন কী?
+                        🧺 ৩ জনের ফ্যামিলির ১ সপ্তাহের বাজার ও খরচ কত?
                       </button>
                     </>
                   ) : (

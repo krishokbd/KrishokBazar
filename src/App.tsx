@@ -21,6 +21,10 @@ import { OrderHistory } from './components/OrderHistory';
 import { RiktazAI } from './components/RiktazAI';
 import { FloatingSocials } from './components/FloatingSocials';
 import { AppEntryFlow } from './components/AppEntryFlow';
+import { SubscriptionModal } from './components/SubscriptionModal';
+import { VerifiedFarmersView } from './components/VerifiedFarmersView';
+import { BlogView } from './components/BlogView';
+import { ScrollingBanners } from './components/ScrollingBanners';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
   ShieldCheck, 
@@ -141,7 +145,7 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   // Route state
-  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story'>('home');
+  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog'>('home');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedFarmerStoreId, setSelectedFarmerStoreId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -152,6 +156,8 @@ const AppContent: React.FC = () => {
   // Modals state
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [subscriptionDefaultRole, setSubscriptionDefaultRole] = useState<'customer' | 'farmer'>('customer');
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [activeFarmerProfile, setActiveFarmerProfile] = useState<Farmer | null>(null);
@@ -569,6 +575,34 @@ const AppContent: React.FC = () => {
         setSearchQuery={setSearchQuery}
       />
 
+      {/* UNIQUE SUBSCRIPTION PROMO & HERO ANNOUNCEMENT BANNER */}
+      <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-600 text-white py-2 px-4 shadow-sm text-xs relative overflow-hidden select-none">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4">
+          <div className="flex items-center gap-2">
+            <span className="bg-white/20 text-white font-black text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-md shrink-0 block">
+              👑 PREMIUM & PARTNER LAUNCH
+            </span>
+            <p className="text-[11px] font-bold text-amber-50 tracking-tight leading-snug">
+              উপভোগ করুন কাটা-ধোয়া <span className="underline decoration-yellow-300 decoration-2">রেডি-টু-কুক সবজি</span> ও ম্যারিনেট করা মাংসের ফ্রি হোম ডেলিভারি! কৃষকদের জন্য থাকছে বিশেষ সবুজ ক্রেস্ট পার্টনারশিপ।
+            </p>
+          </div>
+          <div className="flex bg-white/10 rounded-lg p-0.5 border border-white/20 text-[10px] items-center gap-1 shrink-0">
+            <button
+              onClick={() => { setIsSubscriptionOpen(true); setSubscriptionDefaultRole('customer'); }}
+              className="px-2.5 py-1 bg-white text-emerald-950 font-black rounded-md hover:bg-emerald-50 transition-all cursor-pointer"
+            >
+              মেম্বারশিপ প্ল্যান ও সুযোগ-সুবিধা জানুন 🛍️
+            </button>
+            <button
+              onClick={() => { setIsSubscriptionOpen(true); setSubscriptionDefaultRole('farmer'); }}
+              className="px-2.5 py-1 text-white hover:bg-white/10 rounded-md font-black transition-all cursor-pointer"
+            >
+              কৃষক ভেরিফিকেশন স্পনসর (৮০% সেলস বৃদ্ধি) 🚜
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* CHANNELS ALERT */}
       {successOrderId && (
         <div className="bg-emerald-600 text-white py-3.5 px-4 shadow-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-2">
@@ -627,6 +661,29 @@ const AppContent: React.FC = () => {
               setView('product-details');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+          />
+        )}
+
+        {/* STANDALONE VERIFIED FARMERS LIST PAGE */}
+        {currentView === 'farmers' && (
+          <VerifiedFarmersView 
+            onBack={() => setView('home')}
+            onSelectFarmer={(farmerId) => {
+              setSelectedFarmerStoreId(farmerId);
+              setView('farmer-store');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenSubscription={(role) => {
+              setSubscriptionDefaultRole(role);
+              setIsSubscriptionOpen(true);
+            }}
+          />
+        )}
+
+        {/* STANDALONE PUBLIC BLOG DIRECTORY */}
+        {currentView === 'blog' && (
+          <BlogView 
+            onBack={() => setView('home')}
           />
         )}
         
@@ -1126,6 +1183,12 @@ const AppContent: React.FC = () => {
       </footer>
 
       {/* OVERLAY ELEMENTS */}
+      <SubscriptionModal 
+        isOpen={isSubscriptionOpen}
+        onClose={() => setIsSubscriptionOpen(false)}
+        defaultRole={subscriptionDefaultRole}
+      />
+
       <ProductModal 
         product={quickViewProduct} 
         isOpen={!!quickViewProduct} 
@@ -1150,8 +1213,9 @@ const AppContent: React.FC = () => {
         onOrderSuccess={handleOrderSuccess}
       />
 
+      <ScrollingBanners onOpenSubscription={() => setIsSubscriptionOpen(true)} />
       <FloatingSocials />
-      <RiktazAI />
+      <RiktazAI setView={setView} setSelectedProductId={setSelectedProductId} />
     </div>
   );
 };

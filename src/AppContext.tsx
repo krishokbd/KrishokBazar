@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings } from './types';
+import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission } from './types';
 import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
@@ -37,7 +37,7 @@ interface AppContextType {
   login: (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string) => { success: boolean; message: string; subStatus?: string };
   logout: () => void;
   updateProfile: (name: string, phone: string, address: string) => void;
-  registerCustomer: (name: string, phone: string, password?: string, address?: string) => { success: boolean; message: string };
+  registerCustomer: (name: string, phone: string, password?: string, address?: string, gender?: 'male' | 'female') => { success: boolean; message: string };
   registerFarmer: (name: string, phone: string, password: string, district: string, address: string, nidNumber: string, nidImage: string, gender: 'male' | 'female') => { success: boolean; message: string };
 
   // Cart actions
@@ -83,6 +83,21 @@ interface AppContextType {
 
   // Seed / Reset databases
   resetDemoData: () => Promise<void>;
+  language: 'bn' | 'en';
+  setLanguage: (lang: 'bn' | 'en') => void;
+  toggleLanguage: () => void;
+
+  // OFFERS & SUBSCRIPTIONS STUFF
+  offers: Offer[];
+  membershipSubmissions: MembershipSubmission[];
+  addOffer: (offerData: Omit<Offer, 'id'>) => void;
+  editOffer: (id: string, offerData: Partial<Offer>) => void;
+  deleteOffer: (id: string) => void;
+  submitMembershipRequest: (phone: string, txId: string, categorySlug?: string, amount?: number) => void;
+  approveMembershipRequest: (submissionId: string) => void;
+  rejectMembershipRequest: (submissionId: string) => void;
+  simulateEmailSignUpClick: () => void;
+  approvePaymentForUser: (userId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -130,7 +145,66 @@ const SEED_WITHDRAWALS: WithdrawalRequest[] = [
   }
 ];
 
+const DEFAULT_OFFERS: Offer[] = [
+  {
+    id: 'offer-ready-to-cook',
+    titleBn: '🍳 রেডি-টু-কুক (Ready-to-Cook) প্রিমিয়াম সুবিধা!',
+    titleEn: '🍳 Premium Ready-to-Cook Benefits!',
+    descBn: 'কর্মব্যস্ত জীবনের জন্য প্রাক-ধৌত ও হাইজেনিক উপায়ে কাটা সবজি এবং প্রস্তুত মশলা ডিরেক্ট হোম ডেলিভারি পেতে আমাদের প্রিমিয়াম মেম্বারশিপে যোগ দিন।',
+    descEn: 'Join our premium membership for home-delivery of pre-washed, pre-cut hygienic vegetables and meat items matching your recipe size!',
+    ctaBn: 'সদস্য হতে সাবস্ক্রাইব করুন 👑',
+    ctaEn: 'Subscribe to become a member 👑',
+    tagBn: 'মেডিকেল গ্রেড বিশুদ্ধতা',
+    tagEn: 'Hygienic standard',
+    image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=500',
+    categorySlug: 'ready-to-cook'
+  },
+  {
+    id: 'offer-enjoy',
+    titleBn: '🏷️ স্পেশাল মেম্বারশিপ ও ফ্যামিলি বাস্কেট অফার!',
+    titleEn: '🏷️ Weekly Premium Enjoy Discount Offer!',
+    descBn: 'শুধুমাত্র একটি সাবস্ক্রিপশনেই পেয়ে যান ৭০% পর্যন্ত ডেলিভারি ছাড় এবং ফ্যামিলি কম্বো বাস্কেটে আকর্ষণীয় ক্যাশব্যাক! সাশ্রয় করুন প্রতি মাসে ৫০০০+ টাকা।',
+    descEn: 'Get up to 70% delivery discounts and awesome cashbacks on all family combo baskets! Save over 5000+ BDT cash money every month.',
+    ctaBn: 'সাশ্রয়ী প্ল্যান দেখুন 🛒',
+    ctaEn: 'Explore Budget Plans 🛒',
+    tagBn: 'সীমিত সময়ের অফার',
+    tagEn: 'Limited Offer',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500',
+    categorySlug: 'organic'
+  },
+  {
+    id: 'offer-do-good',
+    titleBn: '🚜 কৃষক ও সরাসরি খামারের সেরা সুবিধার মেম্বারশিপ!',
+    titleEn: '🚜 Support Hardworking Farmers Direct Deal!',
+    descBn: 'দালাল ও সিন্ডিকেট মাফিয়া হটিয়ে সরাসরি তৃণমূল ভেরিফাইড কৃষকদের সাথে যোগাযোগ করুণ। কৃষক বাঁচাতে ও বিষমুক্ত খাদ্য পেতে সহায়ক হোন।',
+    descEn: 'Establish immediate direct connection with local growers and support ethical trade while securing non-toxic organic foods.',
+    ctaBn: 'আজই প্রিমিয়াম মেম্বার হোন 🤝',
+    ctaEn: 'Become a Premium Member 🤝',
+    tagBn: 'সামাজিক আন্দোলন',
+    tagEn: 'Social Movement',
+    image: 'https://images.unsplash.com/photo-1592312040834-bb0d621713e1?w=500',
+    categorySlug: 'vegetables'
+  }
+];
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
+    return (localStorage.getItem('kb_language') as 'bn' | 'en') || 'bn';
+  });
+
+  const toggleLanguage = () => {
+    setLanguageState(prev => {
+      const next = prev === 'bn' ? 'en' : 'bn';
+      localStorage.setItem('kb_language', next);
+      return next;
+    });
+  };
+
+  const setLanguage = (lang: 'bn' | 'en') => {
+    setLanguageState(lang);
+    localStorage.setItem('kb_language', lang);
+  };
+
   const [farmers, setFarmers] = useState<Farmer[]>(() => {
     const saved = localStorage.getItem('kb_farmers');
     return saved ? JSON.parse(saved) : demoFarmers;
@@ -174,6 +248,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
     const saved = localStorage.getItem('kb_blogs');
     return saved ? JSON.parse(saved) : demoBlogs;
+  });
+
+  const [offers, setOffers] = useState<Offer[]>(() => {
+    const saved = localStorage.getItem('kb_offers');
+    return saved ? JSON.parse(saved) : DEFAULT_OFFERS;
+  });
+
+  const [membershipSubmissions, setMembershipSubmissions] = useState<MembershipSubmission[]>(() => {
+    const saved = localStorage.getItem('kb_membership_submissions');
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Default orders block
@@ -308,6 +392,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('kb_banners_cms', JSON.stringify(banners));
   }, [banners]);
+
+  useEffect(() => {
+    localStorage.setItem('kb_offers', JSON.stringify(offers));
+  }, [offers]);
+
+  useEffect(() => {
+    localStorage.setItem('kb_membership_submissions', JSON.stringify(membershipSubmissions));
+  }, [membershipSubmissions]);
 
   useEffect(() => {
     if (currentUser) {
@@ -633,19 +725,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const registerCustomer = (name: string, phone: string, password?: string, address?: string) => {
+  const registerCustomer = (name: string, phone: string, password?: string, address?: string, gender?: 'male' | 'female') => {
     const existing = registeredCustomers.find(c => c.phone === phone);
     if (existing) {
       return { success: false, message: 'এই ফোন নম্বরটি ইতোমধ্যে নিবন্ধিত!' };
     }
+
+    const finalName = name.trim() || `ক্রেতা-${phone.slice(-4)}`;
 
     const newCust: User = {
       id: `customer-${Date.now()}`,
       phone,
       password: password || 'Ajzakir@2020',
       role: 'Customer',
-      name,
-      address: address || 'ঢাকা, বাংলাদেশ'
+      name: finalName,
+      address: address || 'ঢাকা, বাংলাদেশ',
+      gender
     };
 
     if (isFirebaseConfigured && db) {
@@ -856,6 +951,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setRegisteredCustomers(prev => prev.map(c => c.id === updatedUser.id ? updatedUser : c));
       }
     }
+
+    // Call server API proxy to immediately email order alert details to Admin
+    fetch('/api/send-order-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ order: newOrder })
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("[AppContext ORDER EMAIL SENT]:", data.message);
+      })
+      .catch(err => {
+        console.error("Order email alert error:", err);
+      });
 
     clearCart();
     return newOrder;
@@ -1333,6 +1444,113 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // OFFERS & SUBSCRIPTIONS METHODS
+  const addOffer = (offerData: Omit<Offer, 'id'>) => {
+    const newOffer: Offer = {
+      ...offerData,
+      id: `offer-${Date.now()}`,
+      isCustom: true
+    };
+    setOffers(prev => [...prev, newOffer]);
+  };
+
+  const editOffer = (id: string, offerData: Partial<Offer>) => {
+    setOffers(prev => prev.map(o => o.id === id ? { ...o, ...offerData } : o));
+  };
+
+  const deleteOffer = (id: string) => {
+    setOffers(prev => prev.filter(o => o.id !== id));
+  };
+
+  const submitMembershipRequest = (phone: string, txId: string, categorySlug?: string, amount?: number) => {
+    const newSub: MembershipSubmission = {
+      id: `sub-${Date.now()}`,
+      phone,
+      txId,
+      categorySlug,
+      amount: amount || siteSettings.premiumMembershipPriceBDT || 600,
+      customerName: currentUser?.name || 'Muikta Begum',
+      customerPhone: currentUser?.phone || '01931355398',
+      status: 'Pending',
+      createdAt: new Date().toISOString()
+    };
+    setMembershipSubmissions(prev => [newSub, ...prev]);
+    console.log(`[EMAIL NOTIFICATION SENT] To muiktabegum@gmail.com - New bKash Subscription Request from ${newSub.customerName} (${newSub.customerPhone}). TxID: ${txId}. Category: ${categorySlug || 'Global'}`);
+  };
+
+  const approveMembershipRequest = (submissionId: string) => {
+    const sub = membershipSubmissions.find(s => s.id === submissionId);
+    if (!sub) return;
+
+    // Mark submission approved
+    setMembershipSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, status: 'Approved' } : s));
+
+    // Upgrade customer premium status
+    setRegisteredCustomers(prev => prev.map(cust => {
+      if (cust.phone === sub.customerPhone) {
+        return {
+          ...cust,
+          status: 'Approved',
+          subscriptionStatus: 'silver'
+        };
+      }
+      return cust;
+    }));
+
+    if (currentUser && currentUser.phone === sub.customerPhone) {
+      setCurrentUser(prev => prev ? {
+        ...prev,
+        status: 'Approved',
+        subscriptionStatus: 'silver'
+      } : null);
+    }
+  };
+
+  const rejectMembershipRequest = (submissionId: string) => {
+    setMembershipSubmissions(prev => prev.map(s => s.id === submissionId ? { ...s, status: 'Declined' } : s));
+  };
+
+  const simulateEmailSignUpClick = () => {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const newPendingCust: User = {
+      id: `lead-user-${randomSuffix}`,
+      phone: `017${randomSuffix}4321`,
+      password: 'Ajzakir@2020',
+      role: 'Customer',
+      name: `Tasnima Chowdhury (Email Lead #${randomSuffix})`,
+      address: `Road 4, Dhanmondi, Dhaka`,
+      status: 'Pending',
+      subscriptionStatus: 'none',
+      gender: 'female'
+    };
+    setRegisteredCustomers(prev => {
+      if (prev.some(c => c.phone === newPendingCust.phone)) return prev;
+      return [...prev, newPendingCust];
+    });
+    console.log(`[SIMULATED EMAIL CLICK] Registered user ${newPendingCust.name} in Admin with pending status.`);
+  };
+
+  const approvePaymentForUser = (userId: string) => {
+    setRegisteredCustomers(prev => prev.map(cust => {
+      if (cust.id === userId) {
+        return {
+          ...cust,
+          status: 'Approved',
+          subscriptionStatus: 'silver'
+        };
+      }
+      return cust;
+    }));
+
+    if (currentUser && currentUser.id === userId) {
+      setCurrentUser(prev => prev ? {
+        ...prev,
+        status: 'Approved',
+        subscriptionStatus: 'silver'
+      } : null);
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       farmers,
@@ -1378,7 +1596,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addReview,
       deleteReview,
       getNidDetails,
-      resetDemoData
+      resetDemoData,
+      language,
+      setLanguage,
+      toggleLanguage,
+      offers,
+      membershipSubmissions,
+      addOffer,
+      editOffer,
+      deleteOffer,
+      submitMembershipRequest,
+      approveMembershipRequest,
+      rejectMembershipRequest,
+      simulateEmailSignUpClick,
+      approvePaymentForUser
     }}>
       {children}
     </AppContext.Provider>

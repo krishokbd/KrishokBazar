@@ -40,8 +40,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   // Customer registration state
   const [custName, setCustName] = useState('');
   const [custPhone, setCustPhone] = useState('');
-  const [custPassword, setCustPassword] = useState('Ajzakir@2020');
+  const [custPassword, setCustPassword] = useState('');
   const [custAddress, setCustAddress] = useState('');
+  const [custGender, setCustGender] = useState<'male' | 'female' | null>(null);
 
   // Farmer registration state
   const [farmerName, setFarmerName] = useState('');
@@ -84,8 +85,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (!custName || !custPhone || !custPassword || !custAddress) {
-      setErrorMsg('অনুগ্রহ করে সবগুলো ঘর পূরণ করুন।');
+    if (!custPhone || !custPassword || !custAddress) {
+      setErrorMsg('অনুগ্রহ করে সবগুলো প্রয়োজনীয় ঘর পূরণ করুন (মোবাইল নম্বর, পাসওয়ার্ড এবং ঠিকানা)।');
       return;
     }
 
@@ -94,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
       return;
     }
 
-    const res = registerCustomer(custName, custPhone, custPassword, custAddress);
+    const res = registerCustomer(custName, custPhone, custPassword, custAddress, custGender || undefined);
     if (res.success) {
       setSuccessMsg(res.message);
       setTimeout(() => {
@@ -104,6 +105,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
         setCustPhone('');
         setCustPassword('');
         setCustAddress('');
+        setCustGender(null);
         setSuccessMsg('');
       }, 1500);
     } else {
@@ -343,13 +345,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
             <form onSubmit={handleCustomerRegSubmit} className="space-y-4">
               
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans">গ্রাহকের পূর্ণ নাম (Full Name)</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans">গ্রাহকের পূর্ণ নাম (Full Name - ঐচ্ছিক)</label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    required
-                    placeholder="যেমন: মুক্তা বেগম"
+                    placeholder="যেমন: মুক্তা বেগম (ঐচ্ছিক)"
                     value={custName}
                     onChange={(e) => setCustName(e.target.value)}
                     className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-700 outline-none focus:border-emerald-500"
@@ -400,6 +401,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
                     onChange={(e) => setCustAddress(e.target.value)}
                     className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-700 outline-none focus:border-emerald-500"
                   />
+                </div>
+              </div>
+
+              {/* Customer Gender selector (optional) */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1.5">নারী/পুরুষ নির্বাচন (ঐচ্ছিক):</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCustGender(custGender === 'male' ? null : 'male')}
+                    className={`rounded-xl py-2 text-xs font-bold border transition-all cursor-pointer text-center ${
+                      custGender === 'male' 
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    🧔 পুরুষ গ্রাহক (Male)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustGender(custGender === 'female' ? null : 'female')}
+                    className={`rounded-xl py-2 text-xs font-bold border transition-all cursor-pointer text-center ${
+                      custGender === 'female' 
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    👩 নারী গ্রাহক (Female)
+                  </button>
                 </div>
               </div>
 

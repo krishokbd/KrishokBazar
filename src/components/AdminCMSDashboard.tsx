@@ -1015,19 +1015,9 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminProdIsVerified(p.isVerified);
                                 window.scrollTo({ top: 180, behavior: 'smooth' });
                               }}
-                              className="px-2 py-1 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded text-[10px] font-bold cursor-pointer"
+                              className="px-1.5 py-0.5 bg-slate-50 border border-emerald-100 hover:bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold cursor-pointer transition duration-150"
                             >
                               Edit
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (confirm(`Remove product catalog item "${p.title}"?`)) {
-                                  deleteProduct(p.id);
-                                }
-                              }}
-                              className="px-2 py-1 border border-gray-200 hover:bg-red-50 text-red-500 rounded text-[10px] font-bold cursor-pointer"
-                            >
-                              Delete
                             </button>
                           </div>
                         </td>
