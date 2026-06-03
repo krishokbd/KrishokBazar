@@ -1470,11 +1470,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       categorySlug,
       amount: amount || siteSettings.premiumMembershipPriceBDT || 600,
       customerName: currentUser?.name || 'Muikta Begum',
-      customerPhone: currentUser?.phone || '01931355398',
+      customerPhone: currentUser?.phone || phone || '01931355398',
       status: 'Pending',
       createdAt: new Date().toISOString()
     };
     setMembershipSubmissions(prev => [newSub, ...prev]);
+    
+    // In-memory update to user's pending subscription
+    if (currentUser && (currentUser.phone === phone || currentUser.phone === newSub.customerPhone)) {
+      setCurrentUser(prev => prev ? {
+        ...prev,
+        subscriptionStatus: 'Pending' as any
+      } : null);
+    }
+
+    // Sync to registered customers list as well
+    setRegisteredCustomers(prev => prev.map(cust => {
+      if (cust.phone === phone || cust.phone === newSub.customerPhone) {
+        return {
+          ...cust,
+          subscriptionStatus: 'Pending' as any,
+          subscriptionTxId: txId
+        };
+      }
+      return cust;
+    }));
+
     console.log(`[EMAIL NOTIFICATION SENT] To muiktabegum@gmail.com - New bKash Subscription Request from ${newSub.customerName} (${newSub.customerPhone}). TxID: ${txId}. Category: ${categorySlug || 'Global'}`);
   };
 

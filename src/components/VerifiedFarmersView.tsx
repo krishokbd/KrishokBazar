@@ -197,10 +197,22 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
                         📍 {language === 'en' ? `${farmer.district} District` : `${getDistrictNameBn(farmer.district)} জেলা`}
                       </p>
                       
-                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 pt-1 font-bold">
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400 pt-1 font-bold flex-wrap">
                         <span>{language === 'en' ? `Sales: ${farmer.salesCount || 0}` : `সফল বিক্রি: ${farmer.salesCount || 0}টি`}</span>
                         <span className="text-gray-300">•</span>
                         <span>{language === 'en' ? `Crops: ${farmer.productCount || 0}` : `পণ্য সংখ্যা: ${farmer.productCount || 0}টি`}</span>
+                        {farmer.landSize && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-indigo-600">জমির আকার: {farmer.landSize}</span>
+                          </>
+                        )}
+                        {farmer.salesAmount && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-emerald-700">মোট বিক্রয়: ৳{farmer.salesAmount}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

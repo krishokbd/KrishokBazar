@@ -25,6 +25,8 @@ export interface Farmer {
   story?: string;
   gallery?: string[];
   videoPlaceholder?: string;
+  landSize?: string;
+  salesAmount?: number;
 }
 
 export interface Product {

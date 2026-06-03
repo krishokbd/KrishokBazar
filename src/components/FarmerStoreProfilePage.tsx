@@ -255,7 +255,7 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
             <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-12 sm:-mt-16 mb-6">
               <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-full border-4 border-white bg-white shadow overflow-hidden shrink-0 mx-auto md:mx-0 relative group">
                 <img 
-                  src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
+                  src={(farmer.avatar && (farmer.avatar.startsWith('http') || farmer.avatar.startsWith('/'))) ? farmer.avatar : (farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR)} 
                   alt={farmer.name}
                   className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"
@@ -312,6 +312,18 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
                   <span>{farmerProducts.length}টি ফসল</span>
                   <span>•</span>
                   <span className="text-emerald-700 font-bold">{farmer.salesCount}টি ফসল সরবরাহ</span>
+                  {farmer.landSize && (
+                    <>
+                      <span>•</span>
+                      <span className="text-indigo-750">জমির আকার: <strong className="font-bold">{farmer.landSize}</strong></span>
+                    </>
+                  )}
+                  {farmer.salesAmount && (
+                    <>
+                      <span>•</span>
+                      <span className="text-emerald-700">মোট বিক্রয়: <strong className="font-bold">৳{farmer.salesAmount}</strong></span>
+                    </>
+                  )}
                 </div>
               </div>
 

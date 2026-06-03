@@ -101,12 +101,11 @@ export const FloatingSocials: React.FC = () => {
       {/* FLOATING ACTION BAR CONTROLLER TOGGLER */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-3.5 sm:px-5 sm:py-3.5 shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer ring-2 ring-white border border-teal-50 relative animate-pulse"
-        style={{ boxShadow: '0 12px 28px -6px rgba(13, 148, 136, 0.4)' }}
+        className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-2 sm:px-3 sm:py-2 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer ring-1 ring-white border border-teal-50 relative"
       >
-        <span className="absolute top-0 left-0 h-3 w-3 rounded-full bg-blue-500 border-2 border-white"></span>
-        <Phone className="h-4.5 w-4.5 animate-bounce" />
-        <span className="hidden sm:inline font-black text-xs uppercase tracking-wide">আমাদের হটলাইন (Contact)</span>
+        <span className="absolute top-0 left-0 h-2.5 w-2.5 rounded-full bg-blue-500 border border-white"></span>
+        <Phone className="h-3.5 w-3.5" />
+        <span className="text-[10px] font-bold uppercase tracking-wider">হটলাইন</span>
       </button>
 
     </div>

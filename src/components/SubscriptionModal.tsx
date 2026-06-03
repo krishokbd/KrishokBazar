@@ -15,7 +15,7 @@ interface SubscriptionModalProps {
 }
 
 export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, defaultRole = 'customer' }) => {
-  const { currentUser, language } = useApp();
+  const { currentUser, language, submitMembershipRequest } = useApp();
   const [activeTab, setActiveTab] = useState<'customer' | 'farmer'>(defaultRole);
   
   // Payment Offline Transaction States
@@ -97,6 +97,9 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
     setTimeout(() => {
       setIsProcessing(false);
       setShowInvoice(true);
+      
+      // Dispatch live subscription pending to global central state
+      submitMembershipRequest(phoneNumber, transactionId, activeTab, selectedPlan?.price || 600);
       
       // Upgrade local user programmatically but mark subscription as Pending for validation (will activate in 12-24 hrs)
       if (currentUser) {

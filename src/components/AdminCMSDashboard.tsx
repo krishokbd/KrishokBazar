@@ -45,7 +45,14 @@ export const AdminCMSDashboard: React.FC = () => {
     saveBanners,
     updateFarmer,
     deleteReview,
-    resetDemoData
+    resetDemoData,
+    membershipSubmissions,
+    approveMembershipRequest,
+    rejectMembershipRequest,
+    offers,
+    editOffer,
+    addOffer,
+    deleteOffer
   } = useApp();
 
   // Database re-seeding / reset state
@@ -122,6 +129,18 @@ export const AdminCMSDashboard: React.FC = () => {
   const [bannerFormSubtitleBn, setBannerFormSubtitleBn] = useState('');
   const [bannerFormSubtitleEn, setBannerFormSubtitleEn] = useState('');
 
+  // Special Promo Banners editing state
+  const [editingOffer, setEditingOffer] = useState<any | null>(null);
+  const [offerFormTitleBn, setOfferFormTitleBn] = useState('');
+  const [offerFormTitleEn, setOfferFormTitleEn] = useState('');
+  const [offerFormDescBn, setOfferFormDescBn] = useState('');
+  const [offerFormDescEn, setOfferFormDescEn] = useState('');
+  const [offerFormCtaBn, setOfferFormCtaBn] = useState('');
+  const [offerFormCtaEn, setOfferFormCtaEn] = useState('');
+  const [offerFormTagBn, setOfferFormTagBn] = useState('');
+  const [offerFormTagEn, setOfferFormTagEn] = useState('');
+  const [offerFormImage, setOfferFormImage] = useState('');
+
   // Admin Custom Product Editor state
   const [adminEditingProduct, setAdminEditingProduct] = useState<Product | null>(null);
   const [adminIsAddingProduct, setAdminIsAddingProduct] = useState(false);
@@ -149,6 +168,10 @@ export const AdminCMSDashboard: React.FC = () => {
   const [adminFarmerFormRating, setAdminFarmerFormRating] = useState(4.5);
   const [adminFarmerFormBalance, setAdminFarmerFormBalance] = useState(0);
   const [adminFarmerFormBio, setAdminFarmerFormBio] = useState('');
+  const [adminFarmerFormAvatar, setAdminFarmerFormAvatar] = useState('');
+  const [adminFarmerFormLandSize, setAdminFarmerFormLandSize] = useState('');
+  const [adminFarmerFormSalesAmount, setAdminFarmerFormSalesAmount] = useState(0);
+  const [adminFarmerFormSalesCount, setAdminFarmerFormSalesCount] = useState(0);
 
   // Customer feedback mock seeding state
   const [feedbackProdName, setFeedbackProdName] = useState('');
@@ -437,6 +460,10 @@ export const AdminCMSDashboard: React.FC = () => {
                                   setAdminFarmerFormRating(f.rating);
                                   setAdminFarmerFormBalance(f.balance);
                                   setAdminFarmerFormBio(f.bio || '');
+                                  setAdminFarmerFormAvatar(f.avatar || '');
+                                  setAdminFarmerFormLandSize(f.landSize || '');
+                                  setAdminFarmerFormSalesAmount(f.salesAmount || 0);
+                                  setAdminFarmerFormSalesCount(f.salesCount || 0);
                                 }}
                                 className="px-3.5 py-1 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer shadow-sm"
                               >
@@ -497,6 +524,10 @@ export const AdminCMSDashboard: React.FC = () => {
                               setAdminFarmerFormRating(f.rating);
                               setAdminFarmerFormBalance(f.balance);
                               setAdminFarmerFormBio(f.bio || '');
+                              setAdminFarmerFormAvatar(f.avatar || '');
+                              setAdminFarmerFormLandSize(f.landSize || '');
+                              setAdminFarmerFormSalesAmount(f.salesAmount || 0);
+                              setAdminFarmerFormSalesCount(f.salesCount || 0);
                             }}
                             className="px-2 py-1 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 rounded-lg text-[10px] font-bold border border-gray-205 cursor-pointer"
                           >
@@ -599,6 +630,50 @@ export const AdminCMSDashboard: React.FC = () => {
                           />
                         </div>
                       </div>
+
+                      {/* EXTRA DETAILED FARMER METRIC FIELDS FOR ADMIN */}
+                      <div>
+                        <label className="block font-bold text-gray-600 mb-1">প্রোফাইল ছবি (Avatar URL):</label>
+                        <input 
+                          type="text"
+                          value={adminFarmerFormAvatar}
+                          onChange={(e) => setAdminFarmerFormAvatar(e.target.value)}
+                          className="w-full rounded-xl border border-gray-200 p-2 text-xs font-mono"
+                          placeholder="https://images.unsplash.com/... বা ডেমো"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1">জমির আকার / পরিমাণ:</label>
+                          <input 
+                            type="text"
+                            value={adminFarmerFormLandSize}
+                            onChange={(e) => setAdminFarmerFormLandSize(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 p-2 text-xs"
+                            placeholder="যেমন: ২.৫ একর"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1">মোট বিক্রয় (৳):</label>
+                          <input 
+                            type="number"
+                            value={adminFarmerFormSalesAmount}
+                            onChange={(e) => setAdminFarmerFormSalesAmount(Number(e.target.value))}
+                            className="w-full rounded-xl border border-gray-200 p-2 text-xs font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1 font-sans">মোট ডেলিভারি সংখ্যা:</label>
+                          <input 
+                            type="number"
+                            value={adminFarmerFormSalesCount}
+                            onChange={(e) => setAdminFarmerFormSalesCount(Number(e.target.value))}
+                            className="w-full rounded-xl border border-gray-200 p-2 text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block font-bold text-gray-600 mb-1">রেটিং স্কোর (১-৫):</label>
@@ -667,7 +742,11 @@ export const AdminCMSDashboard: React.FC = () => {
                               verified: adminFarmerFormVerified,
                               rating: adminFarmerFormRating,
                               balance: adminFarmerFormBalance,
-                              bio: adminFarmerFormBio
+                              bio: adminFarmerFormBio,
+                              avatar: adminFarmerFormAvatar,
+                              landSize: adminFarmerFormLandSize,
+                              salesAmount: adminFarmerFormSalesAmount,
+                              salesCount: adminFarmerFormSalesCount
                             });
                             setAdminEditingFarmer(null);
                           }}
@@ -721,12 +800,12 @@ export const AdminCMSDashboard: React.FC = () => {
                 </button>
               </div>
 
-              {/* Add / Edit Form Block Inline */}
-              {(adminIsAddingProduct || adminEditingProduct) && (
+              {/* Add Form Block Inline */}
+              {adminIsAddingProduct && (
                 <div className="bg-indigo-50/40 border border-indigo-100 rounded-3xl p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xs font-black text-indigo-700 uppercase font-mono tracking-wider">
-                      {adminEditingProduct ? `পণ্য এডিট করুন (ID: ${adminEditingProduct.id})` : 'নতুন পণ্য যুক্ত করার ফরম'}
+                      নতুন পণ্য যুক্ত করার ফরম
                     </h3>
                     <button 
                       onClick={() => {
@@ -940,6 +1019,217 @@ export const AdminCMSDashboard: React.FC = () => {
                 </div>
               )}
 
+              {/* Product Edit Modal Overlay */}
+              {adminEditingProduct !== null && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 overflow-y-auto">
+                  <div className="bg-white rounded-[32px] border border-gray-100 max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-auto space-y-6 text-xs font-sans animate-fade-in text-left">
+                    <div className="flex items-center justify-between border-b pb-4">
+                      <div>
+                        <span className="text-[10px] bg-indigo-50 border px-1.5 py-0.5 rounded text-indigo-700 font-mono font-bold uppercase">Product Editor</span>
+                        <h3 className="text-base sm:text-lg font-black text-gray-800 leading-tight mt-1">
+                          পণ্য সম্পাদনা করুন (Product ID: {adminEditingProduct.id})
+                        </h3>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setAdminEditingProduct(null);
+                        }}
+                        className="h-8 w-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors cursor-pointer text-sm font-bold shadow-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3 col-span-1">
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1">পণ্যের নাম/শিরোনাম (Title):</label>
+                          <input 
+                            type="text"
+                            value={adminProdTitle}
+                            onChange={(e) => setAdminProdTitle(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                            placeholder="যেমন: সতেজ লাল পেঁয়াজ ৫ কেজি ব্যাগ"
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1">মূল্য (৳):</label>
+                            <input 
+                              type="number"
+                              value={adminProdPrice}
+                              onChange={(e) => setAdminProdPrice(Number(e.target.value))}
+                              className="w-full bg-white rounded-xl border border-gray-200 p-2.5 font-mono text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-bold text-gray-605 mb-1">ডিস্কাউন্ট (৳):</label>
+                            <input 
+                              type="text"
+                              value={adminProdDiscountPrice}
+                              onChange={(e) => setAdminProdDiscountPrice(e.target.value)}
+                              className="w-full bg-white rounded-xl border border-gray-200 p-2.5 font-mono text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                              placeholder="ফাঁকা রাখুন"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-bold text-gray-605 mb-1">স্টক (Kg/Unit):</label>
+                            <input 
+                              type="number"
+                              value={adminProdStock}
+                              onChange={(e) => setAdminProdStock(Number(e.target.value))}
+                              className="w-full bg-white rounded-xl border border-gray-200 p-2.5 font-mono text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-gray-605 mb-1">শ্রেণীবিভাগ (Category):</label>
+                          <select
+                            value={adminProdCategory}
+                            onChange={(e) => setAdminProdCategory(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 capitalize text-xs font-bold text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none cursor-pointer"
+                          >
+                            {categories.map(c => (
+                              <option key={c.id} value={c.id}>{c.nameBn} ({c.nameEn})</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block font-bold text-gray-605 mb-1">উৎপাদনকারী খামারি অংশীদার:</label>
+                          <select
+                            value={adminProdFarmerId}
+                            onChange={(e) => setAdminProdFarmerId(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none cursor-pointer"
+                          >
+                            {farmers.map(f => (
+                              <option key={f.id} value={f.id}>{f.name} ({f.district}) [ID: {f.id}]</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 col-span-1">
+                        <div>
+                          <label className="block font-bold text-gray-655 mb-1">পণ্যের চমৎকার বিবরণ (Description):</label>
+                          <textarea
+                            rows={3}
+                            value={adminProdDesc}
+                            onChange={(e) => setAdminProdDesc(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition resize-none font-sans"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-gray-605 mb-1">ছবি ৩-ডাইমেনショナル লিংক (Img URLs):</label>
+                          <input 
+                            type="text"
+                            value={adminProdImages[0] || ''}
+                            onChange={(e) => setAdminProdImages([e.target.value, ...adminProdImages.slice(1)])}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-gray-500 font-mono text-[10px] shadow-xs outline-none focus:ring-2 focus:ring-indigo-100 transition"
+                            placeholder="ইমেজ ওয়েব লিংক এড্রেস"
+                          />
+                          {/* Live preview */}
+                          <div className="mt-2">
+                            {adminProdImages[0] ? (
+                              <div className="relative rounded-2xl overflow-hidden border border-emerald-100 h-20 w-full bg-slate-50 flex items-center justify-center transition-all shadow-xs">
+                                <img 
+                                  src={adminProdImages[0]} 
+                                  alt="Live Product Preview" 
+                                  className="h-full w-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60';
+                                  }}
+                                />
+                                <div className="absolute top-1 left-1 bg-black/60 text-white text-[7px] font-black tracking-widest uppercase px-1 py-0.2 rounded font-mono">
+                                  Live Preview (তাত্ক্ষণিক প্রাকদর্শন)
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="border border-dashed border-gray-200 rounded-2xl h-20 w-full flex flex-col items-center justify-center bg-gray-50 text-[10px] text-gray-400">
+                                <Image className="h-4 w-4 mb-1 text-gray-300" />
+                                <span>ছবি লিংক এখানে দৃশ্যমান হবে</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 pt-1 font-sans">
+                      <label className="border p-2 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                        <span className="font-bold text-gray-655">Spotlight Featured ⭐</span>
+                        <input 
+                          type="checkbox"
+                          checked={adminProdIsFeatured}
+                          onChange={(e) => setAdminProdIsFeatured(e.target.checked)}
+                          className="h-4 w-4 accent-indigo-600 rounded"
+                        />
+                      </label>
+                      <label className="border p-2 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                        <span className="font-bold text-gray-655">ভেরিফাইড ব্যাজ 🛡️</span>
+                        <input 
+                          type="checkbox"
+                          checked={adminProdIsVerified}
+                          onChange={(e) => setAdminProdIsVerified(e.target.checked)}
+                          className="h-4 w-4 accent-indigo-600 rounded"
+                        />
+                      </label>
+                      <label className="border p-2 bg-slate-50 hover:bg-slate-150 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                        <span className="font-bold text-gray-655">রেডি টু কুক 🍳</span>
+                        <input 
+                          type="checkbox"
+                          checked={adminProdReadyToCook}
+                          onChange={(e) => setAdminProdReadyToCook(e.target.checked)}
+                          className="h-4 w-4 accent-indigo-600 rounded"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end gap-2 border-t pt-4">
+                      <button
+                        onClick={() => {
+                          setAdminEditingProduct(null);
+                        }}
+                        className="px-5 py-2.5 rounded-xl border bg-white hover:bg-gray-50 text-gray-500 font-bold transition cursor-pointer text-xs"
+                      >
+                        বাতিল করুন
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!adminProdTitle) return;
+                          const targetFarmer = farmers.find(f => f.id === adminProdFarmerId) || farmers[0];
+                          const prodPayload = {
+                            title: adminProdTitle,
+                            price: Number(adminProdPrice),
+                            discountPrice: adminProdDiscountPrice ? Number(adminProdDiscountPrice) : undefined,
+                            category: adminProdCategory,
+                            description: adminProdDesc,
+                            stock: Number(adminProdStock),
+                            isReadyToCook: adminProdReadyToCook,
+                            isFeatured: adminProdIsFeatured,
+                            isVerified: adminProdIsVerified,
+                            images: adminProdImages,
+                            farmerId: adminProdFarmerId || targetFarmer.id,
+                            farmerName: targetFarmer.name
+                          };
+
+                          editProduct(adminEditingProduct.id, prodPayload);
+                          setAdminEditingProduct(null);
+                          alert('পণ্য তথ্য সফলভাবে আপডেট ও সংরক্ষণ করা হয়েছে!');
+                        }}
+                        className="px-6 py-2.5 rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white font-bold shadow-md hover:shadow-lg transition cursor-pointer text-xs"
+                      >
+                        হালনাগাদ সেভ করুন ✔
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Grid or Table list of active products */}
               <div className="overflow-x-auto border border-gray-100 rounded-2xl">
                 <table className="min-w-full divide-y divide-gray-100 text-xs">
@@ -1013,11 +1303,12 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminProdFarmerId(p.farmerId);
                                 setAdminProdIsFeatured(!!p.isFeatured);
                                 setAdminProdIsVerified(p.isVerified);
-                                window.scrollTo({ top: 180, behavior: 'smooth' });
+                                window.scrollTo({ top: 120, behavior: 'smooth' });
                               }}
-                              className="px-1.5 py-0.5 bg-slate-50 border border-emerald-100 hover:bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold cursor-pointer transition duration-150"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-805 rounded font-bold text-[9px] border border-amber-200 cursor-pointer transition duration-150 shadow-xs"
                             >
-                              Edit
+                              <Edit className="h-2.5 w-2.5 text-amber-650" />
+                              এডিট
                             </button>
                           </div>
                         </td>
@@ -1121,34 +1412,31 @@ export const AdminCMSDashboard: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-gray-655 mb-11">ইংরেজি শিরোনাম (English Name):</label>
+                      <label className="block font-bold text-gray-650 mb-1">ইংরেজি শিরোনাম (English Name):</label>
                       <input 
                         type="text"
                         value={categoryFormNameEn}
                         onChange={(e) => setCategoryFormNameEn(e.target.value)}
-                        placeholder="Organic Honey"
+                        placeholder="как: Organic Honey"
                         className="w-full rounded-xl border border-gray-200 p-2 text-xs font-mono"
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-gray-655 mb-1">আইকন টাইপ নির্দেশনা (Lucene Preset):</label>
-                      <select
+                      <label className="block font-bold text-gray-650 mb-1">ক্যাটাগরি আইকন (Icon preset):</label>
+                      <select 
                         value={categoryFormIcon}
                         onChange={(e) => setCategoryFormIcon(e.target.value)}
                         className="w-full rounded-xl border border-gray-200 p-2 text-xs bg-white font-bold"
                       >
-                        <option value="Leaf">Leaf (অরগানিক পাতা)</option>
-                        <option value="Apple">Apple (তাজা ফলমূল)</option>
-                        <option value="Beef">Beef (মাংস সামগ্রী)</option>
-                        <option value="Fish">Fish (নদী ফিশারি)</option>
-                        <option value="Sparkles">Sparkles (প্রিমিয়াম সিলেকশন)</option>
-                        <option value="Wheat">Wheat (শস্য ও চাল)</option>
-                        <option value="Milk">Milk (মিষ্টি দুগ্ধ)</option>
+                        <option value="Leaf">🌿 Leaf (পাতা)</option>
+                        <option value="Apple">🍏 Apple (ফল)</option>
+                        <option value="Wheat">🌾 Wheat (ধান/সবজি)</option>
+                        <option value="Folder">Folder Icon (অন্যান্য)</option>
                       </select>
                     </div>
 
-                    <div className="flex gap-2 pt-1 font-sans">
-                      {editingCategory && (
+                    <div className="flex gap-2 pt-2">
+                      {editingCategory !== null && (
                         <button
                           onClick={() => {
                             setEditingCategory(null);
@@ -1157,39 +1445,47 @@ export const AdminCMSDashboard: React.FC = () => {
                             setCategoryFormNameEn('');
                             setCategoryFormIcon('Leaf');
                           }}
-                          className="w-1/3 py-2 border rounded-xl hover:bg-gray-50 text-[10px] font-bold text-gray-500 cursor-pointer"
+                          className="w-1/3 py-2 border rounded-xl hover:bg-gray-100 text-[10px] font-bold text-gray-500 cursor-pointer text-center"
                         >
                           বাতিল
                         </button>
                       )}
                       <button
                         onClick={() => {
-                          if (!categoryFormId || !categoryFormNameBn || !categoryFormNameEn) return;
-                          const payload: Category = {
-                            id: categoryFormId.trim().toLowerCase(),
-                            nameBn: categoryFormNameBn.trim(),
-                            nameEn: categoryFormNameEn.trim(),
+                          if (!categoryFormId || !categoryFormNameBn || !categoryFormNameEn) {
+                            alert('সমস্ত ক্ষেত্র সঠিকভাবে পূরণ করুন!');
+                            return;
+                          }
+                          const newCategory: Category = {
+                            id: categoryFormId,
+                            nameBn: categoryFormNameBn,
+                            nameEn: categoryFormNameEn,
                             icon: categoryFormIcon
                           };
 
                           if (editingCategory) {
-                            saveCategories(categories.map(c => c.id === editingCategory.id ? payload : c));
+                            // edit
+                            const updated = categories.map(c => c.id === editingCategory.id ? newCategory : c);
+                            saveCategories(updated);
                           } else {
-                            if (categories.some(c => c.id === payload.id)) {
-                              alert('Category code exists already!');
+                            // add
+                            if (categories.some(c => c.id === categoryFormId)) {
+                              alert('একটি ক্যাটাগরি ইতিমধ্যে এই আইডি দিয়ে নিবন্ধিত রয়েছে!');
                               return;
                             }
-                            saveCategories([...categories, payload]);
+                            saveCategories([...categories, newCategory]);
                           }
 
                           setEditingCategory(null);
                           setCategoryFormId('');
                           setCategoryFormNameBn('');
                           setCategoryFormNameEn('');
+                          setCategoryFormIcon('Leaf');
+                          alert('ক্যাটাগরি ডাটাবেজ সফলভাবে আপডেট করা হয়েছে!');
                         }}
-                        className="flex-1 py-11 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold shadow-sm cursor-pointer"
+                        className="flex-1 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-[10px] shadow shadow-md cursor-pointer text-center font-bold"
                       >
-                        ক্যাটাগরি পরিবর্তন সংরক্ষণ ✔
+                        {editingCategory ? 'ক্যাটাগরি আপডেট সংরক্ষণ ✔' : 'ক্যাটাগরি তৈরি করুন ✔'}
                       </button>
                     </div>
                   </div>
@@ -1198,13 +1494,15 @@ export const AdminCMSDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: HERO SLIDER CAROUSEL COPYWRITING CMS */}
+                  {/* TAB 4: HERO SLIDER CAROUSEL COPYWRITING CMS */}
           {adminActiveTab === 'banners' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm font-sans">
-                  <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase flex items-center gap-1.5 mb-4 font-bold">
-                    🎠 হোমপেজ ক্যারোসল ব্যানার বিজ্ঞাপন ও স্লোগান এডিটর
+              {/* LEFT COLUMN: HERO BANNERS & SPECIAL OFFERS POPUPS LIST */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* 1. HERO CAROUSEL CODES */}
+                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm font-sans space-y-4">
+                  <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase flex items-center gap-1.5 font-bold">
+                    Carousel Hero Banners (হোমপেজ ক্যারোসল ব্যানার ও স্লাইডসমূহ)
                   </h3>
                   
                   <div className="space-y-4">
@@ -1222,15 +1520,18 @@ export const AdminCMSDashboard: React.FC = () => {
                         <div className="flex gap-1.5 self-end md:self-auto font-sans">
                           <button
                             onClick={() => {
+                              setEditingOffer(null); // Close offer editor first
                               setEditingBannerIndex(idx);
                               setBannerFormImage(slide.image);
                               setBannerFormTitleBn(slide.titleBn);
                               setBannerFormTitleEn(slide.titleEn);
                               setBannerFormSubtitleBn(slide.subtitleBn);
                               setBannerFormSubtitleEn(slide.subtitleEn);
+                              window.scrollTo({ top: 120, behavior: 'smooth' });
                             }}
-                            className="text-[10px] p-1.5 px-3 border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-150 text-indigo-700 rounded-lg shrink-0 cursor-pointer font-bold"
+                            className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg shrink-0 cursor-pointer font-bold"
                           >
+                            <Edit className="h-3 w-3 text-amber-600" />
                             Edit
                           </button>
                           <button
@@ -1243,7 +1544,91 @@ export const AdminCMSDashboard: React.FC = () => {
                                 saveBanners(banners.filter((_, i) => i !== idx));
                               }
                             }}
-                            className="text-[10px] p-1.5 px-2 bg-red-50 text-red-550 border border-red-105 rounded-lg shrink-0 cursor-pointer font-bold"
+                            className="text-[10px] p-1.5 px-3 bg-red-50 text-red-550 border border-red-105 rounded-lg shrink-0 cursor-pointer font-bold"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. SPECIAL OFFERS CODES */}
+                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm font-sans space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-50 pb-2.5">
+                    <div>
+                      <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase flex items-center gap-1.5 font-bold">
+                        Special Promo Offer Banners (স্পেশাল প্রমোশনাল অফার ব্যানার পপআপসমূহ)
+                      </h3>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        গ্রাহক ব্রাউজ করার সময় স্ক্রীনের কোণায় পপআপ বিজ্ঞাপনে এই অফারগুলো পালাক্রমে দেখায়।
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setEditingBannerIndex(null); // Close carousel banner editor first
+                        setEditingOffer({ id: 'NEW_OFFER' });
+                        setOfferFormTitleBn('');
+                        setOfferFormTitleEn('');
+                        setOfferFormDescBn('');
+                        setOfferFormDescEn('');
+                        setOfferFormCtaBn('সাশ্রয়ী প্ল্যান দেখুন 🛒');
+                        setOfferFormCtaEn('Explore Budget Plans 🛒');
+                        setOfferFormTagBn('সীমিত সময়ের অফার');
+                        setOfferFormTagEn('Limited Offer');
+                        setOfferFormImage('https://images.unsplash.com/photo-1542838132-92c53300491e?w=500');
+                        window.scrollTo({ top: 120, behavior: 'smooth' });
+                      }}
+                      className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg cursor-pointer font-bold shrink-0 shadow-sm"
+                    >
+                      + Add Offer
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {offers.map((offer, idx) => (
+                      <div key={offer.id} className="border border-gray-100 rounded-2xl p-4 bg-white flex flex-col md:flex-row gap-4 hover:shadow transition-all justify-between items-start md:items-center">
+                        <div className="flex gap-3 items-start">
+                          <img src={offer.image} className="h-14 w-24 object-cover rounded-xl border border-gray-100 flex-shrink-0 bg-slate-100" referrerPolicy="no-referrer" />
+                          <div className="space-y-0.5">
+                            <span className="inline-block font-mono text-[8px] bg-green-50 border border-green-100 px-1.5 py-0.2 rounded text-emerald-700">TAG: {offer.tagBn}</span>
+                            <h4 className="text-xs font-bold text-gray-800 leading-tight">{offer.titleBn}</h4>
+                            <p className="text-[10px] text-gray-500 line-clamp-1">{offer.descBn}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-1.5 self-end md:self-auto font-sans">
+                          <button
+                            onClick={() => {
+                              setEditingBannerIndex(null); // Close carousel banner editor first
+                              setEditingOffer(offer);
+                              setOfferFormTitleBn(offer.titleBn);
+                              setOfferFormTitleEn(offer.titleEn);
+                              setOfferFormDescBn(offer.descBn);
+                              setOfferFormDescEn(offer.descEn);
+                              setOfferFormCtaBn(offer.ctaBn);
+                              setOfferFormCtaEn(offer.ctaEn);
+                              setOfferFormTagBn(offer.tagBn);
+                              setOfferFormTagEn(offer.tagEn);
+                              setOfferFormImage(offer.image);
+                              window.scrollTo({ top: 120, behavior: 'smooth' });
+                            }}
+                            className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg shrink-0 cursor-pointer font-bold animate-pulse-slow"
+                          >
+                            <Edit className="h-3 w-3 text-amber-600" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (window.confirm('আপনি কি এই স্পেশাল প্রমো অফারটি ডিলিট করতে চান?')) {
+                                deleteOffer(offer.id);
+                                if (editingOffer && editingOffer.id === offer.id) {
+                                  setEditingOffer(null);
+                                }
+                              }
+                            }}
+                            className="text-[10px] p-1.5 px-3 bg-red-50 text-red-550 border border-red-105 rounded-lg shrink-0 cursor-pointer font-bold"
                           >
                             Delete
                           </button>
@@ -1254,72 +1639,105 @@ export const AdminCMSDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Slider Editor box */}
+              {/* RIGHT COLUMN: DYNAMIC EDITORS */}
               <div className="space-y-6">
-                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-md space-y-4 font-sans">
-                  <div>
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest font-mono">Banners Copy CMS</span>
-                    <h3 className="text-sm font-bold text-gray-800 mt-1">
-                      {editingBannerIndex !== null ? `স্লাইড নং-${editingBannerIndex + 1} পরিবর্তন করুন` : 'নতুন ব্যানার স্লাইড সংযুক্তি'}
-                    </h3>
-                  </div>
-
-                  <div className="space-y-3 px-0.5 text-xs">
+                {/* EDITOR 1: CAROUSEL BANNER FORM */}
+                {(editingOffer === null) && (
+                  <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-md space-y-4 font-sans">
                     <div>
-                      <label className="block font-bold text-gray-655 mb-1">পটভূমি ছবির লিঙ্ক (Web Img URL):</label>
-                      <input 
-                        type="text"
-                        value={bannerFormImage}
-                        onChange={(e) => setBannerFormImage(e.target.value)}
-                        placeholder="https://images.unsplash.com/photo-..."
-                        className="w-full rounded-xl border border-gray-200 p-2 text-[10px] font-mono text-gray-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-gray-655 mb-1">বাংলা স্লাইড স্লোগান (Bengali Title):</label>
-                      <input 
-                        type="text"
-                        value={bannerFormTitleBn}
-                        onChange={(e) => setBannerFormTitleBn(e.target.value)}
-                        placeholder="তাজা রাসায়নিক মুক্ত শাকসবজি"
-                        className="w-full rounded-xl border border-gray-200 p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-gray-655 mb-1">ইংরেজি স্লাইড স্লোগান (English Title):</label>
-                      <input 
-                        type="text"
-                        value={bannerFormTitleEn}
-                        onChange={(e) => setBannerFormTitleEn(e.target.value)}
-                        placeholder="Fresh Organic Vegetables"
-                        className="w-full rounded-xl border border-gray-200 p-2 font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-gray-655 mb-1">বাংলা ছোট স্লোগান (Bengali Subtitle):</label>
-                      <textarea 
-                        rows={2}
-                        value={bannerFormSubtitleBn}
-                        onChange={(e) => setBannerFormSubtitleBn(e.target.value)}
-                        placeholder="সরাসরি খামারের মাটি কেটে ডোরস্টেপে নিশ্চিত নিরাপদ খাদ্য..."
-                        className="w-full rounded-xl border border-gray-200 p-2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-gray-655 mb-1">ইংরেজি ছোট স্লোগান (English Subtitle):</label>
-                      <textarea 
-                        rows={2}
-                        value={bannerFormSubtitleEn}
-                        onChange={(e) => setBannerFormSubtitleEn(e.target.value)}
-                        placeholder="Farm fresh organic items delivered safely to your home..."
-                        className="w-full rounded-xl border border-gray-200 p-2 font-mono"
-                      />
+                      <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest font-mono font-bold">Banners Copy CMS</span>
+                      <h3 className="text-sm font-bold text-gray-800 mt-1">
+                        {editingBannerIndex !== null ? `স্লাইড নং-${editingBannerIndex + 1} পরিবর্তন করুন` : 'নতুন ব্যানার স্লাইড সংযুক্তি'}
+                      </h3>
                     </div>
 
-                    <div className="flex gap-2 pt-2">
-                      {editingBannerIndex !== null && (
+                    <div className="space-y-3 px-0.5 text-xs">
+                      <div>
+                        <label className="block font-bold text-gray-655 mb-1">পটভূমি ছবির লিঙ্ক (Web Img URL):</label>
+                        <input 
+                          type="text"
+                          value={bannerFormImage}
+                          onChange={(e) => setBannerFormImage(e.target.value)}
+                          placeholder="https://images.unsplash.com/photo-..."
+                          className="w-full rounded-xl border border-gray-200 p-2 text-[10px] font-mono text-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-655 mb-1">বাংলা স্লাইড স্লোগান (Bengali Title):</label>
+                        <input 
+                          type="text"
+                          value={bannerFormTitleBn}
+                          onChange={(e) => setBannerFormTitleBn(e.target.value)}
+                          placeholder="তাজা রাসায়নিক মুক্ত শাকসবজি"
+                          className="w-full rounded-xl border border-gray-200 p-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-655 mb-1">ইংরেজি স্লাইড স্লোগান (English Title):</label>
+                        <input 
+                          type="text"
+                          value={bannerFormTitleEn}
+                          onChange={(e) => setBannerFormTitleEn(e.target.value)}
+                          placeholder="Fresh Organic Vegetables"
+                          className="w-full rounded-xl border border-gray-200 p-2 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-655 mb-1">বাংলা ছোট স্লোগান (Bengali Subtitle):</label>
+                        <textarea 
+                          rows={2}
+                          value={bannerFormSubtitleBn}
+                          onChange={(e) => setBannerFormSubtitleBn(e.target.value)}
+                          placeholder="সরাসরি খামারের মাটি কেটে ডোরস্টেপে নিশ্চিত নিরাপদ খাদ্য..."
+                          className="w-full rounded-xl border border-gray-200 p-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-655 mb-1">ইংরেজি ছোট স্লোগান (English Subtitle):</label>
+                        <textarea 
+                          rows={2}
+                          value={bannerFormSubtitleEn}
+                          onChange={(e) => setBannerFormSubtitleEn(e.target.value)}
+                          placeholder="Farm fresh organic items delivered safely to your home..."
+                          className="w-full rounded-xl border border-gray-200 p-2 font-mono"
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        {editingBannerIndex !== null && (
+                          <button
+                            onClick={() => {
+                              setEditingBannerIndex(null);
+                              setBannerFormImage('');
+                              setBannerFormTitleBn('');
+                              setBannerFormTitleEn('');
+                              setBannerFormSubtitleBn('');
+                              setBannerFormSubtitleEn('');
+                            }}
+                            className="w-1/3 py-2 border rounded-xl hover:bg-gray-100 text-[10px] font-bold text-gray-500 cursor-pointer text-center"
+                          >
+                            বাতিল
+                          </button>
+                        )}
                         <button
                           onClick={() => {
+                            if (!bannerFormTitleBn || !bannerFormImage) return;
+                            const bannerPayload: Banner = {
+                              image: bannerFormImage,
+                              titleBn: bannerFormTitleBn,
+                              titleEn: bannerFormTitleEn,
+                              subtitleBn: bannerFormSubtitleBn,
+                              subtitleEn: bannerFormSubtitleEn
+                            };
+
+                            if (editingBannerIndex !== null) {
+                              const copyB = [...banners];
+                              copyB[editingBannerIndex] = bannerPayload;
+                              saveBanners(copyB);
+                            } else {
+                              saveBanners([...banners, bannerPayload]);
+                            }
+
                             setEditingBannerIndex(null);
                             setBannerFormImage('');
                             setBannerFormTitleBn('');
@@ -1327,116 +1745,240 @@ export const AdminCMSDashboard: React.FC = () => {
                             setBannerFormSubtitleBn('');
                             setBannerFormSubtitleEn('');
                           }}
-                          className="w-1/3 py-2 border rounded-xl hover:bg-gray-100 text-[10px] font-bold text-gray-500 cursor-pointer text-center"
+                          className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm cursor-pointer text-center font-bold"
+                        >
+                          হোমপেজ স্লাইডার সেভ করুন ✔
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* EDITOR 2: SPECIAL OFFER BANNER FORM - FIXED MODAL OVERLAY */}
+                {editingOffer !== null && (
+                  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-[32px] border border-gray-100 max-w-xl w-full p-6 sm:p-8 shadow-2xl relative my-auto space-y-5 text-xs text-left font-sans border-t-4 border-t-amber-400">
+                      <div className="flex items-center justify-between border-b pb-4">
+                        <div>
+                          <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest font-mono font-bold">Special Promo Offer Editor</span>
+                          <h3 className="text-base sm:text-lg font-black text-gray-800 leading-tight mt-1">
+                            {editingOffer.id === 'NEW_OFFER' ? 'নতুন স্পেশাল প্রমো অফার যুক্ত করুন' : `স্পেশাল প্রমো অফার সম্পাদন করুন (ID: ${editingOffer.id})`}
+                          </h3>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setEditingOffer(null);
+                          }}
+                          className="h-8 w-8 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors cursor-pointer text-sm font-bold shadow-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1">অফারের ছবি (Promo Web Img URL):</label>
+                          <input 
+                            type="text"
+                            value={offerFormImage}
+                            onChange={(e) => setOfferFormImage(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 p-2.5 text-[10.5px] font-mono text-gray-500 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">অফারের ব্যাজ ট্যাগ (বাংলা):</label>
+                            <input 
+                              type="text"
+                              value={offerFormTagBn}
+                              onChange={(e) => setOfferFormTagBn(e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-850 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">অফারের ব্যাজ ট্যাগ (ইংরেজি):</label>
+                            <input 
+                              type="text"
+                              value={offerFormTagEn}
+                              onChange={(e) => setOfferFormTagEn(e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">অফারের শিরোনাম (বাংলা):</label>
+                            <input 
+                              type="text"
+                              value={offerFormTitleBn}
+                              onChange={(e) => setOfferFormTitleBn(e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-850 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">অফারের শিরোনাম (ইংরেজি):</label>
+                            <input 
+                              type="text"
+                              value={offerFormTitleEn}
+                              onChange={(e) => setOfferFormTitleEn(e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1 font-sans">Detail Description (বাংলা):</label>
+                          <textarea 
+                            rows={2.5}
+                            value={offerFormDescBn}
+                            onChange={(e) => setOfferFormDescBn(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-850 focus:ring-2 focus:ring-amber-100 outline-none transition resize-none font-sans"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1 font-sans">Detail Description (English):</label>
+                          <textarea 
+                            rows={2.5}
+                            value={offerFormDescEn}
+                            onChange={(e) => setOfferFormDescEn(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition resize-none"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">বোতাম লেখা (বাংলা CTA):</label>
+                            <input 
+                              type="text"
+                              value={offerFormCtaBn}
+                              onChange={(e) => setOfferFormCtaBn(e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-850 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">বোতাম লেখা (English CTA):</label>
+                            <input 
+                              type="text"
+                              value={offerFormCtaEn}
+                              onChange={(e) => setOfferFormCtaEn(e.target.value)}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2.5 pt-4 border-t font-sans">
+                        <button
+                          onClick={() => {
+                            setEditingOffer(null);
+                          }}
+                          className="w-1/3 py-2.5 border rounded-xl hover:bg-gray-50 text-xs font-bold text-gray-500 cursor-pointer text-center transition"
                         >
                           বাতিল
                         </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          if (!bannerFormTitleBn || !bannerFormImage) return;
-                          const bannerPayload: Banner = {
-                            image: bannerFormImage,
-                            titleBn: bannerFormTitleBn,
-                            titleEn: bannerFormTitleEn,
-                            subtitleBn: bannerFormSubtitleBn,
-                            subtitleEn: bannerFormSubtitleEn
-                          };
-
-                          if (editingBannerIndex !== null) {
-                            const copyB = [...banners];
-                            copyB[editingBannerIndex] = bannerPayload;
-                            saveBanners(copyB);
-                          } else {
-                            saveBanners([...banners, bannerPayload]);
-                          }
-
-                          setEditingBannerIndex(null);
-                          setBannerFormImage('');
-                          setBannerFormTitleBn('');
-                          setBannerFormTitleEn('');
-                          setBannerFormSubtitleBn('');
-                          setBannerFormSubtitleEn('');
-                        }}
-                        className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm cursor-pointer text-center"
-                      >
-                        হোমপেজ স্লাইডার সেভ করুন ✔
-                      </button>
+                        <button
+                          onClick={() => {
+                            if (!offerFormTitleBn || !offerFormImage) return;
+                            const payload = {
+                              image: offerFormImage,
+                              titleBn: offerFormTitleBn,
+                              titleEn: offerFormTitleEn,
+                              descBn: offerFormDescBn,
+                              descEn: offerFormDescEn,
+                              ctaBn: offerFormCtaBn,
+                              ctaEn: offerFormCtaEn,
+                              tagBn: offerFormTagBn,
+                              tagEn: offerFormTagEn,
+                            };
+                            if (editingOffer.id === 'NEW_OFFER') {
+                              addOffer(payload);
+                              alert('নতুন অফার সফলভাবে যুক্ত করা হয়েছে!');
+                            } else {
+                              editOffer(editingOffer.id, payload);
+                              alert('অফার সফলভাবে হালনাগাদ করা হয়েছে!');
+                            }
+                            setEditingOffer(null);
+                          }}
+                          className="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition cursor-pointer text-center"
+                        >
+                          {editingOffer.id === 'NEW_OFFER' ? 'নতুন অফার সেভ করুন ✔' : 'অফার এডিট সেভ করুন ✔'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
 
           {/* TAB 5: ACTIVE CUSTOMER REVIEWS & FEEDBACK SEEDER */}
           {adminActiveTab === 'reviews' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 font-sans">
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm font-sans space-y-4">
+                <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-4">
                   <div>
-                    <h3 className="text-sm font-black text-gray-800 uppercase font-bold">💬 মার্কেটপ্লেস অরগানিক কাস্টমার রিভিউ ও কমেন্টস</h3>
-                    <p className="text-[10px] text-gray-400 mt-0.5">গ্রাহকদের দেওয়া ইতিবাচক ও নির্ভরযোগ্য রিভিউ সামগ্রীর তালিকা।</p>
+                    <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest flex items-center gap-1.5">
+                      💬 ক্রেতাদের সক্রিয় মতামত ও পর্যালোচনা ({reviews.length}টি)
+                    </h2>
+                    <p className="text-[11px] text-gray-400 mt-1 leading-normal animate-fade-in">
+                      পণ্যভিত্তিক কোনো ক্রেতা ফিডব্যাক বা আপত্তিকর রিভিউ ডিলিট করতে চাইলে পাশের অ্যাকশন বাটন ব্যবহার করুন।
+                    </p>
                   </div>
 
-                  <div className="space-y-4 font-sans">
-                    {reviews.map((rev) => (
-                      <div key={rev.id} className="border border-gray-100 rounded-2xl p-4.5 bg-gray-50/10 space-y-2.5">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-full bg-emerald-500 text-white font-black flex items-center justify-center shrink-0 uppercase text-xs">
-                              {rev.customerName.slice(0, 2)}
-                            </div>
-                            <div>
-                              <h4 className="text-xs font-bold text-gray-800 flex items-center gap-1.5 flex-wrap">
-                                {rev.customerName}
-                                {rev.isVerifiedPurchase && (
-                                  <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-1 py-0.2 rounded inline-block">ভেরিফাইড ক্রেতা</span>
-                                )}
-                              </h4>
-                              <span className="text-[10px] text-gray-405 font-mono">{rev.location}</span>
-                            </div>
-                          </div>
-
+                  <div className="space-y-4">
+                    {reviews.length === 0 ? (
+                      <div className="text-center py-8 text-gray-450 font-medium text-xs border border-dashed rounded-xl border-gray-200">
+                        এখনো কোনো রিভিউ বা প্রতিক্রিয়া আসেনি। নিচের সীডার দিয়ে নতুন টেস্ট ফিডব্যাক দিন।
+                      </div>
+                    ) : (
+                      reviews.map((rev) => (
+                        <div key={rev.id} className="border border-gray-100 hover:border-gray-155 rounded-2xl p-4 bg-white/50 space-y-2 relative group transition-all">
                           <button
                             onClick={() => {
-                              if (confirm(`Remove this feedback review?`)) {
+                              if (confirm('এই রিভিউটি কি সত্যি মুছে ফেলতে চান?')) {
                                 deleteReview(rev.id);
                               }
                             }}
-                            className="px-2 py-0.5 text-[10px] text-red-500 bg-red-50 border border-red-100 rounded-lg cursor-pointer font-bold"
+                            className="absolute top-4 right-4 h-7 w-7 rounded-lg bg-red-50 text-red-650 hover:bg-red-100 flex items-center justify-center cursor-pointer transition-all border border-red-100"
+                            title="ফিডব্যাক মুছে ফেলুন"
                           >
-                            Delete
+                            ✕
                           </button>
-                        </div>
-
-                        <div className="space-y-1 bg-white p-3 rounded-xl border border-gray-100 text-xs">
-                          <span className="font-bold text-indigo-700 block">পণ্য শিরোনাম: {rev.productName}</span>
-                          <div className="flex gap-0.5 text-amber-500 py-0.5">
-                            {Array.from({ length: rev.rating }).map((_, s) => (
-                              <Star key={s} className="h-3 w-3 fill-amber-500 text-amber-500" />
-                            ))}
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center font-extrabold text-xs text-indigo-700 uppercase">
+                              {rev.avatar || rev.customerName[0]}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5 font-bold text-gray-800 text-xs">
+                                <span>{rev.customerName}</span>
+                                <span className="text-[10px] text-gray-400 font-normal">• {rev.location}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold mt-0.5">
+                                {'★'.repeat(rev.rating)}
+                                <span className="text-gray-450 font-medium ml-1">({rev.productName})</span>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-[11px] text-gray-600 italic">"{rev.comment}"</p>
+                          <p className="text-xs text-gray-655 leading-relaxed pl-1.5 pt-1.5 border-l-2 border-slate-200 bg-slate-50/10 rounded-r-lg">
+                            {rev.comment}
+                          </p>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Seeding Synthetic Organic customer review widgets */}
               <div className="space-y-6">
-                <div className="bg-white rounded-3xl border border-indigo-150 p-6 shadow-md space-y-4 font-sans">
+                <div className="bg-white rounded-3xl border border-indigo-150 p-6 shadow-md space-y-4">
                   <div>
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest font-mono">Verified Purchase Seeder</span>
-                    <h3 className="text-sm font-bold text-gray-800 mt-1 font-bold">নতুন অরগানিক রিভিউ সীডার</h3>
-                    <p className="text-[9px] text-gray-400">মার্কেটপ্লেসের বিভিন্ন পণ্যে গ্রাহকের আস্থা বাড়াতে দ্রুত কাস্টম রিভিউ ও ফাইভ স্টার রেটিং সেভ করুন।</p>
+                    <span className="text-[10.5px] font-black text-indigo-700 uppercase tracking-widest font-mono">Organic Feedback Seeder</span>
+                    <h3 className="text-sm font-black text-gray-800 mt-1">নতুন অরগানিক রিভিউ সীডার</h3>
+                    <p className="text-[10px] text-gray-400 leading-normal">মার্কেটপ্লেসের বিভিন্ন পণ্যে গ্রাহকের আস্থা বাড়াতে দ্রুত কাস্টম রিভিউ ও ফাইভ স্টার রেটিং সেভ করুন।</p>
                   </div>
 
                   <div className="space-y-3 px-0.5 text-xs">
                     <div>
-                      <label className="block font-bold text-gray-650 mb-1">পণ্য পছন্দ করুন (Target Product):</label>
+                      <label className="block font-bold text-gray-655 mb-1">পণ্য পছন্দ করুন (Target Product):</label>
                       <select
                         value={feedbackProdName}
                         onChange={(e) => setFeedbackProdName(e.target.value)}
@@ -1486,7 +2028,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block font-bold text-gray-655 mb-1 font-sans">রিভিউ মন্তব্য (Review text):</label>
+                      <label className="block font-bold text-gray-655 mb-1">রিভিউ মন্তব্য (Review text):</label>
                       <textarea 
                         rows={2}
                         value={feedbackComment}
@@ -1499,7 +2041,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     <button
                       onClick={() => {
                         if (!feedbackProdName || !feedbackComment) {
-                          alert('Please select product and key in review feedback.');
+                          alert('পণ্য পছন্দ করুন এবং মতামত লিখুন।');
                           return;
                         }
 
@@ -1515,7 +2057,7 @@ export const AdminCMSDashboard: React.FC = () => {
                         setFeedbackComment('');
                         setFeedbackCustomerName('');
                         setFeedbackLocation('');
-                        alert('Synthetic organic customer feedback verified generated!');
+                        alert('নতুন কাস্টমার ফিডব্যাক সফলভাবে যুক্ত করা হয়েছে!');
                       }}
                       className="w-full py-2 bg-indigo-650 hover:bg-indigo-700 rounded-xl text-white font-bold text-[10px] shadow shadow-md cursor-pointer text-center"
                     >
@@ -1532,10 +2074,10 @@ export const AdminCMSDashboard: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Wallet withdrawals */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-6 animate-fade-in">
                 <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                  <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4 flex items-center gap-1 font-bold">
-                    <Coins className="h-4 w-4 text-emerald-600" />
+                  <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4 flex items-center gap-1.5 font-bold">
+                    <Coins className="h-4 w-4 text-emerald-600 animate-pulse" />
                     খামারি অংশীদারদের টাকা উত্তোলন আবেদন মনিটর ({withdrawalRequests.filter(r => r.status === 'Pending').length})
                   </h2>
 
@@ -1549,48 +2091,40 @@ export const AdminCMSDashboard: React.FC = () => {
                         <div key={req.id} className="border border-gray-150 rounded-2xl p-4 bg-white space-y-3 font-sans">
                           <div className="flex items-center justify-between border-b border-gray-100 pb-2.5 flex-wrap gap-2">
                             <div>
-                              <span className="text-xs font-black text-emerald-800 font-mono block">অনুরোধ আইডি: {req.id}</span>
-                              <span className="text-[10px] text-gray-400 block mt-0.5">কৃষক: {req.farmerName} • আইডি: {req.farmerId}</span>
+                              <span className="text-xs font-black text-emerald-800 font-mono font-bold">ID: {req.id}</span>
                             </div>
-
-                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border ${
-                              req.status === 'Paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' :
-                              req.status === 'Pending' ? 'bg-amber-50 text-amber-705 border-amber-250 animate-pulse' :
-                              'bg-red-50 text-red-750 border-red-200'
-                            }`}>
-                              {req.status === 'Paid' ? 'টাকা পরিশোধিত' : req.status === 'Pending' ? 'রিভিউ প্রসেসিং' : 'আবেদন বাতিল'}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 text-xs">
-                            <div>
-                              <span className="text-[10px] text-gray-400 block font-bold uppercase">পেমেন্ট মেথড</span>
-                              <strong className="text-gray-750 mt-1 block font-sans">{req.method}</strong>
+                            <div className="flex items-center gap-2">
+                              <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-black uppercase text-white shrink-0 ${
+                                req.status === 'Approved' ? 'bg-emerald-600' :
+                                req.status === 'Declined' ? 'bg-red-650' : 'bg-amber-600'
+                              }`}>
+                                {req.status}
+                              </span>
+                              <div className="text-[10px] text-gray-500 font-mono font-bold">৳{req.amount} ({req.method})</div>
+                              {req.status === 'Pending' && (
+                                <div className="flex gap-1.5 ml-2">
+                                  <button
+                                    onClick={() => updateWithdrawallStatus(req.id, 'Declined')}
+                                    className="px-2 py-0.5 text-[9px] font-bold text-red-650 bg-red-50 hover:bg-red-100 border border-red-150 rounded cursor-pointer"
+                                  >
+                                    নাকচ
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      updateWithdrawallStatus(req.id, 'Approved');
+                                      alert('টাকা উত্তোলন সফলভাবে অনুমোদন করা হয়েছে!');
+                                    }}
+                                    className="px-2 py-0.5 text-[9px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded cursor-pointer"
+                                  >
+                                    অনুমোদন ✔
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                            <div>
-                              <span className="text-[10px] text-gray-400 block font-bold uppercase">অনুরোধকৃত অর্থ</span>
-                              <strong className="text-emerald-750 text-sm mt-1 block font-mono">৳{req.amount} BDT</strong>
-                            </div>
                           </div>
-
-                          <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-[10.5px] text-gray-600 font-serif leading-relaxed">
-                            <strong>মাধ্যম বিবরণ বা ব্যাংক তথ্য:</strong> {req.details}
-                          </div>
-
-                          {req.status === 'Pending' && (
-                            <div className="flex justify-end gap-2 pt-1 font-sans">
-                              <button
-                                onClick={() => updateWithdrawallStatus(req.id, 'Rejected')}
-                                className="px-3.5 py-1.5 text-[10px] font-bold text-red-650 bg-red-50 hover:bg-red-100 rounded-lg cursor-pointer border border-red-200"
-                              >
-                                অনুরোধ বাতিল করুন
-                              </button>
-                              <button
-                                onClick={() => updateWithdrawallStatus(req.id, 'Paid')}
-                                className="px-4 py-1.5 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg cursor-pointer shadow-sm"
-                              >
-                                ৳ পরিশোধ নিশ্চিত করুন ✔
-                              </button>
+                          {req.details && (
+                            <div className="text-[10px] text-slate-500 font-medium mt-1 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                              খামারি আইডি: {req.farmerId} • বিবরণ/তথ্য: {req.details}
                             </div>
                           )}
                         </div>
@@ -1603,7 +2137,9 @@ export const AdminCMSDashboard: React.FC = () => {
               {/* Right panel orders monitoring */}
               <div className="space-y-6">
                 <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                  <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4">অর্ডার ডেলিভারি মনিটর ও স্থিতি পরিবর্তন</h2>
+                  <h2 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4 flex items-center gap-1 font-bold animate-fade-in">
+                    🚴 অর্ডার ডেলিভারি মনিটর ও স্থিতি পরিবর্তন ({orders.length})
+                  </h2>
                   
                   <div className="space-y-4 max-h-[700px] overflow-y-auto pr-1">
                     {orders.map((order) => (
@@ -1645,56 +2181,190 @@ export const AdminCMSDashboard: React.FC = () => {
 
           {/* TAB 7: CUSTOMER LIST */}
           {adminActiveTab === 'customers' && (
-            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
-              <div className="sm:flex sm:items-center sm:justify-between border-b border-gray-100 pb-4">
-                <div>
-                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest font-sans">
+            <div className="space-y-8 animate-fade-in font-sans">
+              
+              {/* MEMBER VERIFICATION PIPELINE */}
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-4">
+                <div className="border-b border-gray-100 pb-4">
+                  <h2 className="text-[13px] font-black text-gray-800 uppercase tracking-widest flex items-center gap-1.5">
+                    👑 পেন্ডিং প্রিমিয়াম সাবস্ক্রিপশন রিভিউ ({membershipSubmissions.filter(sub => sub.status === 'Pending').length})
+                  </h2>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-normal">
+                    গ্রাহকদের দাখিলকৃত বিকাশ/নগদ পেমেন্ট ট্রানজেকশন যাচাই করে প্রিমিয়াম মেম্বারশিপ এবং ডেলিভারি চার্জ মওকুফ লাইসেন্স সচল করুন।
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-amber-50 text-amber-950 font-black border-b border-amber-100">
+                        <th className="p-3">অ্যাপ্লিকেশন আইডি</th>
+                        <th className="p-3">ক্রেতার নাম (Name)</th>
+                        <th className="p-3">মোবাইল ফোন</th>
+                        <th className="p-3">প্ল্যান ও মূল্য (Price)</th>
+                        <th className="p-3">বিকাش/নগদ TxID</th>
+                        <th className="p-3">অবস্থা (Status)</th>
+                        <th className="p-3">অ্যাকশন / ভ্যালিডেশন</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {membershipSubmissions && membershipSubmissions.length > 0 ? (
+                        membershipSubmissions.map((sub, i) => (
+                          <tr key={sub.id || i} className="border-b border-gray-50 hover:bg-amber-50/20 transition font-sans">
+                            <td className="p-3 font-mono font-bold text-gray-750">{sub.id}</td>
+                            <td className="p-3 font-semibold text-gray-800">{sub.customerName}</td>
+                            <td className="p-3 text-gray-500 font-mono">{sub.customerPhone}</td>
+                            <td className="p-3 font-medium text-emerald-800">৳{sub.amount} ({sub.categorySlug || 'অল-ইন-ওয়ান'})</td>
+                            <td className="p-3">
+                              <span className="font-mono bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-lg border border-amber-100 text-[10px] font-bold">
+                                {sub.txId}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              {sub.status === 'Pending' ? (
+                                <span className="inline-flex items-center gap-1 rounded bg-yellow-50 px-2 py-0.5 text-[9px] font-bold text-yellow-750 border border-yellow-150 animate-pulse">
+                                  ⏳ পেন্ডিং রিভিউ
+                                </span>
+                              ) : sub.status === 'Approved' ? (
+                                <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 border border-emerald-150">
+                                  ✔ অনুমোদিত (Active)
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded bg-red-50 px-2 py-0.5 text-[9px] font-bold text-red-705 border border-red-150">
+                                  ❌ নাকচকৃত (Declined)
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              {sub.status === 'Pending' && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => approveMembershipRequest(sub.id)}
+                                    className="px-2.5 py-1 rounded bg-emerald-600 font-bold text-white text-[9px] hover:bg-emerald-700 shadow-xs cursor-pointer transition"
+                                  >
+                                    অনুমোদন (Approve)
+                                  </button>
+                                  <button
+                                    onClick={() => rejectMembershipRequest(sub.id)}
+                                    className="px-2.5 py-1 rounded bg-red-100 font-bold text-red-700 text-[9px] hover:bg-red-200 border border-red-150 cursor-pointer transition"
+                                  >
+                                    নাকচ করুন
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="p-6 text-center text-gray-400 font-bold">
+                            কোনো প্রিমিয়াম মেম্বারশিপ আবেদন নথি পাওয়া যায়নি।
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* REGISTERED CUSTOMERS DATABASE LIST */}
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-4">
+                <div className="border-b border-gray-100 pb-4">
+                  <h2 className="text-[13px] font-black text-gray-800 uppercase tracking-widest font-sans">
                     🌱 নিবন্ধিত কাস্টমার ডাটাবেস (Customer Database)
                   </h2>
                   <p className="text-[11px] text-gray-400 mt-1 leading-normal font-sans">
                     কৃষক বাজারে অ্যাকাউন্ট তৈরি করা সকল সাধারণ ক্রেতাদের বিবরণ ও ঠিকানা এখানে বিদ্যমান।
                   </p>
                 </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-emerald-50 text-emerald-950 font-black border-b border-emerald-100">
-                      <th className="p-3">ক্রমিক নং</th>
-                      <th className="p-3">ক্রেতার নাম (Name)</th>
-                      <th className="p-3">মোবাইল নম্বর (Phone)</th>
-                      <th className="p-3">ডেলিভারি ঠিকানা (Address)</th>
-                      <th className="p-3">অ্যাকশন</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registeredCustomers && registeredCustomers.length > 0 ? (
-                      registeredCustomers.map((cust, index) => (
-                        <tr key={cust.id || index} className="border-b border-gray-50 hover:bg-emerald-50/20 font-sans">
-                          <td className="p-3 text-gray-400 font-mono font-bold">{index + 1}</td>
-                          <td className="p-3 font-semibold text-gray-800">{cust.name}</td>
-                          <td className="p-3 text-gray-500 font-mono">{cust.phone}</td>
-                          <td className="p-3 text-gray-600 max-w-xs truncate" title={cust.address || 'ঠিকানা দেওয়া হয়নি'}>
-                            {cust.address || <span className="text-gray-350 italic">কোনো ঠিকানা এখনো যোগ করা হয়নি</span>}
-                          </td>
-                          <td className="p-3">
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-150">
-                              অ্যাক্টিভ মেম্বার
-                            </span>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-emerald-50 text-emerald-950 font-black border-b border-emerald-100">
+                        <th className="p-3">ক্রমিক নং</th>
+                        <th className="p-3">ক্রেতার নাম (Name)</th>
+                        <th className="p-3">মোবাইল নম্বর (Phone)</th>
+                        <th className="p-3">ডেলিভারি ঠিকানা (Address)</th>
+                        <th className="p-3">মেম্বারশিপ টাইপ</th>
+                        <th className="p-3">অ্যাকশন</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {registeredCustomers && registeredCustomers.length > 0 ? (
+                        registeredCustomers.map((cust, index) => (
+                          <tr key={cust.id || index} className="border-b border-gray-50 hover:bg-emerald-50/20 font-sans">
+                            <td className="p-3 text-gray-400 font-mono font-bold">{index + 1}</td>
+                            <td className="p-3 font-semibold text-gray-850 flex items-center gap-1">
+                              {cust.name}
+                              {cust.subscriptionStatus === 'Premium' && (
+                                <span className="inline-block animate-bounce animate-duration-1000" title="Premium Crown Member">👑</span>
+                              )}
+                            </td>
+                            <td className="p-3 text-gray-500 font-mono">{cust.phone}</td>
+                            <td className="p-3 text-gray-600 max-w-xs truncate" title={cust.address || 'ঠিকানা দেওয়া হয়নি'}>
+                              {cust.address || <span className="text-gray-350 italic">কোনো ঠিকানা এখনো যোগ করা হয়নি</span>}
+                            </td>
+                            <td className="p-3">
+                              {cust.subscriptionStatus === 'Premium' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                  👑 প্রিমিয়াম মেম্বার
+                                </span>
+                              ) : cust.subscriptionStatus === 'Pending' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black bg-amber-50 text-amber-700 border border-amber-150 animate-pulse">
+                                  ⏳ পেন্ডিং রিভিউ
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-gray-50 text-gray-500 border border-gray-200">
+                                  সাধারণ কাস্টমার
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              {cust.subscriptionStatus !== 'Premium' ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    // Direct upgrade trigger in registered collection
+                                    const upgradedList = registeredCustomers.map((c, i) => i === index ? { ...c, subscriptionStatus: 'Premium' } : c);
+                                    localStorage.setItem('kb_registered_customers', JSON.stringify(upgradedList));
+                                    // Trigger location refresh to components
+                                    window.location.reload();
+                                    alert("কাস্টমার মেম্বারশিপ সরাসরি সফলভাবে প্রিমিয়াম স্তরে উন্নীত করা হলো! 👑");
+                                  }}
+                                  className="text-[9px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2.5 py-1 rounded border border-emerald-250 cursor-pointer transition"
+                                >
+                                  মেম্বারশিপ দিন 👑
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const downgradedList = registeredCustomers.map((c, i) => i === index ? { ...c, subscriptionStatus: 'none' } : c);
+                                    localStorage.setItem('kb_registered_customers', JSON.stringify(downgradedList));
+                                    window.location.reload();
+                                    alert("কাস্টমার মেম্বারশিপ ডাউনগ্রেড করা হয়েছে।");
+                                  }}
+                                  className="text-[9px] font-bold bg-gray-50 text-gray-500 px-2.5 py-1 rounded border hover:bg-gray-100 cursor-pointer transition select-none"
+                                >
+                                  ডাউনগ্রেড
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-gray-400 font-bold">
+                            কোনো কাস্টমার নথি এখনো যুক্ত হয়নি।
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="p-8 text-center text-gray-400 font-bold">
-                          কোনো কাস্টমার নথি এখনো যুক্ত হয়নি।
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
             </div>
           )}
 

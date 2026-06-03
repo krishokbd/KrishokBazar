@@ -167,20 +167,55 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
           {/* Pricing Box */}
           <div className="mt-4 rounded-2xl bg-gray-50 p-4 border border-gray-100/50">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-black text-emerald-700">
-                ৳{displayPrice}
-              </span>
-              {hasDiscount && (
-                <span className="text-sm text-gray-400 line-through font-mono">
-                  ৳{originalPrice}
+            <div className="flex items-baseline justify-between flex-wrap gap-2">
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-700">
+                    ৳{displayPrice}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-sm text-gray-400 line-through font-mono">
+                      ৳{originalPrice}
+                    </span>
+                  )}
+                  <span className="text-xs text-gray-400 font-medium">/{getFormattedUnit(product, language)}</span>
+                </div>
+                <p className="mt-1 text-[10.5px] text-gray-400 leading-none">
+                  *কোনো কমিশন বা ফড়িয়া খরচ নেই, সরাসরি মাঠে প্রাপ্ত মূল্য
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-gray-400 uppercase font-mono leading-none block">মোট মূল্য ({qty} {getFormattedUnit(product, language)})</span>
+                <span className="text-xl font-extrabold text-emerald-800 font-sans">
+                  ৳{displayPrice * qty}
                 </span>
-              )}
-              <span className="text-xs text-gray-400 font-medium">/{getFormattedUnit(product, language)}</span>
+              </div>
             </div>
-            <p className="mt-1 text-[10px] text-gray-400 leading-none">
-              *কোনো কমিশন বা ফড়িয়া খরচ নেই, সরাসরি মাঠে প্রাপ্ত মূল্য
-            </p>
+
+            {/* Clickable quantity selector chips */}
+            <div className="mt-3.5 pt-3 border-t border-gray-200/60">
+              <span className="block text-[11px] font-bold text-gray-500 mb-2">দ্রুত পরিমাণ নির্ধারণ করুন (Select Quantity):</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {[1, 2, 5, 10].map(q => {
+                  const unitLabel = getFormattedUnit(product, language);
+                  const isSelected = qty === q;
+                  return (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => setQty(q)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                        isSelected 
+                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50/20'
+                      }`}
+                    >
+                      {q} {unitLabel} (৳{displayPrice * q})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Crop Description */}

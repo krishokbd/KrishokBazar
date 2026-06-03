@@ -58,7 +58,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
       )}
 
       {/* BADGES & COVERS CONTAINER */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
         <img
           src={product.images[0]}
           alt={product.title}
@@ -68,21 +68,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
 
         {/* VERIFIED BADGE */}
         {product.isVerified && (
-          <span className="absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[9px] font-bold tracking-wide text-white uppercase shadow-md border border-emerald-500">
-            ✔ Verified Farmer
+          <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[8px] font-bold tracking-wide text-white uppercase shadow-md border border-emerald-500">
+            ✔ Verified
           </span>
         )}
 
         {/* READY TO COOK BADGE */}
         {product.isReadyToCook && (
-          <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase shadow">
-            🍳 Ready-to-Cook
+          <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded bg-indigo-600 px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow">
+            🍳 R2C
           </span>
         )}
 
         {/* DISCOUNT BADGE */}
         {hasDiscount && (
-          <span className="absolute left-3 bottom-3 z-10 inline-flex items-center rounded-lg bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white shadow">
+          <span className="absolute left-2 bottom-2 z-10 inline-flex items-center rounded bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white shadow">
             -{Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
           </span>
         )}
@@ -91,97 +91,66 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
         <div className="absolute inset-0 bg-black/25 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button 
             type="button"
-            className="rounded-full bg-white/95 p-3 text-emerald-700 shadow-lg hover:scale-110 active:scale-95 transition-all"
+            className="rounded-full bg-white/95 p-2 text-emerald-700 shadow-lg hover:scale-110 active:scale-95 transition-all"
           >
-            <Eye className="h-5 w-5" />
+            <Eye className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* TEXT CONTENT CONTAINER */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3">
         {/* Category + Star Rating Row */}
-        <div className="flex items-center justify-between gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+        <div className="flex items-center justify-between gap-1 text-[9px] font-bold uppercase tracking-wider text-gray-400">
           <span>{product.category}</span>
           <div className="flex items-center gap-0.5 text-amber-500">
-            <Star className="h-3 w-3 fill-amber-500 shrink-0" />
-            <span className="text-gray-600 font-mono mt-0.5">{product.rating}</span>
+            <Star className="h-2.5 w-2.5 fill-amber-500 shrink-0" />
+            <span className="text-gray-600 font-mono mt-0.5 text-[9px]">{product.rating}</span>
           </div>
         </div>
 
         {/* Title */}
-        <h3 className="mt-1.5 text-xs sm:text-sm font-bold text-gray-800 tracking-tight leading-snug line-clamp-2 font-sans group-hover:text-emerald-700 transition-colors">
+        <h3 className="mt-1 text-xs font-bold text-gray-800 tracking-tight leading-snug line-clamp-1 font-sans group-hover:text-emerald-700 transition-colors">
           {product.title}
         </h3>
 
         {/* Farmer credit reference */}
-        <div className="mt-1.5 flex items-center gap-1 flex-wrap text-[11px] text-gray-500 font-medium">
-          <Landmark className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-          <span className="truncate max-w-[130px]" title={product.farmerName}>
-            কৃষক: <strong className="text-gray-700 font-bold">{product.farmerName}</strong>
+        <div className="mt-1 flex items-center gap-1 flex-wrap text-[10px] text-gray-500 font-medium">
+          <Landmark className="h-3 w-3 text-emerald-600 shrink-0" />
+          <span className="truncate max-w-[120px]" title={product.farmerName}>
+            <strong className="text-gray-650 font-bold">{product.farmerName}</strong>
           </span>
-          {product.isVerified && (
-            <span className="inline-flex items-center gap-0.5 rounded bg-blue-50 px-1 py-0.5 text-[8px] font-black text-blue-600 border border-blue-100 shrink-0 ml-0.5" title="Verified Farmer">
-              ✔ ভেরিফাইড
-            </span>
-          )}
         </div>
 
-        {/* Price + Cart Bottom Section */}
-        <div className="mt-auto pt-3 border-t border-gray-50 space-y-2">
-          {/* Top row: Price + Add to cart */}
-          <div className="flex items-center justify-between gap-2">
-            {/* Pricing display */}
-            <div className="flex flex-col">
-              {hasDiscount && (
-                <span className="text-[10px] text-gray-400 line-through font-mono">
-                  ৳{originalPrice}
-                </span>
-              )}
-              <span className="text-sm font-black text-emerald-700 font-sans flex items-baseline">
-                ৳{displayPrice}
-                <span className="text-[10px] text-gray-400 font-medium ml-0.5 font-mono">
-                  /{getFormattedUnit(product, language)}
-                </span>
+        {/* Price + Single Buy Now Button Bottom Section */}
+        <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+          {/* Pricing display */}
+          <div className="flex flex-col">
+            {hasDiscount && (
+              <span className="text-[9px] text-gray-450 line-through font-mono leading-none">
+                ৳{originalPrice}
               </span>
-            </div>
-
-            {/* Add to Cart button */}
-            <button
-              onClick={handleAddToCart}
-              disabled={product.stock <= 0}
-              className={`flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
-                product.stock > 0
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-              {product.stock > 0 ? 'কার্টে রাখুন' : 'স্টক শেষ'}
-            </button>
+            )}
+            <span className="text-xs font-black text-emerald-700 font-sans flex items-baseline">
+              ৳{displayPrice}
+              <span className="text-[9px] text-gray-400 font-medium ml-0.5 font-mono">
+                /{getFormattedUnit(product, language)}
+              </span>
+            </span>
           </div>
 
-          {/* Bottom row: Buy Now + WhatsApp Order */}
-          {product.stock > 0 && (
-            <div className="grid grid-cols-2 gap-1.5 pt-1">
-              <button
-                onClick={handleBuyNow}
-                className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-2 py-1.5 text-[10px] font-extrabold text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <ShoppingBag className="h-3 w-3 shrink-0" />
-                এখনই কিনুন
-              </button>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center justify-center gap-1 rounded-xl bg-green-500 hover:bg-green-600 px-2 py-1.5 text-[10px] font-extrabold text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center"
-              >
-                <PhoneCall className="h-3 w-3 shrink-0" />
-                WhatsApp অর্ডার
-              </a>
-            </div>
+          {/* Single Buy Now button */}
+          {product.stock > 0 ? (
+            <button
+              onClick={handleBuyNow}
+              className="rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-3 py-1 text-[9px] font-black text-white shadow hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            >
+              কিনুন
+            </button>
+          ) : (
+            <span className="text-[8px] font-black text-gray-400 bg-gray-50 px-1.5 py-1 rounded">
+              স্টক শেষ
+            </span>
           )}
         </div>
       </div>

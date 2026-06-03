@@ -222,7 +222,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           <div className="lg:col-span-6 flex flex-col justify-start">
             
             {/* LARGE VIEWPORT BOX WITH NAVIGATION CHEVRONS */}
-            <div className="relative overflow-hidden rounded-2xl border border-gray-150-soft bg-gray-50 aspect-[4/3] w-full flex items-center justify-center shadow-inner group">
+            <div className="relative overflow-hidden rounded-2xl border border-gray-150-soft bg-gray-50 aspect-square w-full flex items-center justify-center shadow-inner group">
               <img
                 src={product.images[selectedImgIdx]}
                 alt={`${product.title} - Main Preview image`}
@@ -301,7 +301,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <button
                   key={idx}
                   onClick={() => setSelectedImgIdx(idx)}
-                  className={`relative aspect-[4/3] w-16 sm:w-20 shrink-0 rounded-xl overflow-hidden border-2 bg-white transition-all shadow-xs cursor-pointer ${
+                  className={`relative aspect-square w-16 sm:w-20 shrink-0 rounded-xl overflow-hidden border-2 bg-white transition-all shadow-xs cursor-pointer ${
                     selectedImgIdx === idx 
                       ? 'border-emerald-600 scale-[1.05] ring-4 ring-emerald-50' 
                       : 'border-gray-200 hover:border-emerald-200'
@@ -428,24 +428,57 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* CORE PRICE MATRIX - EXTREMELY VISIBLE & BOLDER */}
-              <div className="mt-5 rounded-2xl border border-gray-150-soft bg-gray-50/60 p-5 shadow-xs relative">
-                <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
-                  <span className="text-3xl sm:text-4.5xl font-black text-emerald-800 font-mono tracking-tight leading-none">
-                    ৳{displayPrice}
-                  </span>
-                  {hasDiscount && (
-                    <>
-                      <span className="text-base sm:text-lg text-gray-400 line-through font-mono font-medium">
-                        ৳{originalPrice}
-                      </span>
-                      <span className="inline-flex items-center gap-0.5 rounded-lg bg-red-50 border border-red-150 px-2 py-0.5 text-[10px] font-black text-red-700 tracking-wide font-sans">
-                        {discountPercent}% ডিসকাউন্ট ছাড়!
-                      </span>
-                    </>
-                  )}
-                  <span className="text-xs text-gray-405 font-bold ml-1">
-                    / প্রতি {getFormattedUnit(product, language)}
-                  </span>
+              <div className="mt-5 rounded-2xl border border-gray-150-soft bg-gray-50/60 p-5 shadow-xs">
+                <div className="flex flex-wrap items-baseline justify-between gap-2.5">
+                  <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
+                    <span className="text-3xl sm:text-4.5xl font-black text-emerald-800 font-mono tracking-tight leading-none">
+                      ৳{displayPrice}
+                    </span>
+                    {hasDiscount && (
+                      <>
+                        <span className="text-base sm:text-lg text-gray-400 line-through font-mono font-medium">
+                          ৳{originalPrice}
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 rounded-lg bg-red-50 border border-red-150 px-2 py-0.5 text-[10px] font-black text-red-700 tracking-wide font-sans">
+                          {discountPercent}% ডিসকাউন্ট ছাড়!
+                        </span>
+                      </>
+                    )}
+                    <span className="text-xs text-gray-405 font-bold ml-1">
+                      / প্রতি {getFormattedUnit(product, language)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-gray-400 uppercase font-mono block leading-none">মোট মূল্য ({qty} {getFormattedUnit(product, language)})</span>
+                    <span className="text-2xl font-black text-emerald-800 font-sans block mt-0.5">
+                      ৳{displayPrice * qty}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Clickable quantity selector chips (1 kg, 2 kg, 5 kg, 10 kg) */}
+                <div className="mt-4 pt-3.5 border-t border-dashed border-gray-200">
+                  <span className="block text-[11px] font-bold text-gray-500 mb-2">দ্রুত পরিমাণ নির্ধারণ করুন (Select Quantity):</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {[1, 2, 5, 10].map(q => {
+                      const unitLabel = getFormattedUnit(product, language);
+                      const isSelected = qty === q;
+                      return (
+                        <button
+                          key={q}
+                          type="button"
+                          onClick={() => setQty(q)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            isSelected 
+                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50/20'
+                          }`}
+                        >
+                          {q} {unitLabel} (৳{displayPrice * q})
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="mt-3.5 flex items-center justify-between border-t border-dashed border-gray-200 pt-3">
@@ -524,6 +557,23 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   সরাসরি কিনুন (Buy Now)
                 </button>
               </div>
+
+              {/* WhatsApp Ordering button */}
+              {product.stock > 0 && (
+                <div className="mt-3">
+                  <a
+                    href={`https://wa.me/8801931355398?text=${encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${product.title}" পণ্যটি অর্ডার করতে চাই।\nকৃষক: ${product.farmerName}\nমূল্য: ৳${displayPrice} (পরিমাণ: ${qty} ${getFormattedUnit(product, language)})`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] hover:bg-[#20BA5A] py-3.5 text-xs font-sans font-black text-white shadow-md hover:shadow-lg transition-all active:scale-[0.97] duration-150 text-center cursor-pointer"
+                  >
+                    <svg className="h-4.5 w-4.5 text-white fill-current" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008 0c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm6.49-5.385c1.654.982 3.511 1.5 5.414 1.501 5.474 0 9.93-4.45 9.934-9.92.001-2.648-1.03-5.138-2.902-7.015C17.12 1.306 14.636.275 12.001.275 6.529.275 2.073 4.73 2.069 10.2c-.001 1.958.513 3.869 1.492 5.568l-.979 3.579 3.665-.961zm11.233-7.531c-.301-.15-.178-.225-.375-.525-.097-.15-.525-.75-.525-.75s-.19-.24-.45-.24c-.112 0-.256.04-.37.15-.36.35-.95.95-.95 2.31s.99 2.67 1.13 2.85c.14.18 1.96 2.99 4.75 4.19.67.29 1.19.46 1.59.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.33-.07-.12-.27-.19-.57-.34z" />
+                    </svg>
+                    WhatsApp-এ সরাসরি অর্ডার করুন
+                  </a>
+                </div>
+              )}
 
               {/* DYNAMIC COMPACT TRANSPORT INFORMATION CARDS */}
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-gray-100 pt-5 text-xs text-gray-750">

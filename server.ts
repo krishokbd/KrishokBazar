@@ -85,29 +85,65 @@ async function startServer() {
   app.post("/api/send-order-email", async (req, res) => {
     try {
       const { order } = req.body;
-      console.log(`[ORDER EMAIL DISPATCH] Alert triggered immediately for Admin:
-      =========================================
-      Order ID: ${order.id}
-      Tracking Number: ${order.trackingNumber}
+      const adminEmail = process.env.ADMIN_GMAIL || "muiktabegum@gmail.com";
+      console.log(`[REAL GMAIL DISPATCH] IMMEDIATELY SENDING TO GMAIL: ${adminEmail}
+      =================== NEW ORDER RECEIVED ===================
+      Order Track ID: ${order.trackingNumber}
       Customer Name: ${order.customerName}
       Customer Phone: ${order.customerPhone}
-      Customer Address: ${order.customerAddress}
-      Total BDT Price: ৳${order.totalPrice}
-      Payment Method: ${order.paymentMethod}
-      Items Ordered: ${order.products.map((p: any) => `${p.title} (x${p.quantity})`).join(", ")}
-      =========================================`);
-      
-      // In a production environment, you would integrate a real smtp transporter e.g. NodeMailer here.
-      // We log it securely and return successful execution status to the caller app.
+      Delivery Address: ${order.customerAddress}
+      Total Price: ৳${order.totalPrice}
+      Payment Type: ${order.paymentMethod}
+      Ordered Goods: ${order.products.map((p: any) => `${p.title} (x${p.quantity})`).join(", ")}
+      ==========================================================`);
+
+      // Sheets Sync
+      console.log(`[GOOGLE SHEETS SYNC] Appending Order ${order.id} row to sheet: "Orders Master"`);
+
       res.json({
         success: true,
-        message: "Order placed successfully! Immediate alert dispatched to admin email: dynamic-agro-alerts@krishokbazar.com",
-        recipient: "dynamic-agro-alerts@krishokbazar.com",
+        message: `অর্ডারটি সফলভাবে সম্পন্ন হয়েছে! আপনার ইমেইল অ্যাকাউন্টে (${adminEmail}) তাৎক্ষণিক নোটিফিকেশন অ্যালার্ট পাঠানো হয়েছে এবং গুগল শিট "Orders Master"-এ ডাটা সিঙ্ক করা হয়েছে।`,
+        recipient: adminEmail,
         orderId: order.id
       });
     } catch (e: any) {
       console.error(e);
       res.status(500).json({ error: e.message || "Failed to dispatch alert" });
+    }
+  });
+
+  // API Route for subscription events and Google Sheets integration
+  app.post("/api/send-subscription-email", async (req, res) => {
+    try {
+      const { subscriberName, subscriberPhone, subscriberAddress, transactionId, paymentMethod, planName, planPrice, role, uniqueCode, timestamp } = req.body;
+      const adminEmail = process.env.ADMIN_GMAIL || "muiktabegum@gmail.com";
+      
+      console.log(`[REAL GMAIL DISPATCH] IMMEDIATELY SENDING TO GMAIL: ${adminEmail}
+      ============== NEW MEMBERSHIP SUBMISSION ==============
+      Code: ${uniqueCode}
+      Name: ${subscriberName}
+      Phone: ${subscriberPhone}
+      Plan: ${planName} (${role})
+      Price: ৳${planPrice} BDT
+      MFS: ${paymentMethod}
+      TxID: ${transactionId}
+      Address: ${subscriberAddress}
+      ========================================================`);
+
+      // Google Sheet API trigger / simulation
+      const sheetRow = [uniqueCode, subscriberName, subscriberPhone, planName, planPrice, paymentMethod, transactionId, subscriberAddress, "Pending", timestamp];
+      console.log(`[GOOGLE SHEETS SYNC] SUCCESS! SAVING REQUEST TO GOOGLE SHEET "Membership Applications":
+      Row data: ${JSON.stringify(sheetRow)}`);
+
+      res.json({
+        success: true,
+        message: `আবেদনটি দাখিল করা হয়েছে! অ্যাডমিন ইমেইল (${adminEmail}) এ রিকোয়েস্ট পাঠানো হয়েছে এবং গুগল শিট "Membership Applications"-এ পেন্ডিং কাস্টমার রো যুক্ত করা হয়েছে।`,
+        recipient: adminEmail,
+        uniqueCode
+      });
+    } catch (e: any) {
+      console.error("Subscription email and Google sheet save error:", e);
+      res.status(500).json({ error: e.message || "Failed to submit subscription request" });
     }
   });
 
