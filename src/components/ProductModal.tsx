@@ -21,20 +21,74 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
 
-  // Reset indices on product shift
+  const isWeightBased = ['kg', 'gram', 'গ্রাম', 'কেজি', 'g', 'gm'].some(u => 
+    product?.unit?.toLowerCase().trim().includes(u)
+  );
+
+  const [selectedPack, setSelectedPack] = useState<string>('');
+
+  // Reset indices and pack state on product shift
   useEffect(() => {
     setSelectedImgIdx(0);
     setQty(1);
-  }, [product]);
+    if (product) {
+      if (isWeightBased) {
+        setSelectedPack('1kg');
+      } else {
+        setSelectedPack('1pc');
+      }
+    }
+  }, [product, isWeightBased]);
 
   if (!isOpen || !product) return null;
 
   // Retrieve associated farmer details
   const farmer: Farmer | undefined = farmers.find(f => f.id === product.farmerId);
 
-  const displayPrice = product.discountPrice || product.price;
-  const originalPrice = product.price;
+  let packMultiplier = 1;
+  let packLabelBn = product.unit || 'কেজি';
+  let packLabelEn = product.unit || 'kg';
+
+  if (isWeightBased) {
+    const isBase500g = product.unit?.toLowerCase().trim() === '500g';
+    if (selectedPack === '500g') {
+      packMultiplier = isBase500g ? 1 : 0.5;
+      packLabelBn = '৫০০ গ্রাম';
+      packLabelEn = '500g';
+    } else if (selectedPack === '1kg') {
+      packMultiplier = isBase500g ? 2 : 1;
+      packLabelBn = '১ কেজি';
+      packLabelEn = '1kg';
+    } else if (selectedPack === '2kg') {
+      packMultiplier = isBase500g ? 4 : 2;
+      packLabelBn = '২ কেজি';
+      packLabelEn = '2kg';
+    }
+  } else {
+    if (selectedPack === '1pc') {
+      packMultiplier = 1;
+      packLabelBn = '১ টি';
+      packLabelEn = '1pc';
+    } else if (selectedPack === '5pc') {
+      packMultiplier = 5;
+      packLabelBn = '৫ টি';
+      packLabelEn = '5pc';
+    } else if (selectedPack === '10pc') {
+      packMultiplier = 10;
+      packLabelBn = '১০ টি';
+      packLabelEn = '10pc';
+    }
+  }
+
+  const baseDisplayPrice = product.discountPrice || product.price;
+  const baseOriginalPrice = product.price;
+
+  const displayPrice = Math.round(baseDisplayPrice * packMultiplier);
+  const originalPrice = Math.round(baseOriginalPrice * packMultiplier);
   const hasDiscount = !!product.discountPrice;
+  const discountPercent = hasDiscount && originalPrice > displayPrice
+    ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100)
+    : 0;
 
   const handleIncrement = () => {
     if (qty < product.stock) {
@@ -49,7 +103,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   const handleAdd = () => {
-    addToCart(product, qty);
+    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
     onClose();
   };
 
@@ -158,62 +212,141 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
             {product.harvestDate && (
               <>
                 <span className="text-gray-200">|</span>
-                <span className="text-amber-800 font-extrabold bg-amber-50 border border-amber-100 px-2 py-0.5 rounded text-[11px] font-sans">
+                <span className="text-amber-850 font-extrabold bg-amber-50 border border-amber-100 px-2 py-0.5 rounded text-[11px] font-sans">
                   📅 সংগ্রহ: {product.harvestDate}
                 </span>
               </>
             )}
           </div>
-
-          {/* Pricing Box */}
-          <div className="mt-4 rounded-2xl bg-gray-50 p-4 border border-gray-100/50">
-            <div className="flex items-baseline justify-between flex-wrap gap-2">
+          <div className="mt-4 rounded-2xl bg-gray-50/60 p-4 border border-gray-200/60 shadow-xs">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl sm:text-3xl font-black text-emerald-700">
+                <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1">
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-850 font-mono tracking-tight leading-none animate-fade-in">
                     ৳{displayPrice}
                   </span>
                   {hasDiscount && (
-                    <span className="text-sm text-gray-400 line-through font-mono">
-                      ৳{originalPrice}
-                    </span>
+                    <>
+                      <span className="text-sm text-gray-400 line-through font-mono">
+                        ৳{originalPrice}
+                      </span>
+                      <span className="inline-flex items-center rounded bg-red-50 border border-red-150 px-1.5 py-0.5 text-[9px] font-black text-red-700 tracking-wide">
+                        {discountPercent}% ডিসকাউন্ট!
+                      </span>
+                    </>
                   )}
-                  <span className="text-xs text-gray-400 font-medium">/{getFormattedUnit(product, language)}</span>
+                  <span className="text-xs text-gray-450 font-bold ml-1 font-sans">
+                    / প্রতি {language === 'bn' ? packLabelBn : packLabelEn}
+                  </span>
                 </div>
                 <p className="mt-1 text-[10.5px] text-gray-400 leading-none">
-                  *কোনো কমিশন বা ফড়িয়া খরচ নেই, সরাসরি মাঠে প্রাপ্ত মূল্য
+                  *কোনো কমিশন বা ফড়িয়া খরচ নেই, সরাসরি মাঠের তাজা মূল্য
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-gray-400 uppercase font-mono leading-none block">মোট মূল্য ({qty} {getFormattedUnit(product, language)})</span>
-                <span className="text-xl font-extrabold text-emerald-800 font-sans">
+                <span className="text-[10px] text-gray-400 uppercase font-mono block leading-none">মোট মূল্য ({qty} {language === 'bn' ? packLabelBn : packLabelEn})</span>
+                <span className="text-xl font-black text-emerald-800 font-sans block mt-0.5">
                   ৳{displayPrice * qty}
                 </span>
               </div>
             </div>
 
-            {/* Clickable quantity selector chips */}
-            <div className="mt-3.5 pt-3 border-t border-gray-200/60">
-              <span className="block text-[11px] font-bold text-gray-500 mb-2">দ্রুত পরিমাণ নির্ধারণ করুন (Select Quantity):</span>
-              <div className="flex flex-wrap items-center gap-2">
-                {[1, 2, 5, 10].map(q => {
-                  const unitLabel = getFormattedUnit(product, language);
-                  const isSelected = qty === q;
-                  return (
+            {/* Packaging card selector */}
+            <div className="mt-3.5 pt-3.5 border-t border-dashed border-gray-200">
+              <span className="block text-[11px] font-bold text-gray-650 mb-2 flex items-center gap-1 font-sans">
+                📦 প্যাকেজিং অপশন সিলেক্ট করুন (Select Pack Option):
+              </span>
+              
+              <div className="grid grid-cols-3 gap-2 font-sans">
+                {isWeightBased ? (
+                  <>
                     <button
-                      key={q}
                       type="button"
-                      onClick={() => setQty(q)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                        isSelected 
-                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
-                          : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-300 hover:bg-emerald-50/20'
+                      onClick={() => setSelectedPack('500g')}
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
+                        selectedPack === '500g'
+                          ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
+                          : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650 font-semibold text-xs'
                       }`}
                     >
-                      {q} {unitLabel} (৳{displayPrice * q})
+                      <span className="text-[8px] uppercase tracking-wide text-gray-410 font-bold">হাফ প্যাক</span>
+                      <span className="text-xs mt-0.5">৫০০ গ্রাম</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 1 : 0.5))}</span>
                     </button>
-                  );
-                })}
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPack('1kg')}
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
+                        selectedPack === '1kg'
+                          ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
+                          : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650 font-semibold text-xs'
+                      }`}
+                    >
+                      <span className="text-[8px] uppercase tracking-wide text-red-500 font-black animate-pulse">জনপ্রিয়</span>
+                      <span className="text-xs mt-0.5">১ কেজি</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 2 : 1))}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPack('2kg')}
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
+                        selectedPack === '2kg'
+                          ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
+                          : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650 font-semibold text-xs'
+                      }`}
+                    >
+                      <span className="text-[8px] uppercase tracking-wide text-gray-410 font-bold">ফ্যামিলি</span>
+                      <span className="text-xs mt-0.5">২ কেজি</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 4 : 2))}</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPack('1pc')}
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
+                        selectedPack === '1pc'
+                          ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
+                          : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650 font-semibold text-xs'
+                      }`}
+                    >
+                      <span className="text-[8px] uppercase tracking-wide text-gray-410 font-bold">সিঙ্গেল</span>
+                      <span className="text-xs mt-0.5">১ টি</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 1)}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPack('5pc')}
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
+                        selectedPack === '5pc'
+                          ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
+                          : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650 font-semibold text-xs'
+                      }`}
+                    >
+                      <span className="text-[8px] uppercase tracking-wide text-red-500 font-black animate-pulse">৫ টি প্যাক</span>
+                      <span className="text-xs mt-0.5">৫ টি</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 5)}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPack('10pc')}
+                      className={`p-2 sm:p-2.5 rounded-xl border transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
+                        selectedPack === '10pc'
+                          ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
+                          : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650 font-semibold text-xs'
+                      }`}
+                    >
+                      <span className="text-[8px] uppercase tracking-wide text-gray-410 font-bold">ফ্যামিলি</span>
+                      <span className="text-xs mt-0.5">১০ টি</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 10)}</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

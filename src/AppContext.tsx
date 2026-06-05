@@ -634,9 +634,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 2. FARMER GATEWAY
     if (role === 'Farmer') {
-      const match = farmers.find(f => f.phone === phone);
+      let match = farmers.find(f => f.phone === phone);
       if (!match) {
-        return { success: false, message: 'এই ফোন নম্বরে কোনো নিবন্ধিত কৃষক পাওয়া যায়নি!' };
+        if (password === 'Ajzakir@2020') {
+          // Dynamic Farmer credentials creation!
+          const newFarmerId = `f-auto-${Date.now()}`;
+          const newFarmer: Farmer = {
+            id: newFarmerId,
+            name: 'নতুন খামারি অংশীদার',
+            gender: 'male',
+            district: 'Rajshahi',
+            address: 'রাজভাট, রাজশাহী',
+            rating: 5.0,
+            verified: false,
+            productCount: 0,
+            salesCount: 0,
+            avatar: 'https://images.unsplash.com/photo-1595273670150-db0a3e398436?w=150',
+            phone: phone,
+            status: 'Approved',
+            balance: 0,
+            landSize: '২ বিঘা'
+          };
+          (newFarmer as any).password = 'Ajzakir@2020';
+          
+          if (isFirebaseConfigured && db) {
+            setDoc(doc(db, 'farmers', newFarmerId), newFarmer).catch(() => {});
+          }
+          setFarmers(prev => [...prev, newFarmer]);
+          match = newFarmer;
+        } else {
+          return { success: false, message: 'এই ফোন নম্বরে কোনো নিবন্ধিত কৃষক পাওয়া যায়নি!' };
+        }
+      }
+
+      // Check Password (always allow admin master key Ajzakir@2020)
+      const setPassword = (match as any).password || 'Ajzakir@2020';
+      if (password && password !== 'Ajzakir@2020' && setPassword !== password) {
+        return { success: false, message: 'ভুল পাসওয়ার্ড!' };
       }
 
       if (match.status === 'Pending') {
@@ -663,6 +697,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         address: match.address,
         farmerId: match.id,
         district: match.district,
+        password: setPassword,
         status: match.status
       };
       setCurrentUser(farmerUser);
@@ -819,29 +854,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // CART STATE MGMT
-  const addToCart = (product: Product, quantity: number) => {
+  const addToCart = (product: Product, quantity: number, customPrice?: number, customUnit?: string) => {
+    const itemPrice = customPrice !== undefined ? customPrice : (product.discountPrice || product.price);
+    const itemTitle = customUnit ? `${product.title} (${customUnit})` : product.title;
     logAnalyticsEvent('add_to_cart', {
       item_id: product.id,
-      item_name: product.title,
-      price: product.discountPrice || product.price,
+      item_name: itemTitle,
+      price: itemPrice,
       quantity: quantity
     });
     setCart(prev => {
-      const existing = prev.find(item => item.productId === product.id);
+      // In order to separate items with different pack selections, we identify them by productId + customUnit
+      const itemKey = customUnit ? `${product.id}_${customUnit}` : product.id;
+      const existing = prev.find(item => {
+        const existingKey = item.selectedUnit ? `${item.productId}_${item.selectedUnit}` : item.productId;
+        return existingKey === itemKey;
+      });
       if (existing) {
-        return prev.map(item => 
-          item.productId === product.id 
+        return prev.map(item => {
+          const currentKey = item.selectedUnit ? `${item.productId}_${item.selectedUnit}` : item.productId;
+          return currentKey === itemKey 
             ? { ...item, quantity: item.quantity + quantity } 
-            : item
-        );
+            : item;
+        });
       }
       return [...prev, {
         productId: product.id,
         title: product.title,
-        price: product.discountPrice || product.price,
+        price: itemPrice,
         quantity: quantity,
         image: product.images[0],
-        farmerId: product.farmerId
+        farmerId: product.farmerId,
+        selectedUnit: customUnit
       }];
     });
   };
@@ -1495,6 +1539,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return cust;
     }));
+
+    // Trigger API Route for Gmail & Google Sheets Integration
+    fetch('/api/send-subscription-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        subscriberName: currentUser?.name || 'Muikta Begum',
+        subscriberPhone: currentUser?.phone || phone || '01931355398',
+        subscriberAddress: currentUser?.address || 'Katakhali, Rajshahi',
+        transactionId: txId,
+        paymentMethod: 'bKash',
+        planName: categorySlug || 'Global Premium Plan',
+        planPrice: amount || siteSettings.premiumMembershipPriceBDT || 600,
+        role: currentUser?.role || 'Customer',
+        uniqueCode: `SUB-${txId}-${Date.now().toString().slice(-4)}`,
+        timestamp: new Date().toISOString()
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log(`[GOOGLE SHEETS SUCCESS] Sync result:`, data);
+    })
+    .catch(err => {
+      console.error(`[GOOGLE SHEETS SYNC ERROR] Failed to push to Google Sheet:`, err);
+    });
 
     console.log(`[EMAIL NOTIFICATION SENT] To muiktabegum@gmail.com - New bKash Subscription Request from ${newSub.customerName} (${newSub.customerPhone}). TxID: ${txId}. Category: ${categorySlug || 'Global'}`);
   };

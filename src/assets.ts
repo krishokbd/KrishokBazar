@@ -29,5 +29,19 @@ export const HERO_CAROUSEL_BANNERS = [
     titleEn: "Real Joy of Delicious & Nutritious Family Cooking",
     subtitleBn: "মাঠের আসল তাজা সবজি দিয়ে রান্না হোক পরম যত্ন ও মমতায় পরিবারের জন্য।",
     subtitleEn: "Let your family experience pure, unadulterated tastes harvested with care."
+  },
+  {
+    image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&auto=format&fit=crop&q=80",
+    titleBn: "সোনার ফসল ফলানো বাংলার কঠোর পরিশ্রমী কৃষকসমাজ",
+    titleEn: "Our Hardworking Farmers Growing Golden Crops",
+    subtitleBn: "যাঁদের ঘামে গড়ে উঠেছে এই সবুজে ঘেরা বাংলার কৃষি ব্যবস্থা, আমরা তাঁদের পাশে আছি প্রতিক্ষণ।",
+    subtitleEn: "Standing by the core farmers of Bangladesh who nurture our fertile land and secure food sustenance."
+  },
+  {
+    image: "https://images.unsplash.com/photo-1592595896551-12b371d546d5?w=1200&auto=format&fit=crop&q=80",
+    titleBn: "মাটির পরশ মাখা সতেজ ও খাটি পুষ্টিকর ফলমূল",
+    titleEn: "Naturally Grown Earth-rich Golden Fruits & Harvests",
+    subtitleBn: "রাসায়নিক ছাড়াই প্রাকৃতিকভাবে পাকানো ও সুরক্ষিত বাগানের তাজা ফলমূল সরাসরি খমার থেকে।",
+    subtitleEn: "Chemical-free naturally ripened fresh delicious fruits and grains directly from orchards."
   }
 ];

@@ -71,7 +71,7 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ selectedCategory
           </div>
 
           {/* Individual Category Cards */}
-          {categories.map((cat) => {
+          {categories.filter(cat => cat.isActive !== false).map((cat) => {
             const theme = categoryThemeMap[cat.id] || { bg: 'bg-gray-50', text: 'text-gray-600', icon: 'Leaf', border: 'border-gray-100' };
             const isSelected = selectedCategory === cat.id;
 

@@ -44,7 +44,7 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
     const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           (f.bio && f.bio.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesDistrict = selectedDistrict === 'all' || f.district === selectedDistrict;
-    return matchesSearch && matchesDistrict && f.verified;
+    return matchesSearch && matchesDistrict && f.verified && f.isActive !== false && f.status !== 'Blocked';
   });
 
   return (

@@ -307,11 +307,21 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* DROPDOWN MENU */}
                 {profileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-white p-2 shadow-2xl border border-gray-100 ring-1 ring-black/5 divide-y divide-gray-50 z-50 animate-in fade-in slide-in-from-top-1 text-xs">
-                    <div className="px-3 py-2.5">
-                      <p className="font-bold text-gray-800 max-w-[140px] truncate">{currentUser.name}</p>
-                      <span className="mt-0.5 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
+                    <div className="px-3 py-2.5 space-y-1">
+                      <div className="flex items-center gap-1">
+                        <p className="font-bold text-gray-800 max-w-[140px] truncate">{currentUser.name}</p>
+                        {currentUser.subscriptionStatus === 'silver' && (
+                          <span className="text-yellow-500 text-[10px]" title="প্রিমিয়াম গ্রাহক">👑</span>
+                        )}
+                      </div>
+                      <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
                         {currentUser.role === 'Admin' ? '👤 পরিচালক' : currentUser.role === 'Farmer' ? '🌱 অংশীদার কৃষক' : '🛍️ সম্মানিত ক্রেতা'}
                       </span>
+                      {currentUser.subscriptionStatus === 'silver' && (
+                        <span className="block text-[9px] font-extrabold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 text-center uppercase">
+                          ✔ ভেরিফাইড প্রিমিয়াম
+                        </span>
+                      )}
                     </div>
 
                     <div className="py-1">

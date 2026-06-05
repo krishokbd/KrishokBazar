@@ -14,3 +14,73 @@
   --color-emerald-900: #154323;
   --color-emerald-950: #0e2d17;
 }
+
+/* Enforce native mobile-like viewport constraints */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+  overflow-x: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  background-color: #f9fafb; /* gray-50 */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-x: none; /* Prevents swipe navigation */
+  position: relative;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* Prevent unwanted browser font-scaling in landscape */
+@viewport {
+  width: device-width;
+  zoom: 1.0;
+}
+
+/* Preventing default pinch-to-zoom on specified native touch targets */
+button, a, select, input, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* 
+ * CRITICAL MOBILE UX FIX:
+ * iOS automatically zooms in when an input has a font-size lower than 16px.
+ * We force 16px font-size on mobile inputs to completely prevent unwanted page shift and zooming.
+ */
+@media (max-width: 639px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Grid & Flex item overflow safeguards */
+.grid {
+  min-width: 0;
+}
+
+.flex-1 {
+  min-width: 0;
+}
+
+/* Dragging visual prevention */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+

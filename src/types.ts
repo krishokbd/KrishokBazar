@@ -27,6 +27,7 @@ export interface Farmer {
   videoPlaceholder?: string;
   landSize?: string;
   salesAmount?: number;
+  isActive?: boolean;
 }
 
 export interface Product {
@@ -44,9 +45,12 @@ export interface Product {
   isVerified: boolean;
   isReadyToCook: boolean;
   isFeatured?: boolean;
+  approved?: boolean; // When farmer uploads, starts as false, requires Admin approval
+  uploaderRole?: 'Admin' | 'Farmer';
   harvestDate?: string;
   farmName?: string;
   unit?: string; // unit of measure e.g. kg, piece, 500g
+  isActive?: boolean;
 }
 
 export interface OrderItem {
@@ -118,6 +122,7 @@ export interface Category {
   nameBn: string;
   nameEn: string;
   icon: string;
+  isActive?: boolean;
 }
 
 export interface Banner {

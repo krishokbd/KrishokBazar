@@ -114,6 +114,10 @@ export const AdminCMSDashboard: React.FC = () => {
     }
   }, [siteSettings]);
 
+  // Filters for Products and Farmers in Admin CMS
+  const [adminProductFilter, setAdminProductFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
+  const [adminFarmerFilter, setAdminFarmerFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
+
   // Categories editing state
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryFormId, setCategoryFormId] = useState('');
@@ -479,10 +483,35 @@ export const AdminCMSDashboard: React.FC = () => {
 
                 {/* Active Partner Farmers */}
                 <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
-                  <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block mb-4">নিবন্ধিত অংশীদার কৃষক তালিকা ({farmers.filter(f => f.status !== 'Pending').length})</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 border-b border-gray-50 pb-3">
+                    <h3 className="text-xs sm:text-sm font-black text-gray-800 uppercase tracking-wider block">
+                      নিবন্ধিত অংশীদার কৃষক তালিকা ({farmers.filter(f => f.status !== 'Pending').length})
+                    </h3>
+                    
+                    {/* Active/Inactive filter */}
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-gray-400">ফিল্টার:</span>
+                      <select
+                        value={adminFarmerFilter}
+                        onChange={(e) => setAdminFarmerFilter(e.target.value as any)}
+                        className="rounded-lg border border-gray-200 bg-white p-1 text-[10px] font-bold text-gray-600 outline-none"
+                      >
+                        <option value="All">সব কৃষক (All)</option>
+                        <option value="Active">সক্রিয় (Active)</option>
+                        <option value="Inactive">নিষ্ক্রিয় (Inactive)</option>
+                      </select>
+                    </div>
+                  </div>
                   
                   <div className="space-y-3.5">
-                    {farmers.filter(f => f.status !== 'Pending').map((f) => (
+                    {farmers
+                      .filter(f => f.status !== 'Pending')
+                      .filter(f => {
+                        if (adminFarmerFilter === 'Active') return f.isActive !== false;
+                        if (adminFarmerFilter === 'Inactive') return f.isActive === false;
+                        return true;
+                      })
+                      .map((f) => (
                       <div key={f.id} className="border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white hover:bg-gray-50/50 transition-all font-sans">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-50 shrink-0 border border-gray-150">
@@ -532,6 +561,18 @@ export const AdminCMSDashboard: React.FC = () => {
                             className="px-2 py-1 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 rounded-lg text-[10px] font-bold border border-gray-205 cursor-pointer"
                           >
                             সম্পাদনা
+                          </button>
+
+                          <button
+                            onClick={() => updateFarmer(f.id, { isActive: f.isActive === false })}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                              f.isActive !== false
+                                ? 'bg-emerald-50 text-emerald-1000 border-emerald-250 hover:bg-emerald-100'
+                                : 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100/50'
+                            }`}
+                            title="কৃষক দৃশ্যমানতা অন/অফ করুন"
+                          >
+                            {f.isActive !== false ? '🟢 সক্রিয়' : '🔴 নিষ্ক্রিয়'}
                           </button>
 
                           <button
@@ -1129,7 +1170,7 @@ export const AdminCMSDashboard: React.FC = () => {
                             value={adminProdImages[0] || ''}
                             onChange={(e) => setAdminProdImages([e.target.value, ...adminProdImages.slice(1)])}
                             className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-gray-500 font-mono text-[10px] shadow-xs outline-none focus:ring-2 focus:ring-indigo-100 transition"
-                            placeholder="ইমেজ ওয়েব লিংক এড্রেস"
+                            placeholder="ছবি লিংক বা ইউআরএল"
                           />
                           {/* Live preview */}
                           <div className="mt-2">
@@ -1145,7 +1186,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                   }}
                                 />
                                 <div className="absolute top-1 left-1 bg-black/60 text-white text-[7px] font-black tracking-widest uppercase px-1 py-0.2 rounded font-mono">
-                                  Live Preview (তাত্ক্ষণিক প্রাকদর্শন)
+                                  Live Preview
                                 </div>
                               </div>
                             ) : (
@@ -1230,9 +1271,23 @@ export const AdminCMSDashboard: React.FC = () => {
                 </div>
               )}
 
+              {/* Product Filtering Toolbar */}
+              <div className="flex items-center justify-end gap-1.5 pb-2">
+                <span className="text-[10px] font-bold text-gray-400">দৃশ্যমানতা ফিল্টার:</span>
+                <select
+                  value={adminProductFilter}
+                  onChange={(e) => setAdminProductFilter(e.target.value as any)}
+                  className="rounded-lg border border-gray-200 bg-white p-1 text-[10px] font-bold text-gray-650 outline-none"
+                >
+                  <option value="All">সব পণ্য (All)</option>
+                  <option value="Active">সক্রিয়/অন থাকা পণ্য (Active)</option>
+                  <option value="Inactive">নিষ্ক্রিয়/অফ থাকা পণ্য (Inactive)</option>
+                </select>
+              </div>
+
               {/* Grid or Table list of active products */}
               <div className="overflow-x-auto border border-gray-100 rounded-2xl">
-                <table className="min-w-full divide-y divide-gray-100 text-xs">
+                <table className="min-w-full divide-y divide-gray-100 text-xs text-gray-505 font-sans">
                   <thead className="bg-gray-50 font-sans">
                     <tr>
                       <th className="px-4 py-3 text-left font-black text-gray-500 uppercase">পণ্য তথ্য ও খামারি</th>
@@ -1241,17 +1296,29 @@ export const AdminCMSDashboard: React.FC = () => {
                       <th className="px-4 py-3 text-center font-black text-gray-500 uppercase">স্টক পরিমাণ</th>
                       <th className="px-4 py-3 text-center font-black text-gray-500 uppercase">Featured Spotlight</th>
                       <th className="px-4 py-3 text-center font-black text-gray-500 uppercase">ভেরিফাইড ব্যাজ</th>
+                      <th className="px-4 py-3 text-center font-black text-gray-500 uppercase">হোমপেজ শো/হাইড</th>
                       <th className="px-4 py-3 text-right font-black text-gray-500">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100 font-sans">
-                    {products.map((p) => (
+                    {products
+                      .filter(p => {
+                        if (adminProductFilter === 'Active') return p.isActive !== false;
+                        if (adminProductFilter === 'Inactive') return p.isActive === false;
+                        return true;
+                      })
+                      .map((p) => (
                       <tr key={p.id} className="hover:bg-gray-50/50 transition-all">
                         <td className="px-4 py-2.5 flex items-center gap-2.5">
                           <img src={p.images[0]} className="h-9 w-9 object-cover rounded-lg bg-gray-50 border shrink-0" referrerPolicy="no-referrer" />
                           <div className="truncate max-w-[190px]">
                             <strong className="text-gray-800 font-bold text-[11px] block truncate">{p.title}</strong>
                             <span className="text-[10px] text-gray-400 block truncate font-medium">খামারি: {p.farmerName} • ID: {p.id}</span>
+                            {p.approved === false && (
+                              <span className="inline-block mt-0.5 text-[8px] bg-red-50 text-red-700 font-extrabold px-1 rounded-sm border border-red-200 animate-pulse">
+                                ⏳ অনুমোদনের অপেক্ষায়
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-2.5 capitalize">{p.category}</td>
@@ -1286,8 +1353,36 @@ export const AdminCMSDashboard: React.FC = () => {
                             {p.isVerified ? '✔ Verified' : '❌ No'}
                           </button>
                         </td>
+                        <td className="px-4 py-2.5 text-center">
+                          <button
+                            onClick={() => editProduct(p.id, { isActive: p.isActive !== false })}
+                            className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              p.isActive !== false ? 'bg-emerald-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                p.isActive !== false ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                          <span className="block text-[8px] font-medium text-gray-400 mt-0.5">
+                            {p.isActive !== false ? 'সক্রিয় (On)' : 'বন্ধ (Off)'}
+                          </span>
+                        </td>
                         <td className="px-4 py-2.5 text-right font-sans">
                           <div className="flex justify-end gap-1 font-sans">
+                            {p.approved === false && (
+                              <button
+                                onClick={() => {
+                                  editProduct(p.id, { approved: true });
+                                  alert(`"${p.title}" পণ্যটি সফলভাবে অনুমোদন করা হয়েছে! এটি এখন লাইভ সবজি বাজারে ক্রেতাদের কাছে বিক্রি হবে।`);
+                                }}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[9px] cursor-pointer transition duration-150 shadow-xs"
+                              >
+                                অনুমোদন ✔
+                              </button>
+                            )}
                             <button
                               onClick={() => {
                                 setAdminEditingProduct(p);
@@ -1309,6 +1404,17 @@ export const AdminCMSDashboard: React.FC = () => {
                             >
                               <Edit className="h-2.5 w-2.5 text-amber-650" />
                               এডিট
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm(`আপনি কি নিশ্চিতভাবে "${p.title}" পণ্যটি ডিলিট করতে চান?`)) {
+                                  deleteProduct(p.id);
+                                  alert("পণ্যটি সফলভাবে মুছে ফেলা হয়েছে!");
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-50 hover:bg-red-100 text-red-700 rounded font-bold text-[9px] border border-red-200 cursor-pointer transition duration-150 shadow-xs"
+                            >
+                              মুছুন
                             </button>
                           </div>
                         </td>
@@ -1345,7 +1451,20 @@ export const AdminCMSDashboard: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              saveCategories(categories.map(c => c.id === cat.id ? { ...c, isActive: cat.isActive === false } : c));
+                            }}
+                            className={`p-1 rounded text-[10px] font-bold cursor-pointer border transition-colors ${
+                              cat.isActive !== false
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-250 hover:bg-emerald-100'
+                                : 'bg-gray-100 text-gray-400 border-gray-200 hover:bg-gray-250'
+                            }`}
+                            title="ক্যাটাগরি দৃশ্যমানতা অন/অফ করুন"
+                          >
+                            {cat.isActive !== false ? '🟢 সচল (On)' : '🔴 বন্ধ (Off)'}
+                          </button>
                           <button
                             onClick={() => {
                               setEditingCategory(cat);

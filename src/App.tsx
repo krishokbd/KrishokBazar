@@ -18,6 +18,7 @@ import { ProductDetailsPage } from './components/ProductDetailsPage';
 import { FarmerStoreProfilePage } from './components/FarmerStoreProfilePage';
 import { AdminCMSDashboard } from './components/AdminCMSDashboard';
 import { OrderHistory } from './components/OrderHistory';
+import { FarmerDashboard } from './components/FarmerDashboard';
 import { RiktazAI } from './components/RiktazAI';
 import { FloatingSocials } from './components/FloatingSocials';
 import { AppEntryFlow } from './components/AppEntryFlow';
@@ -141,7 +142,8 @@ const AppContent: React.FC = () => {
     updateWithdrawallStatus,
     getNidDetails,
     siteSettings,
-    addToCart
+    addToCart,
+    categories
   } = useApp();
 
   // Route state
@@ -266,6 +268,33 @@ const AppContent: React.FC = () => {
   // Filtered products query for shop/ready-to-cook
   const getFilteredProducts = () => {
     let list = [...products];
+
+    // Filter out unapproved and inactive products/categories/farmers (except for admin, or the farmer owner)
+    list = list.filter(p => {
+      const isAdminOrOwner = currentUser?.role === 'Admin' || (currentUser?.role === 'Farmer' && currentUser.farmerId === p.farmerId);
+      
+      if (p.approved === false) {
+        if (isAdminOrOwner) return true;
+        return false;
+      }
+
+      if (!isAdminOrOwner) {
+        // If the product is deactivated
+        if (p.isActive === false) return false;
+
+        // If the farmer itself is deactivated or blocked
+        const farmer = farmers.find(f => f.id === p.farmerId);
+        if (farmer) {
+          if (farmer.isActive === false || farmer.status === 'Blocked') return false;
+        }
+
+        // If the category itself is deactivated
+        const categoryOfProd = categories.find(c => c.id === p.category);
+        if (categoryOfProd && categoryOfProd.isActive === false) return false;
+      }
+
+      return true;
+    });
 
     // Search query
     if (searchQuery.trim()) {
@@ -565,7 +594,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gray-50 flex flex-col font-sans relative">
       <Header 
         onOpenAuth={handleOpenAuthModal}
         onOpenCart={handleOpenCartDrawer}
@@ -618,7 +647,7 @@ const AppContent: React.FC = () => {
       )}
 
       {/* MAIN LAYOUTS WRAPPER */}
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0">
 
         {/* DEDICATED PRODUCT DETAILS PAGE */}
         {currentView === 'product-details' && selectedProductId && (
@@ -648,6 +677,13 @@ const AppContent: React.FC = () => {
         {currentView === 'customer-dashboard' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <OrderHistory />
+          </div>
+        )}
+
+        {/* FARMER DASHBOARD */}
+        {currentView === 'farmer-dashboard' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <FarmerDashboard />
           </div>
         )}
 

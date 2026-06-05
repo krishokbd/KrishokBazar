@@ -99,41 +99,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
       </div>
 
       {/* TEXT CONTENT CONTAINER */}
-      <div className="flex flex-1 flex-col p-3">
+      <div className="flex flex-1 flex-col p-2 sm:p-3">
         {/* Category + Star Rating Row */}
-        <div className="flex items-center justify-between gap-1 text-[9px] font-bold uppercase tracking-wider text-gray-400">
+        <div className="flex items-center justify-between gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-gray-400">
           <span>{product.category}</span>
           <div className="flex items-center gap-0.5 text-amber-500">
-            <Star className="h-2.5 w-2.5 fill-amber-500 shrink-0" />
-            <span className="text-gray-600 font-mono mt-0.5 text-[9px]">{product.rating}</span>
+            <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 fill-amber-500 shrink-0" />
+            <span className="text-gray-600 font-mono mt-0.5 text-[8px] sm:text-[9px]">{product.rating}</span>
           </div>
         </div>
 
         {/* Title */}
-        <h3 className="mt-1 text-xs font-bold text-gray-800 tracking-tight leading-snug line-clamp-1 font-sans group-hover:text-emerald-700 transition-colors">
+        <h3 className="mt-0.5 text-[10px] sm:text-xs font-bold text-gray-800 tracking-tight leading-snug line-clamp-1 font-sans group-hover:text-emerald-700 transition-colors">
           {product.title}
         </h3>
 
         {/* Farmer credit reference */}
-        <div className="mt-1 flex items-center gap-1 flex-wrap text-[10px] text-gray-500 font-medium">
-          <Landmark className="h-3 w-3 text-emerald-600 shrink-0" />
-          <span className="truncate max-w-[120px]" title={product.farmerName}>
+        <div className="mt-0.5 flex items-center gap-1 flex-wrap text-[8px] sm:text-[10px] text-gray-500 font-medium">
+          <Landmark className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
+          <span className="truncate max-w-[80px] sm:max-w-[120px]" title={product.farmerName}>
             <strong className="text-gray-650 font-bold">{product.farmerName}</strong>
           </span>
         </div>
 
         {/* Price + Single Buy Now Button Bottom Section */}
-        <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+        <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between gap-1.5">
           {/* Pricing display */}
           <div className="flex flex-col">
             {hasDiscount && (
-              <span className="text-[9px] text-gray-450 line-through font-mono leading-none">
+              <span className="text-[8px] sm:text-[9px] text-gray-450 line-through font-mono leading-none">
                 ৳{originalPrice}
               </span>
             )}
-            <span className="text-xs font-black text-emerald-700 font-sans flex items-baseline">
+            <span className="text-[10px] sm:text-xs font-black text-emerald-700 font-sans flex items-baseline leading-none">
               ৳{displayPrice}
-              <span className="text-[9px] text-gray-400 font-medium ml-0.5 font-mono">
+              <span className="text-[8px] sm:text-[9px] text-gray-400 font-medium ml-0.5 font-mono">
                 /{getFormattedUnit(product, language)}
               </span>
             </span>
@@ -143,12 +143,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
           {product.stock > 0 ? (
             <button
               onClick={handleBuyNow}
-              className="rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-3 py-1 text-[9px] font-black text-white shadow hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+              className="rounded bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9px] font-black text-white shadow hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
             >
               কিনুন
             </button>
           ) : (
-            <span className="text-[8px] font-black text-gray-400 bg-gray-50 px-1.5 py-1 rounded">
+            <span className="text-[7px] sm:text-[8px] font-black text-gray-400 bg-gray-50 px-1 sm:px-1.5 py-0.5 rounded">
               স্টক শেষ
             </span>
           )}
