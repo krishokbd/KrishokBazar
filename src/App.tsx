@@ -21,8 +21,10 @@ import { OrderHistory } from './components/OrderHistory';
 import { FarmerDashboard } from './components/FarmerDashboard';
 import { RiktazAI } from './components/RiktazAI';
 import { FloatingSocials } from './components/FloatingSocials';
+import { FarmerSocialFeed } from './components/FarmerSocialFeed';
 import { AppEntryFlow } from './components/AppEntryFlow';
 import { SubscriptionModal } from './components/SubscriptionModal';
+import { useSubscriptionTimer } from './hooks/useSubscriptionTimer';
 import { VerifiedFarmersView } from './components/VerifiedFarmersView';
 import { BlogView } from './components/BlogView';
 import { ScrollingBanners } from './components/ScrollingBanners';
@@ -163,6 +165,29 @@ const AppContent: React.FC = () => {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [activeFarmerProfile, setActiveFarmerProfile] = useState<Farmer | null>(null);
+
+  // Conditional subscription auto-trigger timing logic helper
+  const isEligibleForSubscriptionTrigger = 
+    (!currentUser || 
+      (currentUser.role !== 'Admin' && (!currentUser.subscriptionStatus || currentUser.subscriptionStatus === 'none'))
+    );
+
+  useSubscriptionTimer((intervalName) => {
+    let targetTabRole: 'customer' | 'farmer' = 'customer';
+    if (currentUser) {
+      if (currentUser.role === 'Farmer') {
+        targetTabRole = 'farmer';
+      } else {
+        targetTabRole = 'customer';
+      }
+    } else {
+      targetTabRole = 'customer';
+    }
+
+    setSubscriptionDefaultRole(targetTabRole);
+    setIsSubscriptionOpen(true);
+    console.log(`Auto-triggering subscription modal for interval ${intervalName} targeting role: ${targetTabRole}`);
+  }, isEligibleForSubscriptionTrigger);
 
   // Notifications or order success alert
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
@@ -423,6 +448,8 @@ const AppContent: React.FC = () => {
     else if (path === '/dashboard') initialView = 'customer-dashboard';
     else if (path === '/farmer-portal') initialView = 'farmer-dashboard';
     else if (path === '/admin') initialView = 'admin';
+    else if (path === '/blog') initialView = 'blog';
+    else if (path === '/social-feed') initialView = 'social-feed';
     else if (path === '/our-story') initialView = 'our-story';
 
     setView(initialView);
@@ -436,6 +463,8 @@ const AppContent: React.FC = () => {
       else if (p === '/dashboard') matchedView = 'customer-dashboard';
       else if (p === '/farmer-portal') matchedView = 'farmer-dashboard';
       else if (p === '/admin') matchedView = 'admin';
+      else if (p === '/blog') matchedView = 'blog';
+      else if (p === '/social-feed') matchedView = 'social-feed';
       else if (p === '/our-story') matchedView = 'our-story';
       
       setView(matchedView);
@@ -453,6 +482,8 @@ const AppContent: React.FC = () => {
     else if (currentView === 'customer-dashboard') path = '/dashboard';
     else if (currentView === 'farmer-dashboard') path = '/farmer-portal';
     else if (currentView === 'admin') path = '/admin';
+    else if (currentView === 'blog') path = '/blog';
+    else if (currentView === 'social-feed') path = '/social-feed';
     else if (currentView === 'our-story') path = '/our-story';
     else if (currentView === 'product-details') path = `/product/${selectedProductId || 'item'}`;
     else if (currentView === 'farmer-store') path = `/farmer/${selectedFarmerStoreId || 'profile'}`;
@@ -722,6 +753,29 @@ const AppContent: React.FC = () => {
             onBack={() => setView('home')}
           />
         )}
+
+        {/* STANDALONE PUBLIC SOCIAL MEDIA FEED (FARMERS' SOCIAL YARD) */}
+        {currentView === 'social-feed' && (
+          <div className="bg-slate-50 min-h-screen py-6 font-sans">
+            <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-xs">
+                <div>
+                  <span className="text-[10px] sm:text-xs bg-emerald-50 text-emerald-805 border border-emerald-150 px-3 py-1 rounded-full font-black uppercase tracking-wider">সোশ্যাল মিডিয়া হাব (Social Media Feed)</span>
+                  <h1 className="text-xl sm:text-2xl font-black text-gray-900 mt-1.5 leading-tight animate-fadeIn">কৃষকের সামাজিক উঠান ও সোশ্যাল ফিড</h1>
+                  <p className="text-xs text-gray-500 mt-1 font-semibold">খামারি এবং অ্যাডমিনদের দৈনিক আপডেট, মাঠের চিত্র ও ভিডিও ব্লগিং গ্যালারি। লাইক-কমেন্ট দিয়ে নিরাপদ খাদ্যের লড়াইয়ে যুক্ত থাকুন!</p>
+                </div>
+                <button 
+                  onClick={() => setView('home')} 
+                  className="px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl text-xs font-black text-gray-650 flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer transition shadow-2xs hover:scale-102"
+                >
+                  ← প্রচ্ছদে ফিরে যান (Home)
+                </button>
+              </div>
+
+              <FarmerSocialFeed />
+            </div>
+          </div>
+        )}
         
         {/* HOMEPAGE VIEW */}
         {currentView === 'home' && (
@@ -781,51 +835,81 @@ const AppContent: React.FC = () => {
                     সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট
                   </h2>
                   <p className="text-xs text-gray-400 mt-2 font-medium">
-                    দালাল ছাড়াই সরাসরি কৃষকের মাঠের বাছাই করা তাজা ফসল এবং শাকসবজি নিয়ে তৈরি বিশেষ পারিবারিক বাস্কেট প্যাকেজ
+                    সরাসরি কৃষকের মাঠের বাছাই করা তাজা কম্বো বাস্কেট অফারসমূহ। বিস্তারিত বিবরণ ও উপাদান তালিকা ওজনের সাথে বিস্তারিত পাতায় দেখে নিন।
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {COMBO_BASKETS.map((basket) => {
+                  {products.filter(p => p.id.startsWith('cb')).map((basket) => {
                     const originalPrice = basket.price;
                     const displayPrice = basket.discountPrice || basket.price;
                     const hasDiscount = !!basket.discountPrice;
                     const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${basket.title}" কম্বো বাস্কেটটি কিনতে চাই।\nমূল্য: ৳${displayPrice}`);
                     const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
 
+                    const isAuthorizedToEdit = (currentUser?.role === 'Admin') || 
+                      (currentUser?.role === 'Farmer' && currentUser.farmerId === basket.farmerId);
+
                     return (
                       <div 
                         key={basket.id}
-                        className="group flex flex-col overflow-hidden rounded-2xl border border-gray-150/60 bg-white hover:border-emerald-250 hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
+                        className="group flex flex-col overflow-hidden rounded-2xl border border-gray-150/60 bg-white hover:border-emerald-250 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 relative"
                       >
+                        {/* Edit Button directly on top of card on homepage! */}
+                        {isAuthorizedToEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingProduct(basket);
+                            }}
+                            className="absolute top-3 left-3 z-30 rounded-xl bg-amber-500 hover:bg-amber-605 text-white px-3 py-1.5 text-xs font-black shadow-md border border-amber-400 flex items-center gap-1 active:scale-95 transition-transform cursor-pointer"
+                            title="এই কম্বো অফারটি এডিট করুন"
+                          >
+                            ✏️ এডিট (Edit)
+                          </button>
+                        )}
+
                         {/* Img portion */}
-                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-50">
+                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-50 cursor-pointer" onClick={() => {
+                          setSelectedProductId(basket.id);
+                          setView('product-details');
+                        }}>
                           <img
                             src={basket.images[0]}
                             alt={basket.title}
                             className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-105"
                             referrerPolicy="no-referrer"
                           />
-                          <span className="absolute left-3 top-3 z-10 rounded-lg bg-emerald-600 px-2.5 py-1 text-[9px] font-black tracking-wide text-white uppercase shadow-md">
+                          <span className="absolute right-3 top-3 z-10 rounded-lg bg-emerald-600 px-2.5 py-1 text-[9px] font-black tracking-wide text-white uppercase shadow-md">
                             🎯 সেরা ডিল
                           </span>
                           {hasDiscount && (
-                            <span className="absolute right-3 top-3 z-10 rounded-lg bg-red-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md animate-pulse">
+                            <span className="absolute right-3 top-10 z-10 rounded-lg bg-red-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md animate-pulse">
                               {Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
                             </span>
                           )}
                         </div>
 
-                        {/* Text portion */}
+                        {/* Text portion - Only shows Offer Name, Price, FarmerName and Buttons as requested! */}
                         <div className="flex flex-1 flex-col p-5">
-                          <h3 className="text-sm sm:text-base font-black text-gray-800 font-sans group-hover:text-emerald-700 transition-colors">
+                          <h3 
+                            onClick={() => {
+                              setSelectedProductId(basket.id);
+                              setView('product-details');
+                            }}
+                            className="text-sm sm:text-base font-black text-gray-800 font-sans hover:text-emerald-700 transition-colors cursor-pointer"
+                          >
                             {basket.title}
                           </h3>
-                          <p className="mt-2 text-xs text-gray-500 font-medium leading-relaxed flex-1">
-                            {basket.description}
-                          </p>
-                          <div className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-400 font-bold border-t border-gray-50 pt-2.5">
-                            📍 কৃষক: <span className="text-gray-600 underline font-black">{basket.farmerName}</span> (ভেরিফাইড)
+
+                          {/* Offer's Farmer */}
+                          <div className="mt-2.5 flex items-center gap-1 text-[11px] text-gray-400 font-bold border-t border-gray-50 pt-2.5">
+                            📍 খামারি: <span className="text-gray-600 underline font-black cursor-pointer" onClick={() => {
+                              if (basket.farmerId) {
+                                setSelectedFarmerStoreId(basket.farmerId);
+                                setView('farmer-store');
+                              }
+                            }}>{basket.farmerName}</span> (ভেরিফাইড)
                           </div>
 
                           {/* Pricing row */}
@@ -854,28 +938,36 @@ const AppContent: React.FC = () => {
                             </button>
                           </div>
 
-                          {/* Order grids */}
-                          <div className="grid grid-cols-2 gap-2 pt-2.5">
+                          {/* Action Grid */}
+                          <div className="grid grid-cols-3 gap-1.5 pt-3">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProductId(basket.id);
+                                setView('product-details');
+                              }}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-gray-100 hover:bg-gray-200 px-2 py-2 text-[10px] font-black text-gray-700 shadow-xs hover:scale-[1.02] transition-all cursor-pointer text-center font-sans font-bold"
+                            >
+                              📄 বিস্তারিত দেখুন
+                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 addToCart(basket, 1);
                                 window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: { openCheckout: true } }));
                               }}
-                              className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-2.5 py-2 text-[10.5px] font-extrabold text-white shadow-sm hover:scale-[1.02] transition-all cursor-pointer"
+                              className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-2 py-2 text-[10px] font-black text-white shadow-xs hover:scale-[1.02] transition-all cursor-pointer text-center font-sans font-bold"
                             >
-                              <ShoppingBag className="h-3 w-3 shrink-0" />
-                              এখনই কিনুন
+                              🛒 এখনই কিনুন
                             </button>
                             <a
                               href={whatsappUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="flex items-center justify-center gap-1 rounded-xl bg-green-500 hover:bg-green-600 px-2.5 py-2 text-[10.5px] font-extrabold text-white shadow-sm hover:scale-[1.02] transition-all cursor-pointer text-center text-sans"
+                              className="flex items-center justify-center gap-1 rounded-xl bg-green-500 hover:bg-green-600 px-2 py-2 text-[10px] font-black text-white shadow-xs hover:scale-[1.02] transition-all cursor-pointer text-center text-sans font-bold"
                             >
-                              <PhoneCall className="h-3 w-3 shrink-0" />
-                              WhatsApp অর্ডার
+                              📞 হোয়াটসঅ্যাপ
                             </a>
                           </div>
                         </div>
@@ -883,6 +975,23 @@ const AppContent: React.FC = () => {
                     );
                   })}
                 </div>
+              </div>
+            </section>
+
+            {/* FARMERS SOCIAL YARD FEED SECTION */}
+            <section id="farmers-yard" className="py-16 bg-gradient-to-b from-white via-emerald-50/20 to-gray-50 border-t border-gray-100">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="text-center max-w-xl mx-auto mb-10">
+                  <span className="text-xs font-black tracking-widest text-emerald-600 uppercase">কৃষকের উঠান ও সামাজিক ফিড</span>
+                  <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-1.5 leading-snug">
+                    কৃষকের মাঠের চিত্র ও সরাসরি ভিডিও গ্যালারি
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-2 font-medium">
+                    কৃষকদের তোলা খামারের আসল ছবি, ইউটিউব ভিডিও এবং দৈনন্দিন কাজের পোস্ট। মন্তব্য করুন ও সরাসরি খামারিদের লাইক দিয়ে উৎসাহিত করুন!
+                  </p>
+                </div>
+
+                <FarmerSocialFeed />
               </div>
             </section>
 

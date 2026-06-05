@@ -27,6 +27,13 @@ import {
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 import { ProductCard } from './ProductCard';
 
+function parseYoutubeEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+}
+
 interface FarmerStoreProfilePageProps {
   farmerId: string;
   onBack: () => void;
@@ -488,25 +495,59 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
               </div>
             )}
 
-            {/* Farmer Video Tour */}
-            {farmer.videoPlaceholder && (
-              <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
-                <h3 className="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5 mb-3">
+             {/* Multiple Farmer YouTube Videos */}
+            {((farmer.youtubeVideos && farmer.youtubeVideos.length > 0) || farmer.videoPlaceholder) && (
+              <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
+                <h3 className="text-xs font-black text-gray-800 uppercase tracking-wide flex items-center gap-1.5 border-b border-gray-50 pb-2">
                   <Video className="h-4.5 w-4.5 text-emerald-600" />
-                  ভিডিও পরিচিতি (Farm Tour)
+                  খামারের বাস্তব চিত্র ও ভিডিও ({ (farmer.youtubeVideos?.length || 0) + (farmer.videoPlaceholder ? 1 : 0) })
                 </h3>
-                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-150 shadow-sm relative group">
-                  <iframe 
-                    className="w-full h-full"
-                    src={farmer.videoPlaceholder} 
-                    title="Farm Tour Video" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowFullScreen
-                  ></iframe>
-                </div>
-                <span className="text-[9px] text-gray-400 font-medium block text-center mt-2">
-                  🎬 সোনালীতলা খামারের সুন্দর ড্রোন পরিচিতি ভিডিও
-                </span>
+
+                {/* Legacy Video Placeholder */}
+                {farmer.videoPlaceholder && (
+                  <div className="space-y-1">
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-100 border border-gray-150 shadow-sm relative group">
+                      <iframe 
+                        className="w-full h-full"
+                        src={farmer.videoPlaceholder} 
+                        title="Farm Tour Video" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                    <span className="text-[9px] text-gray-400 font-medium block text-center mt-1">
+                      🎬 সোনালীতলা খামারের সুন্দর পরিচিতি ভিডিও
+                    </span>
+                  </div>
+                )}
+
+                {/* Real interactive custom uploaded videos */}
+                {farmer.youtubeVideos && farmer.youtubeVideos.map((url, vIdx) => {
+                  const embedUrl = parseYoutubeEmbedUrl(url);
+                  return (
+                    <div key={vIdx} className="space-y-1">
+                      <div className="aspect-video w-full rounded-2xl overflow-hidden bg-gray-105 border border-gray-150 shadow-sm relative group bg-black">
+                        {embedUrl ? (
+                          <iframe 
+                            className="w-full h-full"
+                            src={embedUrl} 
+                            title={`Farmer Real Video ${vIdx + 1}`} 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                          ></iframe>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-white p-4 text-center">
+                            <span className="text-[10px] font-bold break-all mb-2">{url}</span>
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="bg-emerald-600 px-3 py-1.5 rounded-lg text-[9px] font-bold">ভিডিও প্লে করুন ↗</a>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-gray-400 font-bold block text-center mt-1">
+                        🎬 খামারির বাস্তব ভিডিও লিংক #{vIdx + 1}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

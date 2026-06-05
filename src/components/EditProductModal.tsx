@@ -1,7 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { useApp } from '../AppContext';
-import { X, Trash2, Save, Image, Check, Sparkles, ArrowRight } from 'lucide-react';
+import { X, Trash2, Save, Image, Check, Sparkles, ArrowRight, Upload } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
+
+// Client-side image compression downscaling utility
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      reject(new Error("শুধুমাত্র ছবি আপলোড করা যাবে!"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 
 interface EditProductModalProps {
   product: Product | null;
@@ -20,9 +82,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [stock, setStock] = useState(0);
-  const [image1, setImage1] = useState('');
-  const [image2, setImage2] = useState('');
-  const [image3, setImage3] = useState('');
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isReadyToCook, setIsReadyToCook] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   const [unit, setUnit] = useState('kg');
@@ -30,6 +90,61 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [successAnimation, setSuccessAnimation] = useState(false);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleImageFileChange = async (files: FileList | null) => {
+    if (!files) return;
+    setUploadError('');
+    setIsUploading(true);
+
+    const uploadedUrls: string[] = [...uploadedImages].filter(Boolean);
+    const filesArray = Array.from(files);
+
+    if (uploadedUrls.length + filesArray.length > 5) {
+      alert("সর্বোচ্চ ৫টি ছবি আপলোড করা যাবে!");
+      setIsUploading(false);
+      return;
+    }
+
+    try {
+      for (const file of filesArray) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`ছবি "${file.name}" ৫ মেগাবাইটের বেশি বড়। দয়া করে ছোট ছবি নির্বাচন করুন!`);
+          continue;
+        }
+
+        let blobToUpload: Blob;
+        try {
+          blobToUpload = await compressImage(file);
+        } catch (compErr) {
+          console.warn("Compression failed, uploading original:", compErr);
+          blobToUpload = file;
+        }
+
+        if (storage) {
+          const fileRef = ref(storage, `products/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+          await uploadBytes(fileRef, blobToUpload);
+          const downloadUrl = await getDownloadURL(fileRef);
+          uploadedUrls.push(downloadUrl);
+        } else {
+          const dataUrl = await new Promise<string>((res) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result as string);
+            r.readAsDataURL(blobToUpload);
+          });
+          uploadedUrls.push(dataUrl);
+        }
+      }
+      setUploadedImages(uploadedUrls);
+    } catch (err: any) {
+      console.error("Image upload failed:", err);
+      setUploadError("ছবি আপলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Sync state with product when modal opens
   useEffect(() => {
@@ -41,14 +156,13 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setDescription(product.description);
       setCategory(product.category);
       setStock(product.stock);
-      setImage1(product.images[0] || '');
-      setImage2(product.images[1] || '');
-      setImage3(product.images[2] || '');
+      setUploadedImages(product.images || []);
       setIsReadyToCook(!!product.isReadyToCook);
       setIsFeatured(!!product.isFeatured);
       setUnit(product.unit || 'kg');
       setConfirmDelete(false);
       setSuccessAnimation(false);
+      setUploadError('');
     }
   }, [product, isOpen]);
 
@@ -57,30 +171,45 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const handlePresetSelect = (presetType: string) => {
     // Elegant Unsplash agricultural presets for fast replacing
     if (presetType === 'vegetables') {
-      setImage1('https://images.unsplash.com/photo-1566385101042-1a0104524c61?w=600&auto=format&fit=crop&q=80');
-      setImage2('https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80');
-      setImage3('https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600&auto=format&fit=crop&q=80');
+      setUploadedImages([
+        'https://images.unsplash.com/photo-1566385101042-1a0104524c61?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600&auto=format&fit=crop&q=80'
+      ]);
     } else if (presetType === 'fruits') {
-      setImage1('https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=600&auto=format&fit=crop&q=80');
-      setImage2('https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&auto=format&fit=crop&q=80');
-      setImage3('https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80');
+      setUploadedImages([
+        'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop&q=80'
+      ]);
     } else if (presetType === 'fish') {
-      setImage1('https://images.unsplash.com/photo-1534482421-64566f976cfa?w=600&auto=format&fit=crop&q=80');
-      setImage2('https://images.unsplash.com/photo-1574786198875-49f5d09bfde3?w=600&auto=format&fit=crop&q=80');
-      setImage3('https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&auto=format&fit=crop&q=80');
+      setUploadedImages([
+        'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1574786198875-49f5d09bfde3?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&auto=format&fit=crop&q=80'
+      ]);
     } else if (presetType === 'honey') {
-      setImage1('https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=600&auto=format&fit=crop&q=80');
-      setImage2('https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&auto=format&fit=crop&q=80');
-      setImage3('https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=600&auto=format&fit=crop&q=80');
+      setUploadedImages([
+        'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=600&auto=format&fit=crop&q=80'
+      ]);
     } else if (presetType === 'grains') {
-      setImage1('https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&auto=format&fit=crop&q=80');
-      setImage2('https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80');
-      setImage3('https://images.unsplash.com/photo-1501250936402-43163a2d93c1?w=600&auto=format&fit=crop&q=80');
+      setUploadedImages([
+        'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1501250936402-43163a2d93c1?w=600&auto=format&fit=crop&q=80'
+      ]);
     }
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const finalImgs = uploadedImages.filter(Boolean);
+    if (finalImgs.length === 0) {
+      finalImgs.push('https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500');
+    }
 
     const updatedData: Partial<Product> = {
       title,
@@ -92,11 +221,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       isReadyToCook,
       isFeatured,
       unit,
-      images: [
-        image1 || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500',
-        image2 || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500',
-        image3 || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500',
-      ].filter(Boolean),
+      images: finalImgs,
     };
 
     editProduct(product.id, updatedData);
@@ -293,7 +418,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-emerald-800">
                   <Image className="h-4.5 w-4.5 text-emerald-650" />
-                  <span className="text-xs font-black">পণ্যের গ্যালারি ছবিসমূহ (images - ৩টি পর্যন্ত)</span>
+                  <span className="text-xs font-black">পণ্যের গ্যালারি ছবিসমূহ (images - ৫টি পর্যন্ত)</span>
                 </div>
                 {/* Instant image preset inject clicker */}
                 <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">PRESET ACCELERATORS</span>
@@ -338,66 +463,97 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5">
-                <div>
-                  <span className="block text-[10px] font-bold text-gray-500 mb-1">১ম ইমেজ ইউআরএল (Primary View Cover)</span>
-                  <input
-                    type="url"
-                    required
-                    value={image1}
-                    onChange={(e) => setImage1(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-1.5 text-[10px] font-mono select-all outline-none focus:border-emerald-500"
-                  />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-gray-500 mb-1">২য় ইমেজ ইউআরএল (Alternative View)</span>
-                  <input
-                    type="url"
-                    value={image2}
-                    onChange={(e) => setImage2(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-1.5 text-[10px] font-mono select-all outline-none focus:border-emerald-500"
-                  />
-                </div>
-                <div>
-                  <span className="block text-[10px] font-bold text-gray-500 mb-1">৩য় ইমেজ ইউআরএল (Alternative View)</span>
-                  <input
-                    type="url"
-                    value={image3}
-                    onChange={(e) => setImage3(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-1.5 text-[10px] font-mono select-all outline-none focus:border-emerald-500"
-                  />
+              {/* Drag and Drop Zone */}
+              <div 
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleImageFileChange(e.dataTransfer.files);
+                  }
+                }}
+                onClick={() => document.getElementById('edit-image-upload-input')?.click()}
+                className="w-full border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/25 active:bg-emerald-50/40 rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group shadow-inner"
+              >
+                <input 
+                  id="edit-image-upload-input"
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => handleImageFileChange(e.target.files)}
+                />
+                <Upload className="h-6 w-6 text-emerald-600 group-hover:scale-110 transition duration-200" />
+                <div className="space-y-1">
+                  <p className="font-bold text-emerald-800 text-[11px] font-sans">নতুন ছবি ড্র্যাগ করুন অথবা ক্লিক করে আপলোড করুন (সর্বোচ্চ ৫টি ছবি)</p>
+                  <p className="text-[9.5px] text-gray-500 font-medium font-sans">ছবিগুলো সংকুচিত হয়ে সরাসরি স্টোরেজে আপলোড হবে</p>
                 </div>
               </div>
 
-              {/* Instant Multi-Image Preview Strip */}
-              <div className="pt-2 border-t border-gray-100">
-                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">তাত্ক্ষণিক ইমেজ গ্যালারি প্রিভিউ (Live Gallery Preview)</span>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { url: image1, label: '১ম ছবি' },
-                    { url: image2, label: '২য় ছবি' },
-                    { url: image3, label: '৩য় ছবি' }
-                  ].map((x, index) => (
-                    <div key={index} className="relative aspect-video sm:h-20 rounded-xl overflow-hidden border border-gray-150 bg-gray-50 flex items-center justify-center group shadow-xs">
-                      {x.url ? (
-                        <img 
-                          src={x.url} 
-                          alt={x.label} 
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
-                          }}
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center text-[9px] text-gray-400">
-                          <Image className="h-4.5 w-4.5 mb-1 text-gray-300" />
-                          <span>ফাঁকা</span>
-                        </div>
-                      )}
-                      <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[7px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs font-sans">
-                        {x.label}
+              {/* Error Indicator */}
+              {uploadError && (
+                <p className="text-[10px] text-red-650 font-bold leading-none animate-pulse font-sans">❌ {uploadError}</p>
+              )}
+
+              {/* Progress Slider Indicator */}
+              {isUploading && (
+                <div className="flex items-center justify-center gap-2 text-[11px] font-black text-emerald-700 animate-pulse bg-emerald-50 border border-emerald-100 rounded-xl p-2 font-sans">
+                  <div className="h-3.5 w-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                  <span>ছবি আপলোড ও কমпресс করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
+                </div>
+              )}
+
+              {/* Live Uploaded Images Strip */}
+              <div className="pt-2 border-t border-gray-100 font-sans">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">তাত্ক্ষণিক ইমেজ গ্যালারি প্রিভিউ ({uploadedImages.filter(Boolean).length} / ৫)</span>
+                  <button 
+                    type="button" 
+                    onClick={() => setUploadedImages([])}
+                    className="text-[9.5px] text-red-500 hover:underline font-bold"
+                  >
+                    সবগুলো মুছে ফেলুন
+                  </button>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {uploadedImages.filter(Boolean).map((url, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center group shadow-xs">
+                      <img 
+                        src={url} 
+                        alt={`uploaded-product-${idx}`} 
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setUploadedImages(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="absolute top-1 right-1 bg-red-650/90 hover:bg-red-700 text-white rounded-full p-0.5 shadow transition cursor-pointer"
+                        title="মুছে ফেলুন"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5 leading-none">
+                        ছবি {idx + 1}
                       </div>
+                    </div>
+                  ))}
+                  {Array.from({ length: Math.max(0, 5 - uploadedImages.filter(Boolean).length) }).map((_, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-150 border-dashed bg-gray-50/50 flex flex-col items-center justify-center text-[9px] text-gray-400">
+                      <Image className="h-4.5 w-4.5 mb-1 text-gray-300" />
+                      <span>ফাঁকা</span>
                     </div>
                   ))}
                 </div>

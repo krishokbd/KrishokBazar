@@ -241,6 +241,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
           {activeTab === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               
+              {/* DEFAULT CREDENTIALS INFO CALLOUT FOR FARMERS */}
+              <div className="rounded-2xl border border-emerald-150 bg-emerald-50/70 p-3.5 text-emerald-850 text-xs tracking-tight font-sans text-left leading-relaxed select-none">
+                <span className="font-black text-[13px] block mb-1">💡 ডেমো কুইক এক্সেস লকবক্স:</span>
+                <ul className="list-disc pl-4 space-y-1 text-[11px] font-medium text-emerald-900/90">
+                  <li>সম্মানিত আমাদের <strong>সকল নিবন্ধিত কৃষকের ডিফল্ট লগইন পাসওয়ার্ড</strong> হলো: <code className="bg-white/95 px-1.5 py-0.5 rounded-md font-sans font-black text-emerald-750">Ajzakir@2020</code></li>
+                  <li>মাস্টার <strong>এডমিন অ্যাক্সেস নম্বরসমূহ</strong>: <code className="bg-white/95 px-1 py-0.5 rounded-md font-mono font-bold">01931355398</code> অথবা <code className="bg-white/95 px-1 py-0.5 rounded-md font-mono font-bold">01939052257</code> (পাসওয়ার্ড: <code className="bg-white/95 px-1 py-0.5 rounded-md font-sans font-black text-emerald-750">Ajzakir@2020</code>)</li>
+                  <li>যেকোনো ফোন নাম্বার দিয়ে কৃষক রোল সিলেক্ট করে পাসওয়ার্ড <code className="bg-white/95 px-1 py-0.5 rounded-md font-sans">Ajzakir@2020</code> দিলে অটো-রেজিস্টার হয়ে প্রবেশ করা যাবে!</li>
+                </ul>
+              </div>
+
               {/* Role switcher tags */}
               <div>
                 <label className="block text-[10px] uppercase font-black text-gray-400 mb-2 tracking-wider">ড্যাশবোর্ড রোল নির্বাচন করুন:</label>

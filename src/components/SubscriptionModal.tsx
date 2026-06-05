@@ -16,7 +16,13 @@ interface SubscriptionModalProps {
 
 export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, defaultRole = 'customer' }) => {
   const { currentUser, language, submitMembershipRequest } = useApp();
-  const [activeTab, setActiveTab] = useState<'customer' | 'farmer'>(defaultRole);
+  const [activeTab, setActiveTab ] = useState<'customer' | 'farmer'>(defaultRole);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultRole);
+    }
+  }, [isOpen, defaultRole]);
   
   // Payment Offline Transaction States
   const [selectedPlan, setSelectedPlan] = useState<{ id: string; name: string; price: number } | null>(null);

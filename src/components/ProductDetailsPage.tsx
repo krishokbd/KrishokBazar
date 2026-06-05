@@ -70,12 +70,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
   // Packaging selection states
   const isWeightBased = product ? !['piece', 'pcs', 'pc', 'টি'].includes(product.unit?.toLowerCase().trim() || '') : false;
-  const [selectedPack, setSelectedPack] = useState<string>(isWeightBased ? (product.unit?.toLowerCase().trim() === '500g' ? '500g' : '1kg') : '1pc');
+  const [selectedPack, setSelectedPack] = useState<string>(isWeightBased ? '1kg' : '1pc');
 
   // Synchronize dynamic packaging selection on startup or item change
   useEffect(() => {
     if (product) {
-      setSelectedPack(isWeightBased ? (product.unit?.toLowerCase().trim() === '500g' ? '500g' : '1kg') : '1pc');
+      setSelectedPack(isWeightBased ? '1kg' : '1pc');
     }
   }, [productId, isWeightBased]);
 
@@ -111,42 +111,22 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   let packLabelEn = '';
 
   if (isWeightBased) {
-    if (product.unit?.toLowerCase().trim() === '500g') {
-      if (selectedPack === '500g') {
-        packMultiplier = 1;
-        packLabelBn = '৫০০ গ্রাম';
-        packLabelEn = '500g';
-      } else if (selectedPack === '1kg') {
-        packMultiplier = 2;
-        packLabelBn = '১ কেজি';
-        packLabelEn = '1kg';
-      } else if (selectedPack === '2kg') {
-        packMultiplier = 4;
-        packLabelBn = '২ কেজি';
-        packLabelEn = '2kg';
-      } else {
-        packMultiplier = 1;
-        packLabelBn = '৫০০ গ্রাম';
-        packLabelEn = '500g';
-      }
-    } else { // base unit is 'kg' or something similar
-      if (selectedPack === '500g') {
-        packMultiplier = 0.5;
-        packLabelBn = '৫০০ গ্রাম';
-        packLabelEn = '500g';
-      } else if (selectedPack === '1kg') {
-        packMultiplier = 1;
-        packLabelBn = '১ কেজি';
-        packLabelEn = '1kg';
-      } else if (selectedPack === '2kg') {
-        packMultiplier = 2;
-        packLabelBn = '২ কেজি';
-        packLabelEn = '2kg';
-      } else {
-        packMultiplier = 1;
-        packLabelBn = '১ কেজি';
-        packLabelEn = '1kg';
-      }
+    if (selectedPack === '500g') {
+      packMultiplier = 0.5;
+      packLabelBn = '৫০০ গ্রাম';
+      packLabelEn = '500g';
+    } else if (selectedPack === '1kg') {
+      packMultiplier = 1;
+      packLabelBn = '১ কেজি';
+      packLabelEn = '1kg';
+    } else if (selectedPack === '2kg') {
+      packMultiplier = 2;
+      packLabelBn = '২ কেজি';
+      packLabelEn = '2kg';
+    } else {
+      packMultiplier = 1;
+      packLabelBn = '১ কেজি';
+      packLabelEn = '1kg';
     }
   } else { // piece-based
     if (selectedPack === '1pc') {
@@ -420,11 +400,13 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           <div className="lg:col-span-6 mt-8 lg:mt-0 flex flex-col justify-between">
             
             <div>
-              {/* ADMIN EDIT SPEED BOARD */}
-              {currentUser?.role === 'Admin' && onEditProduct && (
+              {/* DYNAMIC PARTNER EDIT Cockpit */}
+              {((currentUser?.role === 'Admin') || (currentUser?.role === 'Farmer' && currentUser.farmerId === product.farmerId)) && onEditProduct && (
                 <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 mb-4 flex items-center justify-between shadow-xs select-none">
                   <div>
-                    <h5 className="text-[10px] sm:text-xs font-black text-amber-900 uppercase">🛡️ এডমিন প্রোডাক্ট ককপিট</h5>
+                    <h5 className="text-[10px] sm:text-xs font-black text-amber-900 uppercase">
+                      {currentUser?.role === 'Admin' ? '🛡️ এডমিন প্রোডাক্ট ককপিট' : '🌾 খামারি এডিট প্যানেল'}
+                    </h5>
                     <p className="text-[10px] text-amber-700/95 font-medium mt-0.5">নাম, মূল্য, বিবরণ বা ক্যাটাগরি সম্পাদন এবং পণ্য অপসারণ করুন</p>
                   </div>
                   <button
@@ -548,7 +530,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         >
                           <span className="text-[9px] uppercase font-mono tracking-wide text-gray-450 font-bold">হাফ প্যাক</span>
                           <span className="text-xs sm:text-sm mt-1">৫০০ গ্রাম</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 1 : 0.5))}</span>
+                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 0.5)}</span>
                         </button>
 
                         <button
@@ -562,7 +544,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         >
                           <span className="text-[9px] uppercase font-mono tracking-wide text-red-500 font-black animate-pulse">জনপ্রিয়</span>
                           <span className="text-xs sm:text-sm mt-1">১ কেজি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 2 : 1))}</span>
+                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 1)}</span>
                         </button>
 
                         <button
@@ -576,7 +558,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         >
                           <span className="text-[9px] uppercase font-mono tracking-wide text-gray-450 font-bold">ফ্যামিলি প্যাক</span>
                           <span className="text-xs sm:text-sm mt-1">২ কেজি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 4 : 2))}</span>
+                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 2)}</span>
                         </button>
                       </>
                     ) : (

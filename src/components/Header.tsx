@@ -209,6 +209,12 @@ export const Header: React.FC<HeaderProps> = ({
               {language === 'en' ? 'Blog' : 'ব্লগ'}
             </button>
             <button 
+              onClick={() => handleNavClick('social-feed')}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'social-feed' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
+            >
+              {language === 'en' ? "Farmers' Yard" : "কৃষকের উঠান ফিড"}
+            </button>
+            <button 
               onClick={() => handleNavClick('our-story')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'our-story' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
@@ -446,6 +452,12 @@ export const Header: React.FC<HeaderProps> = ({
               className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'blog' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
             >
               {language === 'en' ? 'Blog' : 'ব্লগ (Blog)'}
+            </button>
+            <button 
+              onClick={() => handleNavClick('social-feed')}
+              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'social-feed' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
+            >
+              {language === 'en' ? "Farmers' Social Yard" : "কৃষকের সামাজিক উঠান (Social Yard)"}
             </button>
             <button 
               onClick={() => handleNavClick('our-story')}

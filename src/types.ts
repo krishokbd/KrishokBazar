@@ -25,6 +25,7 @@ export interface Farmer {
   story?: string;
   gallery?: string[];
   videoPlaceholder?: string;
+  youtubeVideos?: string[]; // Multiple farm physical video links
   landSize?: string;
   salesAmount?: number;
   isActive?: boolean;
@@ -267,5 +268,30 @@ export const getFormattedUnit = (product: { unit?: string; title: string }, lang
     return 'kg';
   }
 };
+
+export interface PostComment {
+  id: string;
+  userName: string;
+  content: string;
+  createdAt: string;
+  farmerId?: string; // If commented by a farmer
+  replies?: PostComment[]; // Supported nested replies
+  parentId?: string; // Track parent comment ID
+}
+
+export interface FarmerPost {
+  id: string;
+  farmerId: string;
+  farmerName: string;
+  avatar: string;
+  content: string;
+  images: string[]; // Multiple photos/links
+  videos: string[]; // Multiple YouTube links
+  likes: number;
+  likedByUserIds?: string[];
+  comments: PostComment[];
+  createdAt: string;
+}
+
 
 

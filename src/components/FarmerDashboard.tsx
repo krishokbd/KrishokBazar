@@ -2,6 +2,68 @@ import React, { useState } from 'react';
 import { useApp } from '../AppContext';
 import { Product, Order } from '../types';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
+
+// Client-side image compression downscaling utility to enforce strict size bounds
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      reject(new Error("শুধুমাত্র ছবি আপলোড করা যাবে!"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 import { 
   User, 
   Phone, 
@@ -53,8 +115,62 @@ export const FarmerDashboard: React.FC = () => {
   const [prodDesc, setProdDesc] = useState('');
   const [prodStock, setProdStock] = useState(10);
   const [prodReadyToCook, setProdReadyToCook] = useState(false);
-  const [prodImages, setProdImages] = useState<string[]>(['']);
+  const [prodImages, setProdImages] = useState<string[]>([]);
   const [prodUnit, setProdUnit] = useState('Kg');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleImageFileChange = async (files: FileList | null) => {
+    if (!files) return;
+    setUploadError('');
+    setIsUploading(true);
+
+    const uploadedUrls: string[] = [...prodImages].filter(Boolean);
+    const filesArray = Array.from(files);
+
+    if (uploadedUrls.length + filesArray.length > 5) {
+      alert("সর্বোচ্চ ৫টি ছবি আপলোড করা যাবে!");
+      setIsUploading(false);
+      return;
+    }
+
+    try {
+      for (const file of filesArray) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`ছবি "${file.name}" ৫ মেগাবাইটের বেশি বড়। দয়া করে ছোট ছবি নির্বাচন করুন!`);
+          continue;
+        }
+
+        let blobToUpload: Blob;
+        try {
+          blobToUpload = await compressImage(file);
+        } catch (compErr) {
+          console.warn("Compression failed, uploading original:", compErr);
+          blobToUpload = file;
+        }
+
+        if (storage) {
+          const fileRef = ref(storage, `products/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+          await uploadBytes(fileRef, blobToUpload);
+          const downloadUrl = await getDownloadURL(fileRef);
+          uploadedUrls.push(downloadUrl);
+        } else {
+          const dataUrl = await new Promise<string>((res) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result as string);
+            r.readAsDataURL(blobToUpload);
+          });
+          uploadedUrls.push(dataUrl);
+        }
+      }
+      setProdImages(uploadedUrls);
+    } catch (err: any) {
+      console.error("Image upload failed:", err);
+      setUploadError("ছবি আপলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Profile Edit fields
   const [profileName, setProfileName] = useState(currentUser?.name || '');
@@ -64,6 +180,7 @@ export const FarmerDashboard: React.FC = () => {
   const [profileAddress, setProfileAddress] = useState(currentUser?.address || 'রাজভাট, রাজশাহী');
   const [profileLandSize, setProfileLandSize] = useState('');
   const [profileAvatar, setProfileAvatar] = useState('');
+  const [youtubeVideos, setYoutubeVideos] = useState<string[]>([]);
   
   const currentFarmer = farmers.find(f => f.id === currentUser?.farmerId);
   const isVerified = currentFarmer?.verified || false;
@@ -75,6 +192,7 @@ export const FarmerDashboard: React.FC = () => {
       setProfileName(currentFarmer.name);
       setProfilePhone(currentFarmer.phone);
       setProfileAvatar(currentFarmer.avatar || '');
+      setYoutubeVideos(currentFarmer.youtubeVideos || []);
       if ((currentFarmer as any).password) {
         setProfilePassword((currentFarmer as any).password);
       }
@@ -138,7 +256,8 @@ export const FarmerDashboard: React.FC = () => {
         address: profileAddress,
         landSize: profileLandSize,
         password: profilePassword,
-        avatar: profileAvatar
+        avatar: profileAvatar,
+        youtubeVideos: youtubeVideos
       };
 
       updateFarmer(currentUser.farmerId, updatedData);
@@ -151,7 +270,8 @@ export const FarmerDashboard: React.FC = () => {
         address: profileAddress,
         district: profileDistrict,
         password: profilePassword,
-        avatar: profileAvatar
+        avatar: profileAvatar,
+        youtubeVideos: youtubeVideos
       } : null);
 
       alert("আপনার প্রোফাইল তথ্য ও ছবি সফলভাবে হালনাগাদ করা হয়েছে!");
@@ -165,7 +285,10 @@ export const FarmerDashboard: React.FC = () => {
       return;
     }
 
-    const imgUrl = prodImages[0] || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-1';
+    const finalImages = prodImages.filter(Boolean);
+    if (finalImages.length === 0) {
+      finalImages.push('https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-1');
+    }
 
     const pPayload = {
       title: prodTitle,
@@ -175,7 +298,7 @@ export const FarmerDashboard: React.FC = () => {
       description: prodDesc || 'কৃষকের সতেজ মাঠ থেকে সরাসরি সংগৃহীত অর্গানিক ও বিষমুক্ত ফসল।',
       stock: Number(prodStock),
       isReadyToCook: prodReadyToCook,
-      images: [imgUrl],
+      images: finalImages,
       farmerId: currentUser.farmerId || 'f1',
       farmerName: currentUser.name || 'খামারি অংশীদার',
       rating: 5.0,
@@ -203,7 +326,7 @@ export const FarmerDashboard: React.FC = () => {
     setProdDesc('');
     setProdStock(10);
     setProdReadyToCook(false);
-    setProdImages(['']);
+    setProdImages([]);
     setProdUnit('Kg');
   };
 
@@ -657,14 +780,98 @@ export const FarmerDashboard: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block font-bold text-gray-600 mb-1">ছবির লিংক এড্রেস (Image URL):</label>
-                    <input 
-                      type="text"
-                      value={prodImages[0] || ''}
-                      onChange={(e) => setProdImages([e.target.value])}
-                      className="w-full bg-white rounded-xl border border-gray-200 p-2.5 focus:border-emerald-600 outline-none text-[10px] font-mono text-gray-400"
-                      placeholder="https://..."
-                    />
+                    <label className="block font-bold text-gray-750 mb-1.5 flex items-center gap-1 font-sans">
+                      📸 পণ্যের তাজা ছবিসমূহ (সর্বোচ্চ ৫টি ছবি আপলোড করুন):
+                    </label>
+
+                    {/* Drag and Drop Zone */}
+                    <div 
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          handleImageFileChange(e.dataTransfer.files);
+                        }
+                      }}
+                      onClick={() => document.getElementById('farmer-image-upload-input')?.click()}
+                      className="w-full border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/25 active:bg-emerald-50/40 rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group shadow-inner"
+                    >
+                      <input 
+                        id="farmer-image-upload-input"
+                        type="file" 
+                        multiple 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => handleImageFileChange(e.target.files)}
+                      />
+                      <Upload className="h-6 w-6 text-emerald-600 group-hover:scale-110 transition duration-200" />
+                      <div className="space-y-1">
+                        <p className="font-bold text-emerald-800 text-[11px] font-sans">আপনার ফসল বা পণ্যের ছবি এখানে ড্র্যাগ করুন অথবা ক্লিক করে আপলোড করুন</p>
+                        <p className="text-[9.5px] text-gray-500 font-medium font-sans">মোবাইল বা ক্যামেরা থেকে সরাসরি ছবি তুলুন (সর্বোচ্চ ৫টি, প্রতি ছবি সংকুচিত করা হবে)</p>
+                      </div>
+                    </div>
+
+                    {/* Error Indicator */}
+                    {uploadError && (
+                      <p className="mt-1.5 text-[10px] text-red-650 font-bold leading-none animate-pulse font-sans">❌ {uploadError}</p>
+                    )}
+
+                    {/* Progress Slider Indicator */}
+                    {isUploading && (
+                      <div className="mt-2.5 flex items-center justify-center gap-2 text-[11px] font-black text-emerald-700 animate-pulse bg-emerald-50 border border-emerald-100 rounded-xl p-2 font-sans">
+                        <div className="h-3.5 w-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                        <span>ছবি আপলোড ও কমপ্রেস করা হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
+                      </div>
+                    )}
+
+                    {/* Live Uploaded Images Strip */}
+                    {prodImages.filter(Boolean).length > 0 && (
+                      <div className="mt-3 bg-slate-50 border border-gray-200/50 rounded-2xl p-3 font-sans">
+                        <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-gray-200">
+                          <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider">সংযুক্ত ফটো গ্যালারি ({prodImages.filter(Boolean).length} / ৫)</span>
+                          <button 
+                            type="button" 
+                            onClick={() => setProdImages([])}
+                            className="text-[9.5px] text-red-500 hover:underline font-bold"
+                          >
+                            সবগুলো মুছে ফেলুন
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                          {prodImages.filter(Boolean).map((url, idx) => (
+                            <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-xs group bg-white">
+                              <img 
+                                src={url} 
+                                alt={`uploaded-product-${idx}`} 
+                                className="h-full w-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setProdImages(prev => prev.filter((_, i) => i !== idx));
+                                }}
+                                className="absolute top-1 right-1 bg-red-650/95 hover:bg-red-700 text-white rounded-full p-0.5 shadow transition cursor-pointer"
+                                title="মুছে ফেলুন"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                              <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5 leading-none">
+                                ছবি {idx + 1}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Ready to Cook switcher option */}
@@ -963,6 +1170,51 @@ export const FarmerDashboard: React.FC = () => {
                     onChange={(e) => setProfileAddress(e.target.value)}
                     className="w-full bg-slate-50 border border-gray-200 rounded-xl p-2.5 text-gray-800 focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none"
                   />
+                </div>
+
+                {/* Farmer Real YouTube Videos Management */}
+                <div className="border-t border-gray-100 pt-4">
+                  <h4 className="text-xs font-black uppercase text-gray-500 mb-2 mt-2 tracking-wider flex items-center gap-1">🌾 খামারের বাস্তব ভিডিও গ্যালারি (YouTube Videos)</h4>
+                  <p className="text-[10px] text-gray-400 font-medium mb-3">আপনার চাষাবাদ, ফসল তোলা বা খামারের কাজের ইউটিউব ভিডিও লিংক দিন। এগুলো আপনার স্টোর প্রফাইলে সরাসরি ক্রেতারা দেখতে পাবেন!</p>
+                  
+                  {youtubeVideos.length > 0 && (
+                    <div className="space-y-2 mb-3 bg-emerald-50/20 p-3 rounded-2xl border border-dashed border-emerald-150">
+                      {youtubeVideos.map((url, idx) => (
+                        <div key={idx} className="flex items-center justify-between gap-2 bg-white rounded-xl p-2 border border-gray-150/60 shadow-xs">
+                          <span className="text-[10.5px] font-mono font-medium truncate text-gray-655 flex-1">{url}</span>
+                          <button
+                            type="button"
+                            onClick={() => setYoutubeVideos(prev => prev.filter((_, i) => i !== idx))}
+                            className="bg-red-50 hover:bg-red-100 text-red-650 h-6 w-6 rounded-lg flex items-center justify-center shrink-0 cursor-pointer text-[10px]"
+                          >
+                            ✖
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      id="youtube-url-adder-input"
+                      placeholder="যেমন: https://www.youtube.com/watch?v=..."
+                      className="flex-1 bg-slate-50 border border-gray-200 rounded-xl p-2 px-3 text-xs text-gray-850 focus:bg-white outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById('youtube-url-adder-input') as HTMLInputElement;
+                        if (input && input.value.trim()) {
+                          setYoutubeVideos(prev => [...prev, input.value.trim()]);
+                          input.value = '';
+                        }
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-4 text-xs cursor-pointer active:scale-95 shrink-0"
+                    >
+                      যুক্ত করুন
+                    </button>
+                  </div>
                 </div>
 
                 <button

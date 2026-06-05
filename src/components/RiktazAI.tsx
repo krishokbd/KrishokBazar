@@ -6,6 +6,7 @@ import {
   Apple, DollarSign, Calendar, ChefHat, Type, ChevronLeft, ArrowRight,
   Mic, MicOff, Maximize2, Minimize2
 } from 'lucide-react';
+import riktazFaqs from '../riktaz-faq.json';
 
 interface Message {
   id: string;
@@ -17,6 +18,42 @@ interface Message {
 interface RiktazAIProps {
   setView?: (view: any) => void;
   setSelectedProductId?: (id: string | null) => void;
+}
+
+async function findCachedFAQResponse(text: string): Promise<string | null> {
+  const normalizedQuery = text.toLowerCase().trim();
+  if (!normalizedQuery) return null;
+
+  let bestMatch: typeof riktazFaqs[0] | null = null;
+  let highestScore = 0;
+
+  for (const faq of riktazFaqs) {
+    let score = 0;
+    
+    for (const keyword of faq.keywords) {
+      const kw = keyword.toLowerCase().trim();
+      if (normalizedQuery.includes(kw)) {
+        score += kw.length;
+      }
+    }
+
+    const normalizedQuestion = faq.question.toLowerCase().replace(/[?？!！.,\/\\#@$%^&*()_=+\[\]{}:;'"<>|-]/g, '').trim();
+    if (normalizedQuery.includes(normalizedQuestion) || normalizedQuestion.includes(normalizedQuery)) {
+      score += 15;
+    }
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = faq;
+    }
+  }
+
+  // Score threshold of 3 ensures robust matching (e.g. at least one meaningful keyword word)
+  if (bestMatch && highestScore >= 3) {
+    return new Promise((resolve) => setTimeout(() => resolve(bestMatch!.answer), 300));
+  }
+
+  return null;
 }
 
 export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductId }) => {
@@ -287,6 +324,19 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
     setIsLoading(true);
 
     try {
+      // Prioritize pre-loaded/cached FAQs for < 2s (instant) response time
+      const cachedResponse = await findCachedFAQResponse(textToSend);
+      if (cachedResponse) {
+        setMessages(prev => [...prev, {
+          id: `assistant-cached-${Date.now()}`,
+          sender: 'assistant',
+          text: cachedResponse,
+          timestamp: new Date()
+        }]);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/riktaz-ai', {
         method: 'POST',
         headers: {
@@ -359,6 +409,22 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
     }]);
 
     try {
+      // Prioritize pre-loaded/cached FAQs for < 2s (instant) response time
+      const cachedResponse = await findCachedFAQResponse(displayUserRequest);
+      if (cachedResponse) {
+        setMessages(prev => [...prev, {
+          id: `workflow-assistant-cached-${Date.now()}`,
+          sender: 'assistant',
+          text: cachedResponse,
+          timestamp: new Date()
+        }]);
+        setIsLoading(false);
+        setProdTitleWord('');
+        setProdContext('');
+        setDietNote('');
+        return;
+      }
+
       const response = await fetch('/api/riktaz-ai', {
         method: 'POST',
         headers: {
@@ -624,6 +690,13 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
                             : 'bg-white border border-emerald-50 text-gray-700 rounded-tl-none'
                         }`}
                       >
+                        {m.id.includes('cached') && (
+                          <div className="flex items-center gap-1 mb-1.5 shrink-0">
+                            <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200/60 font-black rounded-md px-2 py-0.5 shadow-2xs flex items-center gap-0.5 animate-pulse select-none">
+                              ⚡ তাত্ক্ষণিক উত্তর (২ সেকেন্ডের কম)
+                            </span>
+                          </div>
+                        )}
                         <div>
                           {renderMessageText(cleanText)}
                         </div>

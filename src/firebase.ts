@@ -6,6 +6,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../firebase-applet-config.json';
 
 // Detect if are using the placeholder credentials or real project keys
@@ -17,6 +18,7 @@ export let isFirebaseConfigured =
 let firebaseApp;
 let firestoreDb;
 let firebaseAuth;
+let firebaseStorage;
 
 if (isFirebaseConfigured) {
   try {
@@ -41,6 +43,13 @@ if (isFirebaseConfigured) {
 
     firebaseAuth = getAuth(firebaseApp);
     
+    // Initialize storage
+    try {
+      firebaseStorage = getStorage(firebaseApp);
+    } catch (storageError) {
+      console.error("Firebase Storage initialization failed:", storageError);
+    }
+    
     // Asynchronously validate live backend connectivity
     const testConnection = async () => {
       try {
@@ -60,6 +69,7 @@ if (isFirebaseConfigured) {
     isFirebaseConfigured = false;
     firestoreDb = undefined;
     firebaseAuth = undefined;
+    firebaseStorage = undefined;
   }
 }
 
@@ -67,6 +77,7 @@ if (isFirebaseConfigured) {
 export const app = firebaseApp;
 export const db = firestoreDb;
 export const auth = firebaseAuth;
+export const storage = firebaseStorage;
 
 // Reusable Firestore hardener errors
 export enum OperationType {

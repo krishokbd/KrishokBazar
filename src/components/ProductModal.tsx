@@ -50,17 +50,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   let packLabelEn = product.unit || 'kg';
 
   if (isWeightBased) {
-    const isBase500g = product.unit?.toLowerCase().trim() === '500g';
     if (selectedPack === '500g') {
-      packMultiplier = isBase500g ? 1 : 0.5;
+      packMultiplier = 0.5;
       packLabelBn = '৫০০ গ্রাম';
       packLabelEn = '500g';
     } else if (selectedPack === '1kg') {
-      packMultiplier = isBase500g ? 2 : 1;
+      packMultiplier = 1;
       packLabelBn = '১ কেজি';
       packLabelEn = '1kg';
     } else if (selectedPack === '2kg') {
-      packMultiplier = isBase500g ? 4 : 2;
+      packMultiplier = 2;
       packLabelBn = '২ কেজি';
       packLabelEn = '2kg';
     }
@@ -271,7 +270,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                     >
                       <span className="text-[8px] uppercase tracking-wide text-gray-410 font-bold">হাফ প্যাক</span>
                       <span className="text-xs mt-0.5">৫০০ গ্রাম</span>
-                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 1 : 0.5))}</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 0.5)}</span>
                     </button>
 
                     <button
@@ -285,7 +284,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                     >
                       <span className="text-[8px] uppercase tracking-wide text-red-500 font-black animate-pulse">জনপ্রিয়</span>
                       <span className="text-xs mt-0.5">১ কেজি</span>
-                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 2 : 1))}</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 1)}</span>
                     </button>
 
                     <button
@@ -299,7 +298,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                     >
                       <span className="text-[8px] uppercase tracking-wide text-gray-410 font-bold">ফ্যামিলি</span>
                       <span className="text-xs mt-0.5">২ কেজি</span>
-                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * (product.unit?.toLowerCase().trim() === '500g' ? 4 : 2))}</span>
+                      <span className="text-[10px] mt-0.5 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 2)}</span>
                     </button>
                   </>
                 ) : (

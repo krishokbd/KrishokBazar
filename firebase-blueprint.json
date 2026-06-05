@@ -139,9 +139,32 @@
         "subtitleEn": { "type": "string" }
       },
       "required": ["image", "titleBn", "titleEn", "subtitleBn", "subtitleEn"]
+    },
+    "FarmerPost": {
+      "title": "Farmer Social Post",
+      "description": "Represents agricultural social feed post by partner farmers with support for user likes and recursive comments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "farmerId": { "type": "string" },
+        "farmerName": { "type": "string" },
+        "avatar": { "type": "string" },
+        "content": { "type": "string" },
+        "images": { "type": "array" },
+        "videos": { "type": "array" },
+        "likes": { "type": "number" },
+        "likedByUserIds": { "type": "array" },
+        "comments": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "farmerId", "farmerName", "avatar", "content", "likes", "createdAt"]
     }
   },
   "firestore": {
+    "/posts/{postId}": {
+      "schema": "FarmerPost",
+      "description": "Social feed updates and discussions from partner growers"
+    },
     "/farmers/{farmerId}": {
       "schema": "Farmer",
       "description": "Collection of our registered farmers"

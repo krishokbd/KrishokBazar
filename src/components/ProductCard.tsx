@@ -17,20 +17,51 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, onEditProduct }) => {
   const { addToCart, currentUser, language } = useApp();
 
+  const isWeightBased = !['piece', 'pcs', 'pc', 'টি', 'piece/পিস', 'পিস'].includes(product.unit?.toLowerCase().trim() || '');
+  const [selectedPack, setSelectedPack] = React.useState<string>(isWeightBased ? '1kg' : '1pc');
+
+  let packMultiplier = 1;
+  let packLabelBn = '';
+  let packLabelEn = '';
+
+  if (isWeightBased) {
+    if (selectedPack === '500g') {
+      packMultiplier = 0.5;
+      packLabelBn = '৫০০ গ্রাম';
+      packLabelEn = '500g';
+    } else if (selectedPack === '1kg') {
+      packMultiplier = 1;
+      packLabelBn = '১ কেজি';
+      packLabelEn = '1kg';
+    } else if (selectedPack === '2kg') {
+      packMultiplier = 2;
+      packLabelBn = '২ কেজি';
+      packLabelEn = '2kg';
+    } else {
+      packMultiplier = 1;
+      packLabelBn = '১ কেজি';
+      packLabelEn = '1kg';
+    }
+  } else {
+    packMultiplier = 1;
+    packLabelBn = '১ টি';
+    packLabelEn = '1 Pc';
+  }
+
+  const displayPrice = Math.round((product.discountPrice || product.price) * packMultiplier);
+  const originalPrice = Math.round(product.price * packMultiplier);
+  const hasDiscount = !!product.discountPrice;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product, 1);
+    addToCart(product, 1, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product, 1);
+    addToCart(product, 1, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
     window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: { openCheckout: true } }));
   };
-
-  const hasDiscount = !!product.discountPrice;
-  const originalPrice = product.price;
-  const displayPrice = product.discountPrice || product.price;
 
   const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${product.title}" পণ্যটি অর্ডার করতে চাই।\nকৃষক: ${product.farmerName}\nমূল্য: ৳${displayPrice}`);
   const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
@@ -122,6 +153,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
           </span>
         </div>
 
+        {/* Stateful Weight Mini Cards Selection */}
+        {isWeightBased && (
+          <div className="mt-2.5 mb-1.5 flex items-center gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
+            <span className="text-gray-400 font-bold shrink-0">ওজন:</span>
+            <div className="flex gap-1 items-center flex-1">
+              {[
+                { id: '500g', label: '৫০০ গ্রাম', labelEn: '500g' },
+                { id: '1kg', label: '১ কেজি', labelEn: '1kg' },
+                { id: '2kg', label: '২ কেজি', labelEn: '2kg' }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSelectedPack(opt.id)}
+                  className={`flex-1 rounded py-0.5 border text-center transition-all cursor-pointer font-extrabold text-[8px] sm:text-[9px] leading-tight ${
+                    selectedPack === opt.id
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-black'
+                      : 'border-gray-200 bg-white text-gray-400 hover:bg-gray-50'
+                  }`}
+                >
+                  {language === 'bn' ? opt.label : opt.labelEn}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Price + Single Buy Now Button Bottom Section */}
         <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between gap-1.5">
           {/* Pricing display */}
@@ -134,7 +192,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
             <span className="text-[10px] sm:text-xs font-black text-emerald-700 font-sans flex items-baseline leading-none">
               ৳{displayPrice}
               <span className="text-[8px] sm:text-[9px] text-gray-400 font-medium ml-0.5 font-mono">
-                /{getFormattedUnit(product, language)}
+                /{language === 'bn' ? packLabelBn : packLabelEn}
               </span>
             </span>
           </div>

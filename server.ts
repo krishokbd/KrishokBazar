@@ -3,8 +3,58 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
+
+// Pre-load static JSON of common FAQs
+const faqPath = path.join(process.cwd(), "src", "riktaz-faq.json");
+let riktazFaqs: any[] = [];
+try {
+  if (fs.existsSync(faqPath)) {
+    riktazFaqs = JSON.parse(fs.readFileSync(faqPath, "utf-8"));
+  }
+} catch (e) {
+  console.error("Error loading riktaz-faq.json in server:", e);
+}
+
+// Check and match cached FAQ responses on server side
+function findServerCachedFAQResponse(text: string): string | null {
+  if (!text || !riktazFaqs || riktazFaqs.length === 0) return null;
+  const normalizedQuery = text.toLowerCase().trim();
+  if (!normalizedQuery) return null;
+
+  let bestMatch: any = null;
+  let highestScore = 0;
+
+  for (const faq of riktazFaqs) {
+    let score = 0;
+    
+    for (const keyword of faq.keywords) {
+      const kw = keyword.toLowerCase().trim();
+      if (normalizedQuery.includes(kw)) {
+        score += kw.length;
+      }
+    }
+
+    const normalizedQuestion = faq.question.toLowerCase().replace(/[?？!！.,\/\\#@$%^&*()_=+\[\]{}:;'"<>|-]/g, '').trim();
+    if (normalizedQuery.includes(normalizedQuestion) || normalizedQuestion.includes(normalizedQuery)) {
+      score += 15;
+    }
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = faq;
+    }
+  }
+
+  // Score threshold of 3 ensures robust matching (e.g. at least one meaningful keyword word)
+  if (bestMatch && highestScore >= 3) {
+    return bestMatch.answer;
+  }
+
+  return null;
+}
 
 async function startServer() {
   const app = express();
@@ -18,6 +68,12 @@ async function startServer() {
     try {
       const { type, prompt, context } = req.body;
       
+      // Prioritize cached FAQ responses on the backend as well for <2s speed and fallback reliability
+      const cachedResponse = findServerCachedFAQResponse(prompt || "");
+      if (cachedResponse) {
+        return res.status(200).json({ text: cachedResponse, isCached: true });
+      }
+
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(200).json({ 

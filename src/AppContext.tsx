@@ -4,12 +4,13 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission } from './types';
+import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment } from './types';
 import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { logAnalyticsEvent } from './lib/analytics';
+import { supabaseService } from './lib/supabaseService';
 
 interface AppContextType {
   farmers: Farmer[];
@@ -41,9 +42,9 @@ interface AppContextType {
   registerFarmer: (name: string, phone: string, password: string, district: string, address: string, nidNumber: string, nidImage: string, gender: 'male' | 'female') => { success: boolean; message: string };
 
   // Cart actions
-  addToCart: (product: Product, quantity: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateCartQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, quantity: number, customPrice?: number, customUnit?: string) => void;
+  removeFromCart: (productId: string, selectedUnit?: string) => void;
+  updateCartQuantity: (productId: string, quantity: number, selectedUnit?: string) => void;
   clearCart: () => void;
 
   // Order actions
@@ -98,6 +99,12 @@ interface AppContextType {
   rejectMembershipRequest: (submissionId: string) => void;
   simulateEmailSignUpClick: () => void;
   approvePaymentForUser: (userId: string) => void;
+  // Farmer Post System state and actions
+  posts: FarmerPost[];
+  addPost: (content: string, images: string[], videos: string[]) => void;
+  likePost: (postId: string) => void;
+  commentPost: (postId: string, commentText: string, parentCommentId?: string) => void;
+  deletePost: (postId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -210,10 +217,127 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : demoFarmers;
   });
 
+  const COMBO_BASKETS_DEFAULT: Product[] = [
+    {
+      id: 'cb1',
+      title: 'সাপ্তাহিক রেশনের বাজেট কম্বো বাস্কেট',
+      description: 'গোল লাল আলু ২ কেজি, তাল বেগুন ১ কেজি, দেশী পেঁয়াজ ১ কেজি, রসুনের সেরা কোয়ালিটি ২৫০ গ্রাম, তাজা ধনে পাতা ২৫০ গ্রাম, কাঁচামরিচ ২৫০ গ্রাম, নরম কচি লম্বা লাউ ১টি।',
+      price: 550,
+      discountPrice: 490,
+      category: 'ready-to-cook',
+      farmerId: 'f5',
+      farmerName: 'Fazle Rabbi',
+      farmName: 'Fazle Rabbi অর্গানিক এগ্রো',
+      rating: 4.9,
+      stock: 25,
+      images: ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80'],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'May 30, 2026'
+    },
+    {
+      id: 'cb2',
+      title: 'ফ্যামিলি সাইজ প্রিমিয়াম সবজি কম্বো বাস্কেট',
+      description: 'গোল কড়া সাদা ফুলকপি ২টি, তাজা কচি বাঁধাকপি ২টি, লাল আলু ৩ কেজি, নরম তাল বেগুন ২ কেজি, মিষ্টি তাজা গাজর ১ কেজি, লাল টমেটো ২ কেজি, কচি পটল ১ কেজি, কড়া সুগন্ধি লেবু ১ ডজন।',
+      price: 980,
+      discountPrice: 850,
+      category: 'ready-to-cook',
+      farmerId: 'f12',
+      farmerName: 'Ayesha Begum',
+      farmName: 'Ayesha Begum অর্গানিক এগ্রো',
+      rating: 4.8,
+      stock: 18,
+      images: ['https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80'],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'May 29, 2026'
+    },
+    {
+      id: 'cb3',
+      title: 'ফিটনেস ও ওয়েট লস গ্রিন কম্বো বাস্কেট',
+      description: 'মিষ্টি কচি পেঁপে ২ কেজি, রসালো টাটকা শসা ২ কেজি, বড় তেতো করলা ১ কেজি, কচি মিষ্টি পানি লাউ ১টি, ডাঁটা শাক ৩ আঁটি, লাল শাক ৩ আঁটি, টক সুগন্ধি লেবু ১ ডজন।',
+      price: 780,
+      discountPrice: 690,
+      category: 'ready-to-cook',
+      farmerId: 'f23',
+      farmerName: 'Sultana Razia',
+      farmName: 'Sultana Razia অর্গানিক এগ্রো',
+      rating: 5.0,
+      stock: 15,
+      images: ['https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80'],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'May 30, 2026'
+    }
+  ];
+
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('kb_products');
-    return saved ? JSON.parse(saved) : demoProducts;
+    const base = saved ? JSON.parse(saved) : demoProducts;
+    const hasCb = base.some((p: any) => p.id === 'cb1');
+    if (!hasCb) {
+      return [...COMBO_BASKETS_DEFAULT, ...base];
+    }
+    return base;
   });
+
+  const DEFAULT_POSTS: FarmerPost[] = [
+    {
+      id: 'post1',
+      farmerId: 'f5',
+      farmerName: 'Fazle Rabbi',
+      avatar: 'male',
+      content: 'আসসালামু আলাইকুম! আমার জৈব খামারের একদম সতেজ ফুলকপি ও টমেটো গাছ থেকে তোলা হয়েছে আজকে সকালে। কোনো রাসায়নিক সার ব্যবহার করিনি। আলহামদুলিল্লাহ ফলন এবার বেশ ভালো হয়েছে। আমাদের খামারের একটি ছোট্ট রিয়েল ভিডিও নিচে যুক্ত করলাম, সবাই দেখে মতামত জানাবেন!',
+      images: ['https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600'],
+      videos: ['https://www.youtube.com/watch?v=S2gby6-gN3E'],
+      likes: 24,
+      likedByUserIds: [],
+      comments: [
+        {
+          id: 'c1',
+          userName: 'Al-Haj Zakir Hossain',
+          content: 'মাশাআল্লাহ ফজলে রাব্বি ভাই, আপনার উদ্যোগ প্রশংসনীয়। রাসায়নিকমুক্ত ফসল জোগানোর এই প্রচেষ্টা সার্থক হোক।',
+          createdAt: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          id: 'c2',
+          userName: 'Ayesha Begum',
+          content: 'খুব সুন্দর ভিডিও রাব্বি ভাই!',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: 'post2',
+      farmerId: 'f12',
+      farmerName: 'Ayesha Begum',
+      avatar: 'female',
+      content: 'সম্মানিত ক্রেতাবৃন্দ, আমার সমন্বিত দুগ্ধ ও ডিম খামারে আজকে একদম ফ্রেশ হাঁসের ডিম সংগ্রহ করেছি। কোনো কৃত্রিম ফিড ছাড়াই এদের প্রাকৃতিক উপায়ে পালন করা হয়েছে। ফ্যামিলি বাজেট কম্বো বাস্কেটের সাথে আপনারা ডিমের অর্ডারও প্লেস করতে পারেন।',
+      images: ['https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=600'],
+      videos: ['https://www.youtube.com/watch?v=gT8-7g-dOAw'],
+      likes: 18,
+      likedByUserIds: [],
+      comments: [
+        {
+          id: 'c3',
+          userName: 'Fazle Rabbi',
+          content: 'আপা, হাঁসের এই ডিমের কোয়ালিটি সত্যিই অসাধারণ দেখায়!',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date(Date.now() - 43200000).toISOString()
+    }
+  ];
+
+  const [posts, setPosts] = useState<FarmerPost[]>(() => {
+    const saved = localStorage.getItem('kb_farmer_posts');
+    return saved ? JSON.parse(saved) : DEFAULT_POSTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kb_farmer_posts', JSON.stringify(posts));
+  }, [posts]);
 
   const [reviews, setReviews] = useState<Review[]>(() => {
     const saved = localStorage.getItem('kb_reviews');
@@ -595,6 +719,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       handleFirestoreError(error, OperationType.LIST, 'banners');
     });
 
+    // 9. FARMER SOCIAL POSTS LIVE CLOUD SYNC
+    const unsubPosts = onSnapshot(collection(db, 'posts'), (snapshot) => {
+      const items: FarmerPost[] = [];
+      snapshot.forEach(docSnap => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as FarmerPost);
+      });
+      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (items.length > 0) {
+        setPosts(items);
+      } else {
+        console.log("Firestore empty: seeding default agricultural posts.");
+        DEFAULT_POSTS.forEach(async (p) => {
+          try {
+            await setDoc(doc(db, 'posts', p.id), p);
+          } catch (e) {}
+        });
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'posts');
+    });
+
     return () => {
       unsubProducts();
       unsubFarmers();
@@ -604,6 +749,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubCustomers();
       unsubCategories();
       unsubBanners();
+      unsubPosts();
     };
   }, [isFirebaseConfigured]);
 
@@ -890,18 +1036,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.productId !== productId));
+  const removeFromCart = (productId: string, selectedUnit?: string) => {
+    setCart(prev => prev.filter(item => {
+      if (selectedUnit) {
+        return !(item.productId === productId && item.selectedUnit === selectedUnit);
+      }
+      return item.productId !== productId;
+    }));
   };
 
-  const updateCartQuantity = (productId: string, quantity: number) => {
+  const updateCartQuantity = (productId: string, quantity: number, selectedUnit?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, selectedUnit);
       return;
     }
-    setCart(prev => prev.map(item => 
-      item.productId === productId ? { ...item, quantity } : item
-    ));
+    setCart(prev => prev.map(item => {
+      const isMatch = selectedUnit 
+        ? (item.productId === productId && item.selectedUnit === selectedUnit)
+        : item.productId === productId;
+      return isMatch ? { ...item, quantity } : item;
+    }));
   };
 
   const clearCart = () => {
@@ -1438,6 +1592,176 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
+  // FARMER POST SOCIAL ENGINE IMPLEMENTATIONS
+  const addPost = async (content: string, images: string[], videos: string[]) => {
+    let farmerName = 'সম্মানিত খামারি';
+    let farmerId = 'f-gen';
+    let avatar = 'male';
+
+    if (currentUser) {
+      farmerName = currentUser.name;
+      farmerId = currentUser.farmerId || currentUser.id;
+      if (currentUser.gender === 'female') {
+        avatar = 'female';
+      } else {
+        // Find actual farmer's avatar preset in farmers array if exists
+        const actualFarmer = farmers.find(f => f.id === currentUser.farmerId);
+        if (actualFarmer && actualFarmer.avatar) {
+          avatar = actualFarmer.avatar;
+        }
+      }
+    }
+
+    const newPost: FarmerPost = {
+      id: `post-${Date.now()}`,
+      farmerId,
+      farmerName,
+      avatar,
+      content,
+      images: (images || []).filter(Boolean),
+      videos: (videos || []).filter(Boolean),
+      likes: 0,
+      likedByUserIds: [],
+      comments: [],
+      createdAt: new Date().toISOString()
+    };
+
+    setPosts(prev => [newPost, ...prev]);
+
+    // Firestore Integration Sync
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, 'posts', newPost.id), newPost);
+      } catch (err) {
+        console.error("Firestore error adding post:", err);
+      }
+    }
+
+    // Supabase Engagement Sync
+    await supabaseService.savePost(newPost);
+  };
+
+  const likePost = async (postId: string) => {
+    const userId = currentUser?.id || 'guest';
+    let updatedPost: FarmerPost | null = null;
+    let nextLikes = 0;
+    let hasLikedNow = false;
+
+    setPosts(prev => prev.map(post => {
+      if (post.id === postId) {
+        const likedUsers = post.likedByUserIds || [];
+        const hasLiked = likedUsers.includes(userId);
+        hasLikedNow = !hasLiked;
+        const nextLikedUsers = hasLiked 
+          ? likedUsers.filter(id => id !== userId)
+          : [...likedUsers, userId];
+        nextLikes = hasLiked ? Math.max(0, post.likes - 1) : post.likes + 1;
+
+        updatedPost = {
+          ...post,
+          likes: nextLikes,
+          likedByUserIds: nextLikedUsers
+        };
+        return updatedPost;
+      }
+      return post;
+    }));
+
+    if (updatedPost) {
+      // Sync update to Firestore
+      if (isFirebaseConfigured && db) {
+        try {
+          await updateDoc(doc(db, 'posts', postId), {
+            likes: (updatedPost as FarmerPost).likes,
+            likedByUserIds: (updatedPost as FarmerPost).likedByUserIds
+          });
+        } catch (err) {
+          console.error("Firestore likeness sync error:", err);
+        }
+      }
+
+      // Track engagement in Supabase
+      await supabaseService.trackLike(postId, userId, hasLikedNow, nextLikes);
+    }
+  };
+
+  const commentPost = async (postId: string, commentText: string, parentCommentId?: string) => {
+    if (!commentText.trim()) return;
+    const userName = currentUser?.name || 'সম্মানিত অতিথি';
+    const newComment: PostComment = {
+      id: `comment-${Date.now()}`,
+      userName,
+      content: commentText.trim(),
+      createdAt: new Date().toISOString(),
+      farmerId: currentUser?.role === 'Farmer' ? currentUser.farmerId : undefined,
+      parentId: parentCommentId
+    };
+
+    let updatedPost: FarmerPost | null = null;
+
+    setPosts(prev => prev.map(post => {
+      if (post.id === postId) {
+        let updatedComments: PostComment[];
+        if (parentCommentId) {
+          // Recursive helper to insert a nested reply
+          const addReplyToComments = (commentsList: PostComment[]): PostComment[] => {
+            return commentsList.map(comment => {
+              if (comment.id === parentCommentId) {
+                return {
+                  ...comment,
+                  replies: [...(comment.replies || []), newComment]
+                };
+              } else if (comment.replies && comment.replies.length > 0) {
+                return {
+                  ...comment,
+                  replies: addReplyToComments(comment.replies)
+                };
+              }
+              return comment;
+            });
+          };
+          updatedComments = addReplyToComments(post.comments || []);
+        } else {
+          updatedComments = [...(post.comments || []), newComment];
+        }
+
+        updatedPost = {
+          ...post,
+          comments: updatedComments
+        };
+        return updatedPost;
+      }
+      return post;
+    }));
+
+    if (updatedPost) {
+      // Sync update to Firestore
+      if (isFirebaseConfigured && db) {
+        try {
+          await updateDoc(doc(db, 'posts', postId), {
+            comments: (updatedPost as FarmerPost).comments
+          });
+        } catch (err) {
+          console.error("Firestore comments sync error:", err);
+        }
+      }
+
+      // Track engagement in Supabase
+      await supabaseService.trackComment(postId, newComment, (updatedPost as FarmerPost).comments);
+    }
+  };
+
+  const deletePost = async (postId: string) => {
+    setPosts(prev => prev.filter(post => post.id !== postId));
+    if (isFirebaseConfigured && db) {
+      try {
+        await deleteDoc(doc(db, 'posts', postId));
+      } catch (err) {
+        console.error("Firestore post deletion error:", err);
+      }
+    }
+  };
+
   const resetDemoData = async () => {
     // 1. Reset states
     setProducts(demoProducts);
@@ -1701,7 +2025,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       approveMembershipRequest,
       rejectMembershipRequest,
       simulateEmailSignUpClick,
-      approvePaymentForUser
+      approvePaymentForUser,
+      posts,
+      addPost,
+      likePost,
+      commentPost,
+      deletePost
     }}>
       {children}
     </AppContext.Provider>
