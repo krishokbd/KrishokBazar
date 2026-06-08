@@ -23,25 +23,26 @@ interface OrderSuccessModalProps {
 }
 
 export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ orderId, onClose }) => {
-  const { orders } = useApp();
+  const { orders, siteSettings } = useApp();
   const order = orders.find(o => o.id === orderId);
+  const targetNumber = siteSettings?.paymentNagadNumber || '01987012893';
 
-  const [channels, setChannels] = useState([
-    { id: 'whatsapp', name: '💬 কাস্টমার ও এডমিন হোয়াটসঅ্যাপ', status: 'pending', detail: '01987012893 নম্বরে নোটিফিকেশন লিংক রেডি' },
-    { id: 'email', name: '📧 এডমিন জি-মেইল এলার্ট', status: 'pending', detail: 'muiktabegum@gmail.com ঠিকানায় নোটিফিকেশন প্রেরিত' },
-    { id: 'admin', name: '💻 কেন্দ্রীয় এডমিন কন্ট্রোল প্যানেল', status: 'pending', detail: 'ডাটাবেস লাইভ সিঙ্ক সম্পন্ন' },
-    { id: 'farmer', name: '🌾 ভেরিফাইড খামারি ড্যাশবোর্ড', status: 'pending', detail: 'কৃষকের সেলস লেজার ও অর্ডার ইনবক্স আপডেট সম্পন্ন' }
-  ]);
+  const [successChannels, setSuccessChannels] = useState<Record<string, boolean>>({
+    whatsapp: false,
+    email: false,
+    admin: false,
+    farmer: false,
+  });
 
   useEffect(() => {
     if (!orderId) return;
 
     // Simulate simultaneous triggers of the notification stream with rapid incremental animations
     const timers = [
-      setTimeout(() => setChannels(prev => prev.map(ch => ch.id === 'admin' ? { ...ch, status: 'success' } : ch)), 200),
-      setTimeout(() => setChannels(prev => prev.map(ch => ch.id === 'farmer' ? { ...ch, status: 'success' } : ch)), 450),
-      setTimeout(() => setChannels(prev => prev.map(ch => ch.id === 'email' ? { ...ch, status: 'success' } : ch)), 700),
-      setTimeout(() => setChannels(prev => prev.map(ch => ch.id === 'whatsapp' ? { ...ch, status: 'success' } : ch)), 950),
+      setTimeout(() => setSuccessChannels(prev => ({ ...prev, admin: true })), 200),
+      setTimeout(() => setSuccessChannels(prev => ({ ...prev, farmer: true })), 450),
+      setTimeout(() => setSuccessChannels(prev => ({ ...prev, email: true })), 700),
+      setTimeout(() => setSuccessChannels(prev => ({ ...prev, whatsapp: true })), 950),
     ];
 
     return () => timers.forEach(clearTimeout);
@@ -49,8 +50,15 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ orderId, o
 
   if (!orderId) return null;
 
+  const channels = [
+    { id: 'whatsapp', name: '💬 কাস্টমার ও এডমিন হোয়াটসঅ্যাপ', status: successChannels.whatsapp ? 'success' : 'pending', detail: `${targetNumber} নম্বরে নোটিফিকেশন লিংক রেডি` },
+    { id: 'email', name: '📧 এডমিন জি-মেইল এলার্ট', status: successChannels.email ? 'success' : 'pending', detail: 'muiktabegum@gmail.com ঠিকানায় নোটিফিকেশন প্রেরিত' },
+    { id: 'admin', name: '💻 কেন্দ্রীয় এডমিন কন্ট্রোল প্যানেল', status: successChannels.admin ? 'success' : 'pending', detail: 'ডাটাবেস লাইভ সিঙ্ক সম্পন্ন' },
+    { id: 'farmer', name: '🌾 ভেরিফাইড খামারি ড্যাশবোর্ড', status: successChannels.farmer ? 'success' : 'pending', detail: 'কৃষকের সেলস লেজার ও অর্ডার ইনবক্স আপডেট সম্পন্ন' }
+  ];
+
   // Formatting WhatsApp text
-  const adminWhatsApp = "01987012893";
+  const adminWhatsApp = targetNumber;
   let productListStr = "";
   if (order) {
     productListStr = order.products.map((p, idx) => {

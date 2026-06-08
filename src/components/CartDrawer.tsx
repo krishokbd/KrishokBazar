@@ -15,11 +15,14 @@ interface CartDrawerProps {
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrderSuccess }) => {
-  const { cart, removeFromCart, updateCartQuantity, placeOrder, currentUser } = useApp();
+  const { cart, removeFromCart, updateCartQuantity, placeOrder, currentUser, siteSettings } = useApp();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [name, setName] = useState(currentUser?.name || '');
   const [phone, setPhone] = useState(currentUser?.phone || '');
   const [address, setAddress] = useState(currentUser?.address || '');
+  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState<'COD' | 'bKash' | 'Nagad'>('COD');
+  const [checkoutTxId, setCheckoutTxId] = useState('');
+  const [senderPhone, setSenderPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -62,25 +65,50 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
       return setErrorMsg('১১ ডিজিটের সঠিক মোবাইল নম্বর দিন (যেমন: 01712345678)।');
     }
 
+    if (checkoutPaymentMethod !== 'COD') {
+      if (!senderPhone.trim()) {
+        return setErrorMsg('দয়া করে টাকা পাঠানোর মোবাইল নম্বর দিন।');
+      }
+      if (!/^01[3-9]\d{8}$/.test(senderPhone.trim())) {
+        return setErrorMsg('টাকা পাঠানোর সচল ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 01931355398)।');
+      }
+      if (!checkoutTxId.trim()) {
+        return setErrorMsg('দয়া করে পেমেন্টের ট্রানজেকশন আইডি (TxID) দিন।');
+      }
+    }
+
     setIsSubmitting(true);
     
     try {
-      const order = placeOrder(name.trim(), phone.trim(), address.trim());
+      const order = placeOrder(
+        name.trim(), 
+        phone.trim(), 
+        address.trim(), 
+        checkoutPaymentMethod, 
+        checkoutPaymentMethod !== 'COD' ? checkoutTxId.trim() : undefined
+      );
       
       // WhatsApp auto routing
-      const adminWhatsApp = "01987012893";
+      const adminWhatsApp = siteSettings?.paymentNagadNumber || "01987012893";
       const productListStr = order.products.map((p, idx) => {
         const unit = p.selectedUnit ? ` (${p.selectedUnit})` : "";
         return `${idx + 1}. *${p.title}*${unit} - ${p.quantity}টি x ৳${p.price} = ৳${p.price * p.quantity}`;
       }).join('\n');
       
+      let paymentInfoText = "ক্যাশ অন ডেলিভারি (COD)";
+      if (checkoutPaymentMethod === 'bKash') {
+        paymentInfoText = `bKash বিকাশ (TxID: ${checkoutTxId.trim()}, পেমেন্ট নম্বর: ${senderPhone.trim()})`;
+      } else if (checkoutPaymentMethod === 'Nagad') {
+        paymentInfoText = `Nagad নগদ (TxID: ${checkoutTxId.trim()}, পেমেন্ট নম্বর: ${senderPhone.trim()})`;
+      }
+
       const waText = `*নতুন অর্ডার রিকোয়েস্ট (Riktaz AI)* 🥦🛒\n\n` +
         `📦 *অর্ডার আইডি:* ${order.id}\n` +
         `🚚 *ট্র্যাকিং আইডি:* ${order.trackingNumber}\n\n` +
         `👤 *গ্রাহকের নাম:* ${order.customerName}\n` +
         `📞 *মোবাইল নম্বর:* ${order.customerPhone}\n` +
         `📍 *ডেলিভারি ঠিকানা:* ${order.customerAddress}\n` +
-        `💳 *পেমেন্ট মেথড:* ক্যাশ অন ডেলিভারি (COD)\n\n` +
+        `💳 *পেমেন্ট মেথড:* ${paymentInfoText}\n\n` +
         `🛍️ *অর্ডারকৃত ফসল:* \n${productListStr}\n\n` +
         `💰 *সর্বমোট মূল্য:* ৳${order.totalPrice}💸\n\n` +
         `আরিকতাজ এআই অ্যাপলিকেশন থেকে অর্ডারটি সাবমিট করা হয়েছে। ধন্যবাদ!`;
@@ -278,14 +306,95 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-gray-105">
-                  <div className="flex items-center text-xs text-gray-500 font-medium justify-between mb-2">
-                    <span>পরি পরিশোধের পদ্ধতি</span>
-                    <span className="flex items-center gap-1 font-bold text-emerald-700">
-                      <CreditCard className="h-3.5 w-3.5" />
-                      ক্যাশ অন ডেলিভারি
-                    </span>
+                <div className="pt-3 border-t border-gray-150 space-y-3">
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5 text-gray-400" />
+                    পরিশোধের পদ্ধতি নির্ধারণ করুন *
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCheckoutPaymentMethod('COD');
+                        setErrorMsg('');
+                      }}
+                      className={`rounded-xl py-2 px-1 border transition-all cursor-pointer flex items-center justify-center gap-1 font-bold text-[10px] ${
+                        checkoutPaymentMethod === 'COD'
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-800 font-extrabold shadow-3xs'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      ক্যাশঅন ডেলিভারি
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCheckoutPaymentMethod('bKash');
+                        setErrorMsg('');
+                      }}
+                      className={`rounded-xl py-2 px-1 border transition-all cursor-pointer flex items-center justify-center gap-1 font-bold text-[10px] ${
+                        checkoutPaymentMethod === 'bKash'
+                          ? 'bg-pink-50 border-pink-500 text-pink-700 font-extrabold shadow-3xs'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      bKash (বিকাশ)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCheckoutPaymentMethod('Nagad');
+                        setErrorMsg('');
+                      }}
+                      className={`rounded-xl py-2 px-1 border transition-all cursor-pointer flex items-center justify-center gap-1 font-bold text-[10px] ${
+                        checkoutPaymentMethod === 'Nagad'
+                          ? 'bg-orange-50 border-orange-500 text-orange-750'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Nagad (নগদ)
+                    </button>
                   </div>
+
+                  {checkoutPaymentMethod !== 'COD' && (
+                    <div className="p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-2xl space-y-3 mt-1 text-xs">
+                      <div className="text-[11px] text-emerald-950 font-medium leading-relaxed">
+                        <strong className="text-emerald-800">👉 {checkoutPaymentMethod} পেমেন্ট নির্দেশনা:</strong>
+                        <p className="mt-1">
+                          আমাদের অফিসিয়াল পার্সোনাল নম্বরে <strong>৳{grandTotal} BDT</strong> সেন্ড মানি বা ক্যাশ আউট করুন।
+                        </p>
+                        <p className="font-extrabold text-sm text-emerald-900 mt-2 bg-white/90 py-1.5 px-3 rounded-xl border border-emerald-100 text-center inline-block w-full font-mono">
+                          📱 {checkoutPaymentMethod === 'bKash' ? `bKash নম্বর: ${siteSettings?.paymentBkashNumber || '01939052257'}` : `Nagad নম্বর: ${siteSettings?.paymentNagadNumber || '01987012893'}`}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 mb-1">টাকা পাঠানোর মোবাইল নম্বর *</label>
+                          <input
+                            type="tel"
+                            required
+                            placeholder="e.g. 01931355398"
+                            maxLength={11}
+                            value={senderPhone}
+                            onChange={(e) => setSenderPhone(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 py-1.5 px-3 text-xs outline-none bg-white focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-500 mb-1">পেমেন্ট ট্রানজেকশন আইডি (TxID) *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. 8N29X902L"
+                            value={checkoutTxId}
+                            onChange={(e) => setCheckoutTxId(e.target.value)}
+                            className="w-full rounded-xl border border-gray-200 py-1.5 px-3 text-xs outline-none bg-white focus:border-emerald-500 font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </form>
             )

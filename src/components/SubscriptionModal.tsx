@@ -105,7 +105,7 @@ interface SubscriptionModalProps {
 }
 
 export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, defaultRole = 'customer' }) => {
-  const { currentUser, language, submitMembershipRequest } = useApp();
+  const { currentUser, language, submitMembershipRequest, siteSettings } = useApp();
   const [activeTab, setActiveTab ] = useState<'customer' | 'farmer'>(defaultRole);
 
   React.useEffect(() => {
@@ -186,7 +186,33 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
 
     // Programmatically trigger WhatsApp mockup dispatch block
     const whatsappMsgText = `নতুন সাবস্ক্রিপশন অনুরোধ: কোড: ${tempCode}, নাম: ${subscriberName}, ফোন: ${phoneNumber}, প্ল্যান: ${selectedPlan?.name}, ট্রানজেকশন আইডি: ${transactionId} (${paymentMethod}), ঠিকানা: ${subscriberAddress}`;
-    console.log("Simulating simultaneous WhatsApp alert context:",          <div className="flex items-center gap-2">
+    console.log("Simulating simultaneous WhatsApp alert context:", whatsappMsgText);
+
+    setIsProcessing(false);
+    setShowInvoice(true);
+  };
+
+  const handleCompleteFullFlow = () => {
+    setSelectedPlan(null);
+    setShowInvoice(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl border border-gray-100 relative my-8">
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-emerald-950/40 hover:text-emerald-950 hover:bg-slate-100 p-2 rounded-full transition-all cursor-pointer z-10"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {/* Modal Header */}
+        <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-950 text-white px-6 sm:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-950 font-sans">
+          <div className="flex items-center gap-2">
             <span className="text-[9px] font-black tracking-widest uppercase bg-emerald-800 text-emerald-100 px-2.5 py-1 rounded-lg">
               PREMIUM ACCESS
             </span>
@@ -377,11 +403,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                     </div>
                   ))}
                 </div>
-              </div>
-            )�� গ্রহণের মাধ্যমে আপনার লাভ নিশ্চিত হবে ৫০% থেকে ৯০% পর্যন্ত! নিচ থেকে লাভজনক সুবিধা ও আবেদন ফর্মের বিবরণসমূহ জেনে নিন।'
-                      : 'Do you want to sell products as a verified grower and double your sales? Try our Premium Farmer partnership to boost your yield profit by 50% to 90%! Learn the rewards and application steps below.'}
-                  </div>
-                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-br from-emerald-950 to-emerald-900 text-white p-6 rounded-2xl space-y-4">
@@ -444,7 +465,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                 <form onSubmit={handleSimulatePayment} className="space-y-4">
                   <div className="text-center pb-3 border-b border-gray-250">
                     <h4 className="text-sm font-extrabold text-gray-700">
-                      {language === 'bn' ? 'অфলাইন পেমেন্ট গেটওয়ে ভেরিফিকেশন' : 'Offline Payment Gateway'}
+                      {language === 'bn' ? 'অফলাইন পেমেন্ট গেটওয়ে ভেরিফিকেশন' : 'Offline Payment Gateway'}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1 leading-normal font-sans">
                       {language === 'bn' ? 'সাবস্ক্রিপশন:' : 'Subscription:'} <strong className="text-emerald-700">{selectedPlan.name}</strong><br />
@@ -465,8 +486,12 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                       {language === 'bn' ? '👉 নিচের যেকোনো একটি নম্বরে সেন্ড মানি বা ক্যাশ আউট করুন:' : '👉 Send Money or Cash-out to our official merchants:'}
                     </p>
                     <div className="mt-2.5 flex flex-col gap-1.5 items-center justify-center font-mono">
-                      <p className="font-extrabold text-sm text-emerald-950">📱 bKash (বিকাশ পার্সোনাল): 01939052257</p>
-                      <p className="font-extrabold text-sm text-emerald-950">📱 Nagad (নগদ পার্সোনাল): 01987012893</p>
+                      <p className="font-extrabold text-xs sm:text-sm text-emerald-950">
+                        📱 bKash (বিকাশ পার্সোনাল): {siteSettings?.paymentBkashNumber || '01939052257'}
+                      </p>
+                      <p className="font-extrabold text-xs sm:text-sm text-emerald-950">
+                        📱 Nagad (নগদ পার্সোনাল): {siteSettings?.paymentNagadNumber || '01987012893'}
+                      </p>
                     </div>
                   </div>
 
@@ -533,7 +558,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-650 mb-1">
+                        <label className="block text-[11px] font-bold text-gray-350 mb-1">
                           {language === 'bn' ? '৪. টাকা পাঠানোর মোবাইল নম্বর:' : '4. Sent-From Bkash/Nagad Number:'}
                         </label>
                         <input
@@ -547,7 +572,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-650 mb-1">
+                        <label className="block text-[11px] font-bold text-gray-350 mb-1">
                           {language === 'bn' ? '৫. ট্রানজেকশন আইডি (TxID):' : '5. Transaction ID (SMS Reciept):'}
                         </label>
                         <input
@@ -583,7 +608,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
               ) : (
                 // SUCCESS CERTIFICATE INVOICE Showing 12-24 Hours Alert
                 <div className="text-center space-y-4">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-yellow-105 text-yellow-600">
                     <span className="text-2xl animate-spin">⏱</span>
                   </div>
                   <div>
