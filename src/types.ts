@@ -157,6 +157,8 @@ export interface SiteSettings {
   socialInstagram: string;
   paymentBkashNumber: string;
   paymentNagadNumber: string;
+  paymentBankAccount: string;
+  paymentBankName: string;
   paymentCodActive: boolean;
   deliveryChargeDhaka: number;
   deliveryChargeOutside: number;

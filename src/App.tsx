@@ -14,6 +14,7 @@ import { ProductModal } from './components/ProductModal';
 import { EditProductModal } from './components/EditProductModal';
 import { CartDrawer } from './components/CartDrawer';
 import { AuthModal } from './components/AuthModal';
+import { OrderSuccessModal } from './components/OrderSuccessModal';
 import { ProductDetailsPage } from './components/ProductDetailsPage';
 import { FarmerStoreProfilePage } from './components/FarmerStoreProfilePage';
 import { AdminCMSDashboard } from './components/AdminCMSDashboard';
@@ -145,7 +146,9 @@ const AppContent: React.FC = () => {
     getNidDetails,
     siteSettings,
     addToCart,
-    categories
+    categories,
+    language,
+    toggleLanguage
   } = useApp();
 
   // Route state
@@ -438,39 +441,34 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
-  // 1. Initial load path parser and popstate listener for SEO-friendly URLs
+  // 1. Initial load path parser and popstate/hashchange listener for SEO & client hash routing
   React.useEffect(() => {
-    const path = window.location.pathname;
-    let initialView: any = 'home';
-    if (path === '/shop') initialView = 'shop';
-    else if (path === '/ready-to-cook') initialView = 'ready-to-cook';
-    else if (path === '/farmers') initialView = 'farmers';
-    else if (path === '/dashboard') initialView = 'customer-dashboard';
-    else if (path === '/farmer-portal') initialView = 'farmer-dashboard';
-    else if (path === '/admin') initialView = 'admin';
-    else if (path === '/blog') initialView = 'blog';
-    else if (path === '/social-feed') initialView = 'social-feed';
-    else if (path === '/our-story') initialView = 'our-story';
-
-    setView(initialView);
-
-    const handlePopState = () => {
-      const p = window.location.pathname;
+    const handleLocationChange = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
       let matchedView: any = 'home';
-      if (p === '/shop') matchedView = 'shop';
-      else if (p === '/ready-to-cook') matchedView = 'ready-to-cook';
-      else if (p === '/farmers') matchedView = 'farmers';
-      else if (p === '/dashboard') matchedView = 'customer-dashboard';
-      else if (p === '/farmer-portal') matchedView = 'farmer-dashboard';
-      else if (p === '/admin') matchedView = 'admin';
-      else if (p === '/blog') matchedView = 'blog';
-      else if (p === '/social-feed') matchedView = 'social-feed';
-      else if (p === '/our-story') matchedView = 'our-story';
+      
+      if (path === '/shop' || hash === '#shop') matchedView = 'shop';
+      else if (path === '/ready-to-cook' || hash === '#ready-to-cook') matchedView = 'ready-to-cook';
+      else if (path === '/farmers' || hash === '#farmers' || hash === '#farmer-directory') matchedView = 'farmers';
+      else if (path === '/dashboard' || hash === '#dashboard') matchedView = 'customer-dashboard';
+      else if (path === '/farmer-portal' || hash === '#farmer-portal') matchedView = 'farmer-dashboard';
+      else if (path === '/admin' || hash === '#admin') matchedView = 'admin';
+      else if (path === '/blog' || hash === '#blog') matchedView = 'blog';
+      else if (path === '/social-feed' || hash === '#social-feed') matchedView = 'social-feed';
+      else if (path === '/our-story' || hash === '#our-story') matchedView = 'our-story';
       
       setView(matchedView);
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    handleLocationChange();
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   // 2. Sync active view back to URL path and log Firebase Analytics screen_view on changes
@@ -1316,11 +1314,20 @@ const AppContent: React.FC = () => {
                 </a>
               </div>
             </div>
-            <div className="mt-6 sm:mt-0 flex justify-center gap-6 text-[11px] font-black tracking-wide text-emerald-800">
+            <div className="mt-6 sm:mt-0 flex flex-wrap items-center justify-center gap-5 text-[11px] font-black tracking-wide text-emerald-800">
               <button onClick={() => setView('home')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">হোম</button>
               <button onClick={() => setView('shop')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">তাজা পণ্য</button>
               <button onClick={() => setView('farmers')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">আমাদের বিশ্বস্ত কৃষক</button>
               <button onClick={() => setView('our-story')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">আমাদের গল্প</button>
+              
+              {/* LANGUAGE SWITCHER PLACED SOLELY IN THE FOOTER */}
+              <button 
+                onClick={toggleLanguage}
+                className="rounded-xl bg-emerald-50 border border-emerald-150 px-3 py-1.5 text-[10px] font-black text-emerald-700 hover:bg-emerald-100 hover:border-emerald-250 flex items-center gap-1 cursor-pointer transition active:scale-95 select-none shrink-0"
+                title=" ভাষা পরিবর্তন করুন / Switch Language"
+              >
+                🌐 <span className="font-sans font-extrabold">{language === 'en' ? 'বাংলা' : 'ENGLISH'}</span>
+              </button>
             </div>
           </div>
 
@@ -1356,6 +1363,11 @@ const AppContent: React.FC = () => {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         onOrderSuccess={handleOrderSuccess}
+      />
+
+      <OrderSuccessModal 
+        orderId={successOrderId}
+        onClose={() => setSuccessOrderId(null)}
       />
 
       <ScrollingBanners onOpenSubscription={() => setIsSubscriptionOpen(true)} />

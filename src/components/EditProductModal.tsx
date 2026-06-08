@@ -86,6 +86,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [isReadyToCook, setIsReadyToCook] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   const [unit, setUnit] = useState('kg');
+  const [harvestDate, setHarvestDate] = useState('');
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -160,6 +161,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setIsReadyToCook(!!product.isReadyToCook);
       setIsFeatured(!!product.isFeatured);
       setUnit(product.unit || 'kg');
+      setHarvestDate(product.harvestDate || '');
       setConfirmDelete(false);
       setSuccessAnimation(false);
       setUploadError('');
@@ -222,6 +224,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       isFeatured,
       unit,
       images: finalImgs,
+      harvestDate: harvestDate || undefined,
     };
 
     editProduct(product.id, updatedData);
@@ -379,6 +382,17 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans">ফসল কাটার তারিখ (Harvest Date)</label>
+                <input
+                  type="text"
+                  value={harvestDate}
+                  onChange={(e) => setHarvestDate(e.target.value)}
+                  placeholder="যেমন: ১ জুন, ২০২৬ বা June 1, 2026"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs outline-none focus:border-emerald-500 shadow-sm text-gray-700 font-bold font-sans"
+                />
+              </div>
+
               <div className="flex flex-col gap-2.5 justify-end pb-1 text-xs">
                 <label className="flex items-center gap-1.5 font-bold text-gray-650 cursor-pointer">
                   <input
@@ -498,6 +512,24 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
               {uploadError && (
                 <p className="text-[10px] text-red-650 font-bold leading-none animate-pulse font-sans">❌ {uploadError}</p>
               )}
+
+              {/* Paste Image Links directly Field */}
+              <div className="mt-2 pt-2 border-t border-dashed border-gray-100">
+                <label className="block text-[11px] font-black text-gray-750 mb-1 hover:text-emerald-800">
+                  🔗 직접 이미지 লিংক পেস্ট করুন (Pasted URLs - প্রতি লাইনে একটি করে লিংক দিন):
+                </label>
+                <textarea
+                  rows={2}
+                  value={uploadedImages.filter(Boolean).join('\n')}
+                  onChange={(e) => {
+                    const parsed = e.target.value.split('\n').map(u => u.trim()).filter(Boolean);
+                    setUploadedImages(parsed);
+                  }}
+                  placeholder="এখানে আপনার ছবির ওয়েব লিংক (যেমন: https://images.unsplash.com/...) পেস্ট করুন। প্রতি লাইনে একটি করে লিংক দিবেন।"
+                  className="w-full rounded-xl border border-gray-200 bg-slate-50/50 hover:bg-white text-[10px] text-gray-700 font-mono p-3 outline-none focus:border-emerald-500 transition duration-150 leading-relaxed"
+                />
+                <p className="text-[9px] text-gray-400 font-medium">পিসির কিবোর্ড থেকে কপি করা ইমেজ ও ওয়েব আর্ট লিংকগুলো এখানে পেস্ট করলেই কার্ডে লাইভ প্রদর্শিত হবে।</p>
+              </div>
 
               {/* Progress Slider Indicator */}
               {isUploading && (

@@ -8,6 +8,96 @@ import { useApp } from '../AppContext';
 import { logAnalyticsEvent } from '../lib/analytics';
 import { X, CheckCircle, Shield, Gift, Zap, Video, MapPin, Truck, Sparkles, CreditCard } from 'lucide-react';
 
+export const CUSTOMER_PLANS = [
+  {
+    id: 'bronze',
+    name: 'ব্রোঞ্জ প্ল্যান (Bronze)',
+    nameEn: 'Bronze Plan',
+    badge: 'লাইট ভ্যালু',
+    badgeEn: 'Light Value',
+    price: 499,
+    desc: 'মৌসুমী তাজা সবজি ও ধনেপাতা/শাক আইটেমগুলো সতেজ ডেলিভারি। সাধারণ খাদকের জন্য যুতসই।',
+    descEn: 'Delivery of basic seasonal vegetables and herbs. Highly affordable.',
+    perks: ['২-৩ ক্যাটাগরির তাজা সবুজ শাকসবজি', 'ভেষজ ও ধনেপাতা ফ্রী অ্যাসোর্টমেন্ট', '২৫% ডেলিভারি চার্জ ডিসকাউন্ট'],
+    perksEn: ['2-3 Veggies Pre-Chopped', 'Clean Hygienic Pack', '25% Shipping Subsidy']
+  },
+  {
+    id: 'silver',
+    name: 'সিলভার প্ল্যান (Silver)',
+    nameEn: 'Silver Plan',
+    badge: 'সবজি স্পেশাল',
+    badgeEn: 'Veg Special',
+    price: 500,
+    desc: 'রান্না উপযোগী কাটা-ধোয়া রেডি-টু-কুক সবজি ও পাতার আইটেমগুলো সতেজ ডেলিভারি। ব্যস্ত গৃহিণীদের প্রিয়।',
+    descEn: 'Pre-washed, chopped ready-to-cook fresh vegetables and greens.',
+    perks: ['৩-৪ ক্যাটাগরির রেডি-টু-কুক সবজি', 'প্রাক-ধৌত ও হাইজেনিক প্যাকিং', '৫০% ডেলিভারি চার্জ ছাড়'],
+    perksEn: ['3-4 Veggies Pre-Chopped', 'Premium Pack', '50% Off Delivery Fee']
+  },
+  {
+    id: 'gold',
+    name: 'গোল্ড প্ল্যান (Gold)',
+    nameEn: 'Gold Plan',
+    badge: 'মসলা ও মিট ডিল',
+    badgeEn: 'Meat & Spice Combo',
+    price: 999,
+    desc: 'কাটা সবজি, বিশেষ ম্যারিনেট করা মুরগী/গরুর মাংসের রেডি প্যাকেট এবং হাতভাঙা খাঁটি হলুদ ও মরিচ গুড়া।',
+    descEn: 'Chopped vegetables, marinated meat cuts, and stone-ground pure spices.',
+    perks: ['সিলভার প্ল্যানের সকল সুবিধা অন্তর্ভুক্ত', 'ম্যারিনেট করা মাংসের রেডি প্যাকেট', 'হাতভাঙা সতেজ হলুদ/মরিচ গুড়া', 'ফ্ল্যাট ৮০% ডেলিভারি ডিসকাউন্ট'],
+    perksEn: ['Includes Silver Bundle', 'Marinated Meat packets', 'Stoneground spices', 'Flat 80% Shipping Discount']
+  },
+  {
+    id: 'platinum',
+    name: 'প্লাটিনাম সুপার (Platinum)',
+    nameEn: 'Platinum Super',
+    badge: 'ভিআইপি আনলিমিটেড',
+    badgeEn: 'VIP Unlimited',
+    price: 1399,
+    desc: 'ডেলিভারি চার্জ সম্পূর্ণ ফ্রী। কাস্টম কাটা সবজি ও মাংস এবং সরাসরি খামার অথবা বাজার থেকে লাইভ ভিডিও কলে বাছার কভারেজ।',
+    descEn: 'Zero shipping charges forever. Fully customizable vegetable cuts and live video assistance.',
+    perks: ['গোল্ড প্ল্যানের সকল সুবিধা অন্তর্ভুক্ত', 'সম্পূর্ণ কাস্টম সাইজ কাটা মাংস ও সবজি', 'আনলিমিটেড ডেলিভারি চার্জ ফ্রি!', 'ভিআইপি খামারি ভিডিও নির্বাচন সাপোর্ট'],
+    perksEn: ['Includes Gold Bundle', 'Custom cuts support', 'Zero delivery fee forever', 'Live Video pick option']
+  }
+];
+
+export const FARMER_PLANS = [
+  {
+    id: 'farmer_silver',
+    name: 'সিলভার খামারি স্পনসর (Silver)',
+    nameEn: 'Silver Farmer Sponsor',
+    badge: 'বেসিক ভেরিফাইড',
+    badgeEn: 'Basic Verified',
+    price: 1000,
+    desc: 'নিজস্ব অনলাইন খামার পোর্টাল, লাইভ অর্ডার নোটিফিকেশন সুবিধা এবং ১টি ডেডিকেটেড ক্যাটাগরি বুস্টিং প্রোগ্রাম।',
+    descEn: 'Online farmer store portal, real-time orders, and 1 category boost.',
+    perks: ['৫টি বেশি প্রোডাক্ট লিস্টিং', 'ভেরিফাইড খামারি সিলভার ব্যাজ', 'বিকাশ-নগদ ৩ ঘণ্টায় পেমেন্ট উইথড্রয়াল', '৫০% সেলস বৃদ্ধির গ্যারান্টি'],
+    perksEn: ['Up to 5 Products', 'Verified Silver Badge', '3-Hour Bkash Payouts', '50% Guaranteed Sales Boost']
+  },
+  {
+    id: 'farmer_gold',
+    name: 'গোল্ড খামারি স্পনসর (Gold)',
+    nameEn: 'Gold Farmer Sponsor',
+    badge: 'ট্রাস্টেড কানেক্ট',
+    badgeEn: 'Trusted Connect',
+    price: 2000,
+    desc: 'সিলভারের সকল সুবিধা, ৩টি ক্যাটাগরি বুস্টিং, বিশেষ প্রোমোশনাল ব্যানার এবং হাহাকার বাদে আড়তদার বিহীন সরাসরি বায়ার লিড।',
+    descEn: 'Includes Silver benefits plus 3 category boosts and direct retail leads.',
+    perks: ['১৫টি পন্য লিস্টিং সাপোর্ট', 'ভেরিফাইড খামারি গোল্ডেন ব্যাজ', 'গ্রাহকদের খামারে লাইভ স্ট্রিম ব্যবস্থা', '৮০% সেলস বৃদ্ধির গ্যারান্টি'],
+    perksEn: ['Up to 15 Products', 'Verified Gold Badge', 'Live Stream to buyer', '80% Guaranteed Sales Boost']
+  },
+  {
+    id: 'farmer_platinum',
+    name: 'প্লাটিনাম খামারি স্পনসর (Platinum)',
+    nameEn: 'Platinum Farmer Sponsor',
+    badge: 'আল্টিমেট স্পনসর',
+    badgeEn: 'Ultimate Sponsor',
+    price: 3000,
+    desc: 'যশোর-রাজশাহী-বগুড়া কুরিয়ার সংগ্রহ হব থেকে সরাসরি ঢাকার ক্রেতার কাছে আমাদের নিজস্ব ট্রাকে ফ্রী ফসল ডেলিভারি ও সর্বোচ্চ কভারেজ।',
+    descEn: 'Free truck collection from regional hubs to Dhaka buyers and ultimate home-page feature placement.',
+    perks: ['আনলিমিটেড প্রোডাক্ট লিস্টিং সুবিধা', 'ভেরিফাইড খামারি ডায়মন্ড ব্যাজ', 'হোমপেজে ফিক্সড ব্যানার বুস্ট', '১২০% সেলস গ্রোথ নিশ্চিত গ্যারান্টি'],
+    perksEn: ['Unlimited products', 'Verified Diamond badge', 'Homepage banner feature', '120% Sales growth guarantee']
+  }
+];
+
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -96,82 +186,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
 
     // Programmatically trigger WhatsApp mockup dispatch block
     const whatsappMsgText = `নতুন সাবস্ক্রিপশন অনুরোধ: কোড: ${tempCode}, নাম: ${subscriberName}, ফোন: ${phoneNumber}, প্ল্যান: ${selectedPlan?.name}, ট্রানজেকশন আইডি: ${transactionId} (${paymentMethod}), ঠিকানা: ${subscriberAddress}`;
-    console.log("Simulating simultaneous WhatsApp alert context:", whatsappMsgText);
-    const whatsappLink = `https://wa.me/8801931355398?text=${encodeURIComponent(whatsappMsgText)}`;
-    console.log("Generated Admin WhatsApp notification hyperlink:", whatsappLink);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      setShowInvoice(true);
-      
-      // Dispatch live subscription pending to global central state
-      submitMembershipRequest(phoneNumber, transactionId, activeTab, selectedPlan?.price || 600);
-      
-      // Upgrade local user programmatically but mark subscription as Pending for validation (will activate in 12-24 hrs)
-      if (currentUser) {
-        currentUser.subscriptionStatus = 'Pending' as any;
-        currentUser.uniqueCode = tempCode;
-        localStorage.setItem('kb_current_user', JSON.stringify(currentUser));
-        
-        // Sync back to registered collections
-        const saved = localStorage.getItem('kb_registered_customers');
-        if (saved) {
-          const list = JSON.parse(saved);
-          const updatedList = list.map((c: any) => c.id === currentUser.id ? { 
-            ...c, 
-            subscriptionStatus: 'Pending', 
-            subscriptionTxId: transactionId,
-            uniqueCode: tempCode 
-          } : c);
-          localStorage.setItem('kb_registered_customers', JSON.stringify(updatedList));
-        }
-
-        // Add to active notifications store
-        const existingNotifications = localStorage.getItem('kb_user_notifications') || '[]';
-        const parsedNotifs = JSON.parse(existingNotifications);
-        parsedNotifs.unshift({
-          id: `notif-${Date.now()}`,
-          title: language === 'bn' ? 'সাবস্ক্রিপশন আবেদন গৃহিত' : 'Subscription Request Received',
-          message: language === 'bn' 
-            ? `আপনার ${selectedPlan?.name} পেমেন্ট আবেদনের তথ্য রিভিউ করা হচ্ছে। ট্রানজেকশন আইডি ${transactionId} রিভিউ করতে ১২-২৪ ঘণ্টা সময় লাগবে।`
-            : `Your registration for ${selectedPlan?.name} with TxID ${transactionId} is currently being verified. Processing takes 12-24 hours.`,
-          date: new Date().toLocaleDateString('bn-BD'),
-          unread: true
-        });
-        localStorage.setItem('kb_user_notifications', JSON.stringify(parsedNotifs));
-      }
-
-      logAnalyticsEvent('user_subscription_upgrade', {
-        plan_id: selectedPlan?.id,
-        plan_name: selectedPlan?.name,
-        price: selectedPlan?.price,
-        phone: phoneNumber,
-        transactionId: transactionId,
-        uniqueCode: tempCode
-      });
-    }, 1200);
-  };
-
-  const handleCompleteFullFlow = () => {
-    setShowInvoice(false);
-    setSelectedPlan(null);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-4xl overflow-y-auto max-h-[92vh] rounded-3xl bg-white shadow-2xl transition-all border border-emerald-50 text-left select-none font-sans">
-        
-        {/* Banner Header */}
-        <div className="bg-gradient-to-r from-emerald-900 via-emerald-700 to-emerald-500 px-6 py-6 sm:py-8 text-white relative">
-          <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 rounded-full bg-black/10 p-2 text-white/90 hover:bg-black/25 cursor-pointer"
-          >
-            <X className="h-4.5 w-4.5" />
-          </button>
-          
-          <div className="flex items-center gap-2">
+    console.log("Simulating simultaneous WhatsApp alert context:",          <div className="flex items-center gap-2">
             <span className="text-[9px] font-black tracking-widest uppercase bg-emerald-800 text-emerald-100 px-2.5 py-1 rounded-lg">
               PREMIUM ACCESS
             </span>
@@ -181,7 +196,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
           </h3>
           <p className="mt-1.5 text-xs text-emerald-100/90 max-w-2xl leading-relaxed">
             {language === 'bn'
-              ? 'সিন্ডিকেট মুক্ত সরাসরি বাণিজ্যে ক্রেতার সর্বোচ্চ সাশ্রয়ী প্রিমিয়াম সেবার সমাহার এবং প্রান্তিক খামারিদের সেলস দ্বিগুণ করার জন্য বিশেষ স্পনসর প্রোগ্রাম।'
+              ? 'সিন্দিকেট মুক্ত সরাসরি বাণিজ্যে ক্রেতার সর্বোচ্চ সাশ্রয়ী প্রিমিয়াম সেবার সমাহার এবং প্রান্তিক খামারিদের সেলস দ্বিগুণ করার জন্য বিশেষ স্পনসর প্রোগ্রাম।'
               : 'Direct broker-free premium offers for consumer savings and dedicated local farmer support packages to expand sales output.'}
           </p>
         </div>
@@ -226,111 +241,69 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                       🎁 {language === 'bn' ? 'কেন আপনি গ্রাহক সাবস্ক্রিপশন নিবেন?' : 'Why buy Customer Subscription?'}
                     </strong>
                     {language === 'bn' 
-                      ? 'আমাদের সাবস্ক্রাইবড প্রিমিয়াম মেম্বারগণ কোনো ঝামেলা ছাড়াই সম্পূর্ণ ফ্রিতে বা স্বল্প ডেলিভারি ব্যয়ে রান্নাঘরের প্রস্তুতকৃত রেডি-টু-কুক সতেজ সবজি, ম্যারিনেট করা ও কাটা মাংস, এবং বাড়িতে হাতধোয়া খাঁটি মসলা পেয়ে থাকেন। নিচে দেওয়া ৩টি সহজ বাজেটের প্ল্যানসমূহ ও তাদের সুযোগ-সুবিধা দেখে নিন।'
-                      : 'Premium subscribers unlock free next-day shipping, ready-to-cook fresh cut vegetables, pre-marinated organic local meats, and verified field access. View our 3 budget-friendly plans.'}
+                      ? 'আমাদের সাবস্ক্রাইবড প্রিমিয়াম মেম্বারগণ কোনো ঝামেলা ছাড়াই সম্পূর্ণ ফ্রিতে বা স্বল্প ডেলিভারি ব্যয়ে রান্নাঘরের প্রস্তুতকৃত রেডি-টু-কুক সতেজ সবজি, ম্যারিনেট করা ও কাটা মাংস, এবং বাড়িতে হাতধোয়া খাঁটি মসলা পেয়ে থাকেন। নিচে দেওয়া ৪টি সহজ বাজেটের প্ল্যানসমূহ ও তাদের সুযোগ-সুবিধা দেখে নিন।'
+                      : 'Premium subscribers unlock free next-day shipping, ready-to-cook fresh cut vegetables, pre-marinated organic local meats, and verified field access. View our 4 budget-friendly plans.'}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 font-sans">
-                  {/* PLAN 1: SILVER (500) */}
-                  <div className="rounded-2xl border border-gray-150 p-5 bg-white space-y-4 hover:border-emerald-500 transition-all shadow-sm relative flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider bg-gray-100 rounded-xl text-gray-650 border border-gray-200">
-                          {language === 'bn' ? 'সবজি স্পেশাল' : 'Veg Special'}
-                        </span>
-                        <span className="text-sm font-black text-emerald-700">৳৫০০ / মাস</span>
-                      </div>
-                      <h4 className="text-base font-black text-gray-800">
-                        {language === 'bn' ? 'সিলভার প্ল্যান (Silver)' : 'Silver Plan'}
-                      </h4>
-                      <p className="text-[11px] text-gray-500 leading-relaxed">
-                        {language === 'bn' 
-                          ? 'শুধুমাত্র রান্না উপযোগী কাটা-ধোয়া রেডি-টু-কুক সবজি ও পাতার আইটেমগুলো সতেজ ডেলিভারি। কর্মব্যস্ত গৃহিণীদের জন্য যুতসই।'
-                          : 'Pre-washed, chopped, ready-to-cook fresh vegetables and greens delivered cold. Best for busy households.'}
-                      </p>
-                      <ul className="text-[11px] text-gray-600 space-y-2 pt-2 border-t border-gray-100">
-                        <li className="flex items-center gap-1.5 font-sans font-medium"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? '৩-৪ ক্যাটাগরির রেডি-টু-কুক সবজি' : '3-4 Veggies Pre-Chopped'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-medium"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'প্রাক-ধৌত ও হাইজেনিক প্যাকিং' : 'Hygienic Packing Ready'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-medium"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? '৫০% ডেলিভারি চার্জ ছাড়' : '50% Off Delivery Fee'}</li>
-                      </ul>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleSubscribeClick({ id: 'silver', name: 'সিলভার প্ল্যান (Silver)', price: 500 })}
-                      className="w-full mt-4 rounded-xl py-2 px-4 bg-emerald-50 hover:bg-emerald-650 hover:text-white text-emerald-800 text-xs font-black transition-all cursor-pointer text-center"
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-sans">
+                  {CUSTOMER_PLANS.map((plan) => (
+                    <div 
+                      key={plan.id}
+                      className={`rounded-2xl border p-4.5 bg-white space-y-3 hover:shadow-md transition-all relative flex flex-col justify-between ${
+                        plan.id === 'gold' ? 'border-2 border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-150'
+                      }`}
                     >
-                      {language === 'bn' ? 'সাবস্ক্রাইব করুন' : 'Subscribe Silver'}
-                    </button>
-                  </div>
-
-                  {/* PLAN 2: GOLD (700) */}
-                  <div className="rounded-2xl border-2 border-emerald-500 p-5 bg-white space-y-4 hover:shadow-md transition-all relative flex flex-col justify-between">
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider shadow">
-                      {language === 'bn' ? '★ সেরা ভ্যালু (Gold Value)' : '★ Best Value'}
-                    </div>
-                    <div className="space-y-3 mt-1.5">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider bg-orange-50 rounded-xl text-orange-700 border border-orange-100">
-                          {language === 'bn' ? 'মসলা ও সবজি মিট' : 'Meat & Spice Combo'}
-                        </span>
-                        <span className="text-sm font-black text-emerald-700">৳৭০০ / মাস</span>
+                      {plan.id === 'gold' && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider shadow">
+                          {language === 'bn' ? '★ সেরা অফার' : '★ BEST VALUE'}
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2 mt-1">
+                        <div className="flex justify-between items-start gap-1">
+                          <span className={`px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-wider rounded-xl border ${
+                            plan.id === 'bronze' ? 'bg-orange-55/70 text-orange-700 border-orange-100' :
+                            plan.id === 'silver' ? 'bg-blue-55/70 text-blue-700 border-blue-100' :
+                            plan.id === 'gold' ? 'bg-emerald-55/70 text-emerald-800 border-emerald-100' :
+                            'bg-purple-55/70 text-purple-700 border-purple-100'
+                          }`}>
+                            {language === 'bn' ? plan.badge : plan.badgeEn}
+                          </span>
+                          <span className="text-xs font-black text-emerald-700 shrink-0">৳{plan.price} / মাস</span>
+                        </div>
+                        
+                        <h4 className="text-sm font-black text-gray-800 font-sans">
+                          {language === 'bn' ? plan.name : plan.nameEn}
+                        </h4>
+                        
+                        <p className="text-[10px] text-gray-500 leading-normal">
+                          {language === 'bn' ? plan.desc : plan.descEn}
+                        </p>
+                        
+                        <ul className="text-[10.5px] text-gray-650 space-y-1.5 pt-2 border-t border-gray-100">
+                          {(language === 'bn' ? plan.perks : plan.perksEn).map((perk, pIdx) => (
+                            <li key={pIdx} className="flex items-center gap-1 font-sans font-medium">
+                              <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" /> 
+                              <span>{perk}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <h4 className="text-base font-black text-gray-800 font-sans">
-                        {language === 'bn' ? 'গোল্ড প্ল্যান (Gold)' : 'Gold Plan'}
-                      </h4>
-                      <p className="text-[11px] text-gray-500 leading-relaxed">
-                        {language === 'bn' 
-                          ? 'প্রাক-কাটা সতেজ সবজি, বিশেষ ম্যারিনেট করা মুরগী/গরুর মাংসের মশলা এবং ১০০% বিশুদ্ধ হাতভাঙা হলুদ ও মরিচ গুড়া।'
-                          : 'Includes pre-chopped vegetables, marinated local meat cuts, and stone-ground pure spices.'}
-                      </p>
-                      <ul className="text-[11px] text-gray-650 space-y-2 pt-2 border-t border-gray-100">
-                        <li className="flex items-center gap-1.5 font-sans font-semibold"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'সিলভার প্ল্যানের সকল সুবিধা' : 'All Silver Perks'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-semibold"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'ম্যারিনেট করা মাংসের রেডি প্যাকেট' : 'Marinated Fresh Meats'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-semibold"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'হাতভাঙা সতেজ হলুদ/মরিচ গুড়া' : 'Stone-ground Pure Spices'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-semibold"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'ফ্লাট ৭০% ডেলিভারি ডিসকাউন্ট' : 'Flat 70% Shipping Subsidy'}</li>
-                      </ul>
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleSubscribeClick({ id: plan.id, name: language === 'bn' ? plan.name : plan.nameEn, price: plan.price })}
+                        className={`w-full mt-3 rounded-xl py-2 px-3 text-[11px] font-black transition-all cursor-pointer text-center ${
+                          plan.id === 'gold' 
+                            ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
+                            : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-650 hover:text-white'
+                        }`}
+                      >
+                        {language === 'bn' ? 'সাবস্ক্রাইব করুন' : 'Subscribe Now'}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleSubscribeClick({ id: 'gold', name: 'গোল্ড প্ল্যান (Gold)', price: 700 })}
-                      className="w-full mt-4 rounded-xl py-2 px-4 bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-black transition-all cursor-pointer text-center"
-                    >
-                      {language === 'bn' ? 'সাবস্ক্রাইব করুন' : 'Subscribe Gold'}
-                    </button>
-                  </div>
-
-                  {/* PLAN 3: PLATINUM (1000) */}
-                  <div className="rounded-2xl border border-gray-150 p-5 bg-white space-y-4 hover:border-emerald-500 transition-all shadow-sm relative flex flex-col justify-between">
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider bg-purple-50 rounded-xl text-purple-700 border border-purple-100">
-                          {language === 'bn' ? 'ভিআইপি আনলিমিটেড' : 'VIP Unlimited'}
-                        </span>
-                        <span className="text-sm font-black text-emerald-700">৳১০০০ / মাস</span>
-                      </div>
-                      <h4 className="text-base font-black text-gray-800">
-                        {language === 'bn' ? 'প্লাটিনাম সুপার (Platinum)' : 'Platinum Super'}
-                      </h4>
-                      <p className="text-[11px] text-gray-500 leading-relaxed">
-                        {language === 'bn' 
-                          ? 'কোন ডেলিভারি চার্জ নেই। কাস্টম সাইজে কাটা সবজি ও মাংস এবং সরাসরি খামার বা পাইকারি বাজারের সাথে লাইভ ভিডিও কল কেনাকাটা।'
-                          : 'Zero shipping charges forever. Fully customizable vegetable cuts, meats, and live video picker from primary growers.'}
-                      </p>
-                      <ul className="text-[11px] text-gray-600 space-y-2 pt-2 border-t border-gray-100">
-                        <li className="flex items-center gap-1.5 font-sans font-medium"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'গোল্ড প্ল্যানের সকল সুবিধা অন্তর্ভুক্ত' : 'Includes Gold Bundle'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-medium"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'সম্পুর্ণ কাস্টম কাটা সবজি ও মাংস' : 'Fully Custom Chop Cuts'}</li>
-                        <li className="flex items-center gap-1.5 font-sans font-medium"><CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" /> {language === 'bn' ? 'আনলিমিটেড ডেলিভারি চার্জ ফ্রি!' : 'Free Zero-delivery charges'}</li>
-                      </ul>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleSubscribeClick({ id: 'platinum', name: 'প্লাটিনাম সুপার (Platinum)', price: 1000 })}
-                      className="w-full mt-4 rounded-xl py-2 px-4 bg-slate-900 text-white hover:bg-black text-xs font-black transition-all cursor-pointer text-center"
-                    >
-                      {language === 'bn' ? 'সাবস্ক্রাইব করুন' : 'Subscribe Platinum'}
-                    </button>
-                  </div>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -342,6 +315,70 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                     <strong className="text-emerald-900 block text-sm mb-1">🌾 {language === 'bn' ? 'কৃষক স্পনসর ও পার্টনার ভেরিফিকেশন স্কিম' : 'Farmer Sponsor & Verified Scheme'}</strong>
                     {language === 'bn'
                       ? 'আপনি কি একজন ভেরিফাইড কৃষক হিসেবে বাজারে পণ্য বিক্রি করে ডাবল লাভবান হতে চান? আমাদের প্রিমিয়াম খামারি পার্টনারশিপ গ্রহণের মাধ্যমে আপনার লাভ নিশ্চিত হবে ৫০% থেকে ৯০% পর্যন্ত! নিচ থেকে লাভজনক সুবিধা ও আবেদন ফর্মের বিবরণসমূহ জেনে নিন।'
+                      : 'Do you want to sell products as a verified grower and double your sales? Try our Premium Farmer partnership to boost your yield profit by 50% to 90%! Learn the rewards and application steps below.'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 font-sans">
+                  {FARMER_PLANS.map((plan) => (
+                    <div 
+                      key={plan.id}
+                      className={`rounded-2xl border p-5 bg-white space-y-3.5 hover:shadow-md transition-all relative flex flex-col justify-between ${
+                        plan.id === 'farmer_gold' ? 'border-2 border-emerald-500 ring-2 ring-emerald-50' : 'border-gray-150'
+                      }`}
+                    >
+                      {plan.id === 'farmer_gold' && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-3 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider shadow">
+                          {language === 'bn' ? '★ সর্বাধিক ভিউ' : '★ MOST POPULAR'}
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2.5">
+                        <div className="flex justify-between items-start gap-1">
+                          <span className={`px-2.5 py-0.5 text-[8.5px] font-bold uppercase tracking-wider rounded-xl border ${
+                            plan.id === 'farmer_silver' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                            plan.id === 'farmer_gold' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                            'bg-purple-50 text-purple-700 border-purple-100'
+                          }`}>
+                            {language === 'bn' ? plan.badge : plan.badgeEn}
+                          </span>
+                          <span className="text-xs font-black text-emerald-700 shrink-0">৳{plan.price} / মাস</span>
+                        </div>
+                        
+                        <h4 className="text-sm font-black text-gray-800 font-sans">
+                          {language === 'bn' ? plan.name : plan.nameEn}
+                        </h4>
+                        
+                        <p className="text-[10.5px] text-gray-500 leading-normal font-sans">
+                          {language === 'bn' ? plan.desc : plan.descEn}
+                        </p>
+                        
+                        <ul className="text-xs text-gray-650 space-y-2 pt-2 border-t border-gray-100">
+                          {(language === 'bn' ? plan.perks : plan.perksEn).map((perk, pIdx) => (
+                            <li key={pIdx} className="flex items-start gap-1.5 leading-normal">
+                              <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span className="font-medium">{perk}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleSubscribeClick({ id: plan.id, name: language === 'bn' ? plan.name : plan.nameEn, price: plan.price })}
+                        className={`w-full mt-3 rounded-xl py-2 px-3 text-xs font-black transition-all cursor-pointer text-center ${
+                          plan.id === 'farmer_gold'
+                            ? 'bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 text-white'
+                            : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-650 hover:text-white'
+                        }`}
+                      >
+                        {language === 'bn' ? 'কৃষক স্পনসর এক্টিভেট করুন' : 'Activate Farmer Sponsor'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )�� গ্রহণের মাধ্যমে আপনার লাভ নিশ্চিত হবে ৫০% থেকে ৯০% পর্যন্ত! নিচ থেকে লাভজনক সুবিধা ও আবেদন ফর্মের বিবরণসমূহ জেনে নিন।'
                       : 'Do you want to sell products as a verified grower and double your sales? Try our Premium Farmer partnership to boost your yield profit by 50% to 90%! Learn the rewards and application steps below.'}
                   </div>
                 </div>
@@ -427,9 +464,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
                     <p className="font-bold">
                       {language === 'bn' ? '👉 নিচের যেকোনো একটি নম্বরে সেন্ড মানি বা ক্যাশ আউট করুন:' : '👉 Send Money or Cash-out to our official merchants:'}
                     </p>
-                    <p className="font-extrabold text-sm mt-1 text-emerald-950 font-mono">
-                      bKash / Nagad: 01931355398
-                    </p>
+                    <div className="mt-2.5 flex flex-col gap-1.5 items-center justify-center font-mono">
+                      <p className="font-extrabold text-sm text-emerald-950">📱 bKash (বিকাশ পার্সোনাল): 01939052257</p>
+                      <p className="font-extrabold text-sm text-emerald-950">📱 Nagad (নগদ পার্সোনাল): 01987012893</p>
+                    </div>
                   </div>
 
                   {/* Payment Logo Switches */}

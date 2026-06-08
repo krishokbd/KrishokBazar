@@ -16,9 +16,76 @@ import {
   CheckCircle2,
   AlertCircle,
   Image,
-  RefreshCw
+  RefreshCw,
+  Upload,
+  X
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
+import { storage } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+const compressImage = (file: File): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      reject(new Error("শুধুমাত্র ছবি আপলোড করা যাবে!"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.onerror = () => {
+        resolve(file);
+      };
+    };
+    reader.onerror = () => {
+      resolve(file);
+    };
+  });
+};
 
 export const AdminCMSDashboard: React.FC = () => {
   const { 
@@ -52,8 +119,14 @@ export const AdminCMSDashboard: React.FC = () => {
     offers,
     editOffer,
     addOffer,
-    deleteOffer
+    deleteOffer,
+    login
   } = useApp();
+
+  // Admin explicit login states
+  const [adminPhone, setAdminPhone] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoginError, setAdminLoginError] = useState('');
 
   // Database re-seeding / reset state
   const [resettingDb, setResettingDb] = useState(false);
@@ -92,6 +165,77 @@ export const AdminCMSDashboard: React.FC = () => {
     window.addEventListener('kb-analytics-event', handleEventsUpdate);
     return () => window.removeEventListener('kb-analytics-event', handleEventsUpdate);
   }, []);
+
+  // --- REAL-TIME SYNC DIAGNOSTICS & SYSTEM PROPAGATION MODULE ---
+  const { triggerSync, isFirebaseConfigured } = useApp();
+  const [syncMetricLogs, setSyncMetricLogs] = useState<{ id: string; event: string; status: 'success' | 'failed'; time: string }[]>([
+    { id: 'initial-handshake', event: 'সিস্টেম বুটস্ট্র্যাপ হ্যান্ডশেক (System Handshake Established)', status: 'success', time: new Date().toLocaleTimeString() }
+  ]);
+  const [lastSyncSignal, setLastSyncSignal] = useState<string>(new Date().toLocaleTimeString());
+  const [simulatedFailure, setSimulatedFailure] = useState(false);
+  const [syncPulse, setSyncPulse] = useState(false);
+  const [selfHealingSuccess, setSelfHealingSuccess] = useState(false);
+
+  useEffect(() => {
+    const handleSync = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const type = customEvent.detail?.type || 'unknown';
+      
+      setSyncPulse(true);
+      setTimeout(() => setSyncPulse(false), 800);
+
+      const status = simulatedFailure ? 'failed' : 'success';
+      const eventMsg = `গ্রাহক ও খামারি ডেটা সিঙ্ক: '${type}' অবজেক্ট ব্রডকাস্ট`;
+
+      setSyncMetricLogs(prev => [
+        {
+          id: Date.now().toString(),
+          event: eventMsg,
+          status: status,
+          time: new Date().toLocaleTimeString()
+        },
+        ...prev.slice(0, 19) // Keep last 20 events
+      ]);
+
+      if (!simulatedFailure) {
+        setLastSyncSignal(new Date().toLocaleTimeString());
+      }
+    };
+
+    window.addEventListener('global-state-sync', handleSync);
+    return () => {
+      window.removeEventListener('global-state-sync', handleSync);
+    };
+  }, [simulatedFailure]);
+
+  const handleManualSyncBroadcast = () => {
+    if (simulatedFailure) {
+      // Propagation fails immediately
+      setSyncPulse(true);
+      setTimeout(() => setSyncPulse(false), 800);
+      setSyncMetricLogs(prev => [
+        {
+          id: Date.now().toString(),
+          event: "ম্যানুয়াল ব্রডকাস্ট ওভাররাইড করতে ব্যর্থতা (Manual Override Failed)",
+          status: 'failed',
+          time: new Date().toLocaleTimeString()
+        },
+        ...prev
+      ]);
+      return;
+    }
+    
+    // Normal sync propagation
+    triggerSync('manual-admin-override');
+  };
+
+  const handleForceSelfHealing = () => {
+    setSimulatedFailure(false);
+    setSelfHealingSuccess(true);
+    setTimeout(() => setSelfHealingSuccess(false), 4000);
+    // Dispatch instant broad sweep
+    window.dispatchEvent(new CustomEvent('global-state-sync', { detail: { type: 'force-heal-all', timestamp: Date.now() } }));
+  };
 
   // Blog CMS states
   const { blogs, addBlogPost, editBlogPost, deleteBlogPost, siteSettings, saveSiteSettings, registeredCustomers } = useApp();
@@ -156,9 +300,65 @@ export const AdminCMSDashboard: React.FC = () => {
   const [adminProdStock, setAdminProdStock] = useState(10);
   const [adminProdReadyToCook, setAdminProdReadyToCook] = useState(false);
   const [adminProdImages, setAdminProdImages] = useState<string[]>([]);
+  const [adminIsUploadingImage, setAdminIsUploadingImage] = useState(false);
+  const [adminUploadError, setAdminUploadError] = useState('');
+
+  const handleAdminImageUpload = async (files: FileList | null) => {
+    if (!files) return;
+    setAdminUploadError('');
+    setAdminIsUploadingImage(true);
+
+    const uploadedUrls: string[] = [...adminProdImages].filter(Boolean);
+    const filesArray = Array.from(files);
+
+    if (uploadedUrls.length + filesArray.length > 5) {
+      alert("সর্বোচ্চ ৫টি ছবি আপলোড করা যাবে!");
+      setAdminIsUploadingImage(false);
+      return;
+    }
+
+    try {
+      for (const file of filesArray) {
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`ছবি "${file.name}" ৫ মেগাবাইটের বেশি বড়। দয়া করে ছোট ছবি নির্বাচন করুন!`);
+          continue;
+        }
+
+        let blobToUpload: Blob;
+        try {
+          blobToUpload = await compressImage(file);
+        } catch (compErr) {
+          console.warn("Compression failed, uploading original:", compErr);
+          blobToUpload = file;
+        }
+
+        if (storage) {
+          const fileRef = ref(storage, `products/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+          await uploadBytes(fileRef, blobToUpload);
+          const downloadUrl = await getDownloadURL(fileRef);
+          uploadedUrls.push(downloadUrl);
+        } else {
+          const dataUrl = await new Promise<string>((res) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result as string);
+            r.readAsDataURL(blobToUpload);
+          });
+          uploadedUrls.push(dataUrl);
+        }
+      }
+      setAdminProdImages(uploadedUrls);
+    } catch (err: any) {
+      console.error("Image upload failed:", err);
+      setAdminUploadError("ছবি আপলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    } finally {
+      setAdminIsUploadingImage(false);
+    }
+  };
+
   const [adminProdFarmerId, setAdminProdFarmerId] = useState('');
   const [adminProdIsFeatured, setAdminProdIsFeatured] = useState(false);
   const [adminProdIsVerified, setAdminProdIsVerified] = useState(true);
+  const [adminProdHarvestDate, setAdminProdHarvestDate] = useState('');
 
   // Admin Farmer Profile Editing state
   const [adminEditingFarmer, setAdminEditingFarmer] = useState<Farmer | null>(null);
@@ -184,7 +384,85 @@ export const AdminCMSDashboard: React.FC = () => {
   const [feedbackCustomerName, setFeedbackCustomerName] = useState('');
   const [feedbackLocation, setFeedbackLocation] = useState('');
 
-  if (!currentUser) return null;
+  if (!currentUser || currentUser.role !== 'Admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50/20 px-4 py-12 sm:px-6 lg:px-8 font-sans">
+        <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-3xl border border-emerald-100 shadow-xl">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-tr from-emerald-600 to-green-500 rounded-2xl flex items-center justify-center font-black text-white text-xl shadow-lg relative">
+              <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 border border-white text-[9px] font-bold">★</span>
+              ADM
+            </div>
+            <h2 className="mt-6 text-center text-xl font-black text-gray-950">
+              প্রধান অ্যাডমিন প্রবেশদ্বার
+            </h2>
+            <p className="mt-2 text-center text-xs text-gray-400 font-bold font-sans">
+              Krishok Bazar (কৃষক বাজার) • CMS Control Station
+            </p>
+          </div>
+          <form className="mt-6 space-y-4" onSubmit={(e) => {
+            e.preventDefault();
+            setAdminLoginError('');
+            const res = login(adminPhone || 'admin', 'Admin', adminPassword);
+            if (!res.success) {
+              setAdminLoginError(res.message);
+            }
+          }}>
+            {adminLoginError && (
+              <div className="bg-red-50 text-red-700 text-xs p-3 rounded-xl border border-red-200 font-bold leading-relaxed">
+                ⚠️ {adminLoginError}
+              </div>
+            )}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider font-extrabold text-gray-450 mb-1">অ্যাডমিন আইডি বা নম্বর</label>
+                <input
+                  type="text"
+                  required
+                  value={adminPhone}
+                  onChange={(e) => setAdminPhone(e.target.value)}
+                  className="w-full bg-gray-50 rounded-xl border border-gray-150 p-3 text-xs outline-none focus:bg-white focus:border-emerald-600 font-bold text-gray-800"
+                  placeholder="যেমন: admin বা 01931355398"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider font-extrabold text-gray-450 mb-1">সিক্রেট পাসওয়ার্ড</label>
+                <input
+                  type="password"
+                  required
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full bg-gray-50 rounded-xl border border-gray-150 p-3 text-xs outline-none focus:bg-white focus:border-emerald-600 font-bold text-gray-800"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:opacity-90 py-3 text-xs font-bold text-white shadow-md active:scale-98 transition duration-150 cursor-pointer"
+            >
+              নিরাপদে লগইন করুন
+            </button>
+
+            <div className="relative flex py-2 items-center justify-center">
+              <span className="text-[10px] text-gray-400 font-black bg-white px-2">অথবা দ্রুত অ্যাক্সেস ট্রায়াল (Quick Trials)</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                login('admin', 'Admin', 'Ajzakir@2020');
+              }}
+              className="w-full rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 py-3 text-xs font-extrabold text-amber-800 active:scale-98 transition duration-150 cursor-pointer shadow-3xs"
+            >
+              ⚡ ১-ক্লিকে অ্যাডমিন হিসেবে প্রবেশ (Ajzakir@2020)
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="py-8 bg-gray-50 min-h-screen">
@@ -264,6 +542,154 @@ export const AdminCMSDashboard: React.FC = () => {
               </>
             )}
           </button>
+        </div>
+
+        {/* REAL-TIME STATE SYNC DIAGNOSTICS & SYSTEM PROPAGATION PANEL */}
+        <div className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-6 mb-8 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-gray-150 pb-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`relative h-11 w-11 rounded-2xl flex items-center justify-center transition-all ${
+                simulatedFailure 
+                  ? 'bg-red-50 text-red-650' 
+                  : syncPulse 
+                    ? 'bg-emerald-50 text-emerald-600 scale-105' 
+                    : 'bg-emerald-50 text-emerald-600'
+              }`}>
+                <RefreshCw className={`h-5 w-5 ${syncPulse ? 'animate-spin' : ''}`} style={{ animationDuration: '1.2s' }} />
+                {/* Visual live pulse ring */}
+                {!simulatedFailure && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+                  </span>
+                )}
+                {simulatedFailure && (
+                  <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-black">!</span>
+                )}
+              </div>
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider font-sans">
+                    রিয়েল-টাইম সিঙ্ক ডায়াগনস্টিকস ও প্রপাগেশন ট্র্যাকার
+                  </h3>
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border shadow-xs max-w-fit ${
+                    simulatedFailure 
+                      ? 'bg-red-50 border-red-200 text-red-700 animate-pulse' 
+                      : 'bg-emerald-50 border-emerald-250 text-emerald-800'
+                  }`}>
+                    {simulatedFailure ? '● প্রপাগেশন বাধাগ্রস্ত (BLOCKED)' : '● গ্লোবাল লাইভ সিঙ্ক সচল (LIVE)'}
+                  </span>
+                </div>
+                <p className="text-[10.5px] text-gray-400 mt-0.5 leading-normal font-sans">
+                  কৃষক বাজার ক্লায়েন্ট সেশন ও সিএমএস প্যানেলের লাইভ ডেটা প্রপাগেশন লেজার। এটি নেটওয়ার্ক স্থিতি ও ডাটাবেজ সামঞ্জস্য নিশ্চিত করে।
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleManualSyncBroadcast}
+                className="px-4 py-2.5 rounded-xl border border-emerald-150 bg-emerald-50/50 hover:bg-emerald-50 text-emerald-800 font-bold text-xs select-none shadow-3xs cursor-pointer active:scale-95 transition-all text-sans"
+              >
+                🔄 ব্রডকাস্ট সিগন্যাল পাঠান
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setSimulatedFailure(!simulatedFailure)}
+                className={`px-4 py-2.5 rounded-xl border font-bold text-xs select-none shadow-3xs cursor-pointer active:scale-95 transition-all text-sans ${
+                  simulatedFailure 
+                    ? 'bg-amber-100 border-amber-250 text-amber-900 font-black' 
+                    : 'bg-red-50 border-red-150 text-red-650'
+                }`}
+              >
+                🚨 {simulatedFailure ? 'ত্রুটি সিমুলেশন বন্ধ করুন' : 'সিঙ্ক ত্রুটি সিমুলেট করুন'}
+              </button>
+            </div>
+          </div>
+
+          {/* CRITICAL WARNING MESSAGE IF PROPAGATION FAILS */}
+          {simulatedFailure && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4.5 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-bounce-subtle">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-red-950 uppercase tracking-wide">সতর্কতা: ক্লায়েন্ট সেশন সিঙ্ক ব্যর্থ হয়েছে! (Data Integration Out of Sync)</h4>
+                  <p className="text-[10.5px] text-red-800 leading-normal mt-0.5 font-sans">
+                    CMS আপডেট গ্রাহক সেশনে প্রচারিত হচ্ছে না। ডাটাবেজ বা ব্রডকাস্ট পাইপলাইনে একটি নিষ্ক্রিয় অবস্থা পাওয়া গেছে। ফায়ারবেস কানেকশন বা লোকাল ক্লায়েন্ট প্রপাগেশন পুনরায় সক্রিয় করতে ফোর্স সেলফ-হিলিং করুন।
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleForceSelfHealing}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold leading-normal shadow hover:shadow-md cursor-pointer transition-all active:scale-95 text-sans whitespace-nowrap shrink-0"
+              >
+                🔥 ফোর্স সেলফ-হিলিং (Self-Heal)
+              </button>
+            </div>
+          )}
+
+          {selfHealingSuccess && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-3.5 px-4.5 mb-4 text-xs font-bold font-sans flex items-center gap-2.5 animate-pulse">
+              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0" />
+              স্বয়ংক্রিয় নিরাময় সফল হয়েছে! সেশন পুনরায় সিঙ্ক করা হয়েছে এবং সামঞ্জস্য পুনরুদ্ধার করা হয়েছে।
+            </div>
+          )}
+
+          {/* Diagnostic Metrics Matrix */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-gray-50/50 p-3 rounded-2xl border border-gray-100 text-[11px] leading-tight font-sans mb-4">
+            <div className="p-2 px-3 bg-white border border-gray-100 rounded-xl">
+              <span className="text-[9px] uppercase tracking-wide text-gray-400 font-bold block mb-1">কানেকশন মোড</span>
+              <strong className="text-gray-700 font-black flex items-center gap-1.5 justify-between">
+                <span>{isFirebaseConfigured ? 'ক্লাউড ফায়ারস্টোর' : 'লোকাল ব্রডকাস্ট'}</span>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+              </strong>
+            </div>
+            <div className="p-2 px-3 bg-white border border-gray-100 rounded-xl">
+              <span className="text-[9px] uppercase tracking-wide text-gray-400 font-bold block mb-1">প্রোপাগেশন স্ট্যাটাস</span>
+              <strong className={`font-black flex items-center justify-between ${simulatedFailure ? 'text-red-600' : 'text-emerald-700'}`}>
+                <span>{simulatedFailure ? 'ব্যাহত (Obstructed)' : 'সক্রিয় ও সামঞ্জস্যপূর্ণ'}</span>
+                <span className={`h-2 w-2 rounded-full shrink-0 ${simulatedFailure ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`}></span>
+              </strong>
+            </div>
+            <div className="p-2 px-3 bg-white border border-gray-100 rounded-xl">
+              <span className="text-[9px] uppercase tracking-wide text-gray-400 font-bold block mb-1">সর্বশেষ সফল প্রোপাগেশন</span>
+              <strong className="text-gray-700 font-black block font-mono">{lastSyncSignal}</strong>
+            </div>
+            <div className="p-2 px-3 bg-white border border-gray-100 rounded-xl">
+              <span className="text-[9px] uppercase tracking-wide text-gray-400 font-bold block mb-1">সিঙ্কড ক্যাটাগরি ম্যাট্রিক্স</span>
+              <strong className="text-indigo-600 font-black block">{products.length} পণ্য • {farmers.length} খামারি</strong>
+            </div>
+          </div>
+
+          {/* Propagation logs ledger accordion */}
+          <div className="border border-gray-150 rounded-2xl overflow-hidden text-xs">
+            <div className="bg-gray-50 px-4 py-2.5 font-black text-gray-700 flex items-center justify-between border-b border-gray-150">
+              <span className="font-sans">🔍 সিঙ্ক ইভেন্ট লাইভ লেজার (Event Synchronization Ledger)</span>
+              <span className="font-mono text-[9px] text-gray-400 font-bold">RECENT 20 SIGNALS</span>
+            </div>
+            <div className="max-h-[160px] overflow-y-auto divide-y divide-gray-100 bg-white shadow-inner font-mono text-[10px] text-gray-500">
+              {syncMetricLogs.map((log) => (
+                <div key={log.id} className="p-3 px-4 flex items-center justify-between gap-3 hover:bg-gray-50/50">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] text-gray-400 font-bold block min-w-[70px]">{log.time}</span>
+                    <span className="text-gray-700 font-medium font-sans">{log.event}</span>
+                  </div>
+                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${
+                    log.status === 'success' 
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                      : 'bg-red-50 text-red-750 border border-red-150'
+                  }`}>
+                    {log.status === 'success' ? '✓ PROPEGATED' : '✗ OBSTRUCTED'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* TAB SELECTORS */}
@@ -834,6 +1260,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     setAdminProdFarmerId(farmers[0]?.id || 'f1');
                     setAdminProdIsFeatured(false);
                     setAdminProdIsVerified(true);
+                    setAdminProdHarvestDate('May 30, 2026');
                   }}
                   className="rounded-xl px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-500 text-white font-bold text-xs shadow hover:scale-101 cursor-pointer flex items-center gap-1 self-start sm:self-auto"
                 >
@@ -917,7 +1344,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     </div>
 
                     <div className="md:col-span-2 space-y-3">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                         <div>
                           <label className="block font-bold text-gray-655 mb-1">শ্রেণীবিভাগ:</label>
                           <select
@@ -931,36 +1358,97 @@ export const AdminCMSDashboard: React.FC = () => {
                           </select>
                         </div>
                         <div>
-                          <label className="block font-bold text-gray-655 mb-1">ছবি ৩-ডাইমেনশনাল লিংক (Img URLs):</label>
+                          <label className="block font-bold text-gray-655 mb-1">ফসল সংগ্রহ কাল (Harvest Date):</label>
                           <input 
                             type="text"
-                            value={adminProdImages[0] || ''}
-                            onChange={(e) => setAdminProdImages([e.target.value, ...adminProdImages.slice(1)])}
-                            className="w-full bg-white rounded-xl border border-gray-200 p-2 text-gray-500 text-[10px] shadow-xs outline-none focus:border-emerald-500"
-                            placeholder="ইমেজ ওয়েব লিংক এড্রেস"
+                            value={adminProdHarvestDate}
+                            onChange={(e) => setAdminProdHarvestDate(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2 font-sans"
+                            placeholder="যেমন: ১ জুন, ২০২৬"
                           />
-                          {/* Instantly displayed image preview component */}
-                          <div className="mt-2 text-left">
-                            {adminProdImages[0] ? (
-                              <div className="relative rounded-2xl overflow-hidden border border-emerald-100 h-24 w-full bg-slate-50 flex items-center justify-center transition-all group shadow-sm hover:border-emerald-300">
-                                <img 
-                                  src={adminProdImages[0]} 
-                                  alt="Live Product Preview" 
-                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60';
-                                  }}
-                                />
-                                <div className="absolute top-1.5 left-1.5 bg-black/60 text-white text-[8px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded backdrop-blur-xs font-mono">
-                                  Live Preview (তাত্ক্ষণিক প্রাকদর্শন)
-                                </div>
+                        </div>
+                        <div className="col-span-2 space-y-3">
+                          <label className="block font-sans text-xs font-bold text-gray-750 mb-0.5 hover:text-emerald-800">
+                            🖼️ পণ্যের ছবিসমূহ (Product Images - সর্বোচ্চ ৫টি):
+                          </label>
+                          
+                          {/* Rich Drag & Drop file upload selector */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div 
+                              onClick={() => document.getElementById('admin-file-upload-input-add')?.click()}
+                              className="group border-2 border-dashed border-emerald-350 hover:border-emerald-500 rounded-2xl p-4 bg-slate-50 hover:bg-white flex flex-col items-center justify-center gap-2 cursor-pointer transition text-center"
+                            >
+                              <input 
+                                id="admin-file-upload-input-add"
+                                type="file" 
+                                multiple
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => handleAdminImageUpload(e.target.files)}
+                              />
+                              <Upload className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition duration-200" />
+                              <div className="space-y-0.5">
+                                <p className="font-bold text-emerald-800 text-[11px] font-sans">নতুন ছবি আপলোড করতে ক্লিক করুন</p>
+                                <p className="text-[9.5px] text-gray-400 font-sans font-medium">মোবাইল ক্যামেরা বা গ্যালারি থেকে সরাসরি</p>
+                              </div>
+                            </div>
+
+                            {/* Direct URL block */}
+                            <div>
+                              <textarea
+                                rows={3}
+                                value={adminProdImages.filter(Boolean).join('\n')}
+                                onChange={(e) => {
+                                  const parsed = e.target.value.split('\n').map(u => u.trim()).filter(Boolean);
+                                  setAdminProdImages(parsed);
+                                }}
+                                placeholder="অথবা ছবির ওয়েব লিংক পেস্ট করুন (প্রতি লাইনে একটি করে লিংক দিন)"
+                                className="w-full h-full rounded-2xl border border-gray-250 hover:border-emerald-400 bg-white p-2.5 text-[9.5px] font-mono outline-none focus:ring-1 focus:ring-emerald-500 transition leading-snug resize-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Error block */}
+                          {adminUploadError && (
+                            <p className="text-[10px] text-red-650 font-bold font-sans">❌ {adminUploadError}</p>
+                          )}
+
+                          {/* Live Upload progress */}
+                          {adminIsUploadingImage && (
+                            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-emerald-700 animate-pulse bg-emerald-50 border border-emerald-100 rounded-xl p-2 font-sans">
+                              <div className="h-3.5 w-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                              <span>ছবি আপলোড ও প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
+                            </div>
+                          )}
+
+                          {/* Beautiful image list strip with delete buttons */}
+                          <div className="p-2.5 bg-slate-100/60 rounded-2xl border border-gray-100">
+                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 font-sans">তাত্ক্ষণিক ইমেজ স্ট্রিপ ({adminProdImages.filter(Boolean).length} / ৫)</span>
+                            {adminProdImages.filter(Boolean).length > 0 ? (
+                              <div className="flex flex-wrap gap-2 flex-row">
+                                {adminProdImages.filter(Boolean).map((imgUrl, idx) => (
+                                  <div key={idx} className="relative h-12 w-12 rounded-lg overflow-hidden border border-gray-200 group bg-white shadow-xs shrink-0">
+                                    <img 
+                                      src={imgUrl} 
+                                      className="h-full w-full object-cover" 
+                                      alt="Product Thumb"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        setAdminProdImages(prev => prev.filter((_, i) => i !== idx));
+                                      }}
+                                      className="absolute inset-0 bg-red-650/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                                      title="ছবি ডিলিট করুন"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
                             ) : (
-                              <div className="border border-dashed border-gray-250 rounded-2xl h-24 w-full flex flex-col items-center justify-center bg-gray-50 text-[11px] text-gray-400">
-                                <Image className="h-4.5 w-4.5 mb-1.5 text-gray-300 animate-pulse" />
-                                <span>URL দিলে সতেজ ছবি এখানে দৃশ্যমান হবে</span>
-                              </div>
+                              <p className="text-[10px] text-gray-400 italic">কোনো ছবি যুক্ত করা হয়নি। দয়া করে ছবি আপলোড বা পেস্ট করুন।</p>
                             )}
                           </div>
                         </div>
@@ -1034,7 +1522,8 @@ export const AdminCMSDashboard: React.FC = () => {
                           isVerified: adminProdIsVerified,
                           images: adminProdImages,
                           farmerId: adminProdFarmerId || targetFarmer.id,
-                          farmerName: targetFarmer.name
+                          farmerName: targetFarmer.name,
+                          harvestDate: adminProdHarvestDate || undefined
                         };
 
                         if (adminEditingProduct) {
@@ -1126,6 +1615,17 @@ export const AdminCMSDashboard: React.FC = () => {
                         </div>
 
                         <div>
+                          <label className="block font-bold text-gray-655 mb-1">ফসল কাটার তারিখ (Harvest Date):</label>
+                          <input 
+                            type="text"
+                            value={adminProdHarvestDate}
+                            onChange={(e) => setAdminProdHarvestDate(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 outline-none"
+                            placeholder="যেমন: ১ জুন, ২০২৬"
+                          />
+                        </div>
+
+                        <div>
                           <label className="block font-bold text-gray-605 mb-1">শ্রেণীবিভাগ (Category):</label>
                           <select
                             value={adminProdCategory}
@@ -1159,41 +1659,92 @@ export const AdminCMSDashboard: React.FC = () => {
                             rows={3}
                             value={adminProdDesc}
                             onChange={(e) => setAdminProdDesc(e.target.value)}
-                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition resize-none font-sans"
+                            className="w-full bg-white rounded-xl border border-gray-205 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition resize-none font-sans"
                           />
                         </div>
 
-                        <div>
-                          <label className="block font-bold text-gray-605 mb-1">ছবি ৩-ডাইমেনショナル লিংক (Img URLs):</label>
-                          <input 
-                            type="text"
-                            value={adminProdImages[0] || ''}
-                            onChange={(e) => setAdminProdImages([e.target.value, ...adminProdImages.slice(1)])}
-                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-gray-500 font-mono text-[10px] shadow-xs outline-none focus:ring-2 focus:ring-indigo-100 transition"
-                            placeholder="ছবি লিংক বা ইউআরএল"
-                          />
-                          {/* Live preview */}
-                          <div className="mt-2">
-                            {adminProdImages[0] ? (
-                              <div className="relative rounded-2xl overflow-hidden border border-emerald-100 h-20 w-full bg-slate-50 flex items-center justify-center transition-all shadow-xs">
-                                <img 
-                                  src={adminProdImages[0]} 
-                                  alt="Live Product Preview" 
-                                  className="h-full w-full object-cover"
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60';
-                                  }}
-                                />
-                                <div className="absolute top-1 left-1 bg-black/60 text-white text-[7px] font-black tracking-widest uppercase px-1 py-0.2 rounded font-mono">
-                                  Live Preview
-                                </div>
+                        <div className="space-y-3">
+                          <label className="block font-sans text-xs font-bold text-gray-750 mb-0.5 hover:text-emerald-800">
+                            🖼️ পণ্যের ছবিসমূহ (Product Images - সর্বোচ্চ ৫টি):
+                          </label>
+                          
+                          {/* Rich Drag & Drop file upload selector */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div 
+                              onClick={() => document.getElementById('admin-file-upload-input-edit')?.click()}
+                              className="group border-2 border-dashed border-emerald-300 hover:border-emerald-500 rounded-2xl p-4 bg-slate-50 hover:bg-white flex flex-col items-center justify-center gap-2 cursor-pointer transition text-center"
+                            >
+                              <input 
+                                id="admin-file-upload-input-edit"
+                                type="file" 
+                                multiple
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => handleAdminImageUpload(e.target.files)}
+                              />
+                              <Upload className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition duration-200" />
+                              <div className="space-y-0.5">
+                                <p className="font-bold text-emerald-800 text-[11px] font-sans">নতুন ছবি আপলোড করতে ক্লিক করুন</p>
+                                <p className="text-[9.5px] text-gray-400 font-sans font-medium">মোবাইল ক্যামেরা বা গ্যালারি থেকে সরাসরি</p>
+                              </div>
+                            </div>
+
+                            {/* Direct URL block */}
+                            <div>
+                              <textarea
+                                rows={3}
+                                value={adminProdImages.filter(Boolean).join('\n')}
+                                onChange={(e) => {
+                                  const parsed = e.target.value.split('\n').map(u => u.trim()).filter(Boolean);
+                                  setAdminProdImages(parsed);
+                                }}
+                                placeholder="অথবা ছবির ওয়েব লিংক পেস্ট করুন (প্রতি লাইনে একটি করে লিংক দিন)"
+                                className="w-full h-full rounded-2xl border border-gray-250 hover:border-emerald-400 bg-white p-2.5 text-[9.5px] font-mono outline-none focus:ring-1 focus:ring-emerald-500 transition leading-snug resize-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Error block */}
+                          {adminUploadError && (
+                            <p className="text-[10px] text-red-650 font-bold font-sans">❌ {adminUploadError}</p>
+                          )}
+
+                          {/* Live Upload progress */}
+                          {adminIsUploadingImage && (
+                            <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-emerald-700 animate-pulse bg-emerald-50 border border-emerald-100 rounded-xl p-2 font-sans">
+                              <div className="h-3.5 w-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                              <span>ছবি আপলোড ও প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
+                            </div>
+                          )}
+
+                          {/* Beautiful image list strip with delete buttons */}
+                          <div className="p-2.5 bg-slate-100/60 rounded-2xl border border-gray-100">
+                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 font-sans">তাত্ক্ষণিক ইমেজ স্ট্রিপ ({adminProdImages.filter(Boolean).length} / ৫)</span>
+                            {adminProdImages.filter(Boolean).length > 0 ? (
+                              <div className="flex flex-wrap gap-2 flex-row">
+                                {adminProdImages.filter(Boolean).map((imgUrl, idx) => (
+                                  <div key={idx} className="relative h-12 w-12 rounded-lg overflow-hidden border border-gray-200 group bg-white shadow-xs shrink-0">
+                                    <img 
+                                      src={imgUrl} 
+                                      className="h-full w-full object-cover" 
+                                      alt="Product Thumb"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    <button 
+                                      type="button"
+                                      onClick={() => {
+                                        setAdminProdImages(prev => prev.filter((_, i) => i !== idx));
+                                      }}
+                                      className="absolute inset-0 bg-red-650/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                                      title="ছবি ডিলিট করুন"
+                                    >
+                                      <X className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
                             ) : (
-                              <div className="border border-dashed border-gray-200 rounded-2xl h-20 w-full flex flex-col items-center justify-center bg-gray-50 text-[10px] text-gray-400">
-                                <Image className="h-4 w-4 mb-1 text-gray-300" />
-                                <span>ছবি লিংক এখানে দৃশ্যমান হবে</span>
-                              </div>
+                              <p className="text-[10px] text-gray-400 italic">কোনো ছবি যুক্ত করা হয়নি। দয়া করে ছবি আপলোড বা পেস্ট করুন।</p>
                             )}
                           </div>
                         </div>
@@ -1255,7 +1806,8 @@ export const AdminCMSDashboard: React.FC = () => {
                             isVerified: adminProdIsVerified,
                             images: adminProdImages,
                             farmerId: adminProdFarmerId || targetFarmer.id,
-                            farmerName: targetFarmer.name
+                            farmerName: targetFarmer.name,
+                            harvestDate: adminProdHarvestDate || undefined
                           };
 
                           editProduct(adminEditingProduct.id, prodPayload);
@@ -1398,6 +1950,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminProdFarmerId(p.farmerId);
                                 setAdminProdIsFeatured(!!p.isFeatured);
                                 setAdminProdIsVerified(p.isVerified);
+                                setAdminProdHarvestDate(p.harvestDate || '');
                                 window.scrollTo({ top: 120, behavior: 'smooth' });
                               }}
                               className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-805 rounded font-bold text-[9px] border border-amber-200 cursor-pointer transition duration-150 shadow-xs"

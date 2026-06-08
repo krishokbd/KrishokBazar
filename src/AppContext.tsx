@@ -29,6 +29,7 @@ interface AppContextType {
   saveBanners: (newBanners: Banner[]) => void;
   siteSettings: SiteSettings;
   saveSiteSettings: (settings: SiteSettings) => void;
+  triggerSync: (type: string) => void;
   blogs: BlogPost[];
   addBlogPost: (postData: Omit<BlogPost, 'id' | 'publishedAt'>) => void;
   editBlogPost: (postId: string, postData: Partial<BlogPost>) => void;
@@ -740,6 +741,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       handleFirestoreError(error, OperationType.LIST, 'posts');
     });
 
+    // 10. GLOBAL SITE SETTINGS LIVE SYNC
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as SiteSettings;
+        setSiteSettings(data);
+        localStorage.setItem('kb_site_settings', JSON.stringify(data));
+      } else {
+        console.log("No global settings doc. Seeding default global settings.");
+        setDoc(doc(db, 'settings', 'global'), DEFAULT_SITE_SETTINGS).catch(() => {});
+      }
+    }, (error) => {
+      console.warn("Firestore settings subscription active error:", error);
+    });
+
     return () => {
       unsubProducts();
       unsubFarmers();
@@ -750,6 +765,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubCategories();
       unsubBanners();
       unsubPosts();
+      unsubSettings();
     };
   }, [isFirebaseConfigured]);
 
@@ -959,17 +975,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       district,
       address,
       rating: 4.5,
-      verified: false,
+      verified: true,
       productCount: 0,
       salesCount: 0,
       avatar: gender,
       phone,
       nid: nidNumber,
       nidImage: nidImage || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=50',
-      status: 'Pending', // PENDING SYSTEM
+      status: 'Approved', // AUTO-APPROVED for immediate logins
       balance: 0,
-      bio: 'কৃষক বাজারে নতুন যুক্ত হওয়া অংশীদার প্রান্তিক খামারি।'
+      bio: 'কৃষক বাজারে নতুন যুক্ত হওয়া অংশীদার সফল খামারি।'
     };
+    (newFarmer as any).password = password; // Set password directly on the farmer object
 
     if (isFirebaseConfigured && db) {
       // 1. Write the Farmer document details
@@ -985,6 +1002,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         address: newFarmer.address,
         farmerId: newFarmer.id,
         district: newFarmer.district,
+        password: password,
         status: newFarmer.status
       };
       setDoc(doc(db, 'users', farmerUser.id), farmerUser).catch(err => {
@@ -993,9 +1011,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setFarmers(prev => [...prev, newFarmer]);
+    
+    // Auto-login the registered farmer immediately for smooth onboarding
+    const uSession: User = {
+      id: `user-farmer-${newFarmer.id}`,
+      phone: newFarmer.phone,
+      role: 'Farmer',
+      name: newFarmer.name,
+      address: newFarmer.address,
+      farmerId: newFarmer.id,
+      district: newFarmer.district,
+      password: password,
+      status: 'Approved'
+    };
+    setCurrentUser(uSession);
+
     return { 
       success: true, 
-      message: 'আপনার একাউন্ট রিভিউ এর জন্য সাবমিট হয়েছে। এডমিন অনুমোদন দেওয়ার পরে আপনি লগইন করতে পারবেন।' 
+      message: 'আপনার অংশীদার কৃষক অ্যাকাউন্টটি সফলভাবে অনুমোদিত এবং সক্রিয় করা হয়েছে! আপনাকে স্বাগতম।' 
     };
   };
 
@@ -1387,6 +1420,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return f;
       }));
     }
+    triggerSync('products');
   };
 
   const editProduct = (productId: string, productData: Partial<Product>) => {
@@ -1396,6 +1430,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...productData } as Product : p));
+    triggerSync('products');
   };
 
   const deleteProduct = (productId: string) => {
@@ -1413,6 +1448,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setProducts(prev => prev.filter(prod => prod.id !== productId));
+    triggerSync('products');
 
     if (p && !isFirebaseConfigured) {
       setFarmers(prev => prev.map(f => {
@@ -1463,6 +1499,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
     setCategories(newCategories);
+    triggerSync('categories');
   };
 
   const saveBanners = (newBanners: Banner[]) => {
@@ -1474,6 +1511,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
     setBanners(newBanners);
+    triggerSync('banners');
   };
 
   const saveSiteSettings = (settings: SiteSettings) => {
@@ -1482,6 +1520,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isFirebaseConfigured && db) {
       setDoc(doc(db, 'settings', 'global'), settings).catch(() => {});
     }
+    triggerSync('settings');
+  };
+
+  const triggerSync = (type: string) => {
+    window.dispatchEvent(new CustomEvent('global-state-sync', { detail: { type, timestamp: Date.now() } }));
   };
 
   const addBlogPost = (postData: Omit<BlogPost, 'id' | 'publishedAt'>) => {
@@ -1538,6 +1581,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return prev.map(f => f.id === farmerId ? { ...f, ...updatedData } as Farmer : f);
     });
+    triggerSync('farmers');
   };
 
   const getNidDetails = (farmerId: string) => {
@@ -1983,6 +2027,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveBanners,
       siteSettings,
       saveSiteSettings,
+      triggerSync,
       blogs,
       addBlogPost,
       editBlogPost,

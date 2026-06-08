@@ -98,7 +98,7 @@ export interface FirestoreErrorInfo {
     email?: string | null;
     emailVerified?: boolean | null;
     isAnonymous?: boolean | null;
-    tenantId?: string | null;
+    farmerId?: string | null;
     providerInfo?: {
       providerId?: string | null;
       email?: string | null;
@@ -116,7 +116,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       email: auth?.currentUser?.email || null,
       emailVerified: auth?.currentUser?.emailVerified || null,
       isAnonymous: auth?.currentUser?.isAnonymous || null,
-      tenantId: auth?.currentUser?.tenantId || null,
+      farmerId: auth?.currentUser?.tenantId || null,
       providerInfo: auth?.currentUser?.providerData?.map(provider => ({
         providerId: provider.providerId,
         email: provider.email,

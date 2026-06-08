@@ -91,10 +91,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
       {/* BADGES & COVERS CONTAINER */}
       <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
         <img
-          src={product.images[0]}
+          src={product.images && product.images.length > 0 && product.images[0] ? product.images[0] : 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500'}
           alt={product.title}
           className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+          }}
         />
 
         {/* VERIFIED BADGE */}

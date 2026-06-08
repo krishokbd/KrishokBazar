@@ -84,7 +84,8 @@ import {
   ArrowRight,
   Camera,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Bell
 } from 'lucide-react';
 
 export const FarmerDashboard: React.FC = () => {
@@ -117,6 +118,7 @@ export const FarmerDashboard: React.FC = () => {
   const [prodReadyToCook, setProdReadyToCook] = useState(false);
   const [prodImages, setProdImages] = useState<string[]>([]);
   const [prodUnit, setProdUnit] = useState('Kg');
+  const [prodHarvestDate, setProdHarvestDate] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
@@ -305,7 +307,8 @@ export const FarmerDashboard: React.FC = () => {
       isVerified: isVerified,
       approved: false, // MANDATORY: Starts as unapproved, goes to Admin first!
       uploaderRole: 'Farmer' as const,
-      unit: prodUnit
+      unit: prodUnit,
+      harvestDate: prodHarvestDate || undefined
     };
 
     if (editingProduct) {
@@ -328,6 +331,7 @@ export const FarmerDashboard: React.FC = () => {
     setProdReadyToCook(false);
     setProdImages([]);
     setProdUnit('Kg');
+    setProdHarvestDate('');
   };
 
   const handleStartEdit = (p: Product) => {
@@ -341,6 +345,7 @@ export const FarmerDashboard: React.FC = () => {
     setProdReadyToCook(p.isReadyToCook);
     setProdImages(p.images && p.images.length > 0 ? p.images : ['']);
     setProdUnit(p.unit || 'Kg');
+    setProdHarvestDate(p.harvestDate || '');
     setIsAddingProduct(true);
   };
 
@@ -461,6 +466,27 @@ export const FarmerDashboard: React.FC = () => {
         {/* TAB 1: OVERVIEW SCREEN */}
         {activeTab === 'overview' && (
           <div className="space-y-4">
+            
+            {/* Active order alert notification banner */}
+            {farmerOrders.length > 0 && (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-4 flex items-center justify-between gap-3 text-left animate-fade-in">
+                <div className="flex items-center gap-3">
+                  <div className="bg-amber-600 text-white rounded-2xl p-2.5 shrink-0 stroke-2 animate-bounce">
+                    <Bell className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-805 text-xs">আপনার নতুন খামারি অর্ডার এসেছে! 📦</h4>
+                    <p className="text-[10px] text-gray-500 mt-0.5">সবজি বাজার থেকে কাস্টমাররা আপনার ফসলে {farmerOrders.length} টি নতুন অর্ডার প্লেস করেছেন।</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] rounded-xl shadow-xs shrink-0 cursor-pointer transition"
+                >
+                  ইনবক্স দেখুন ➔
+                </button>
+              </div>
+            )}
             
             {/* Sales Performance Graph info */}
             <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm text-left">
@@ -766,6 +792,17 @@ export const FarmerDashboard: React.FC = () => {
                         <option key={c.id} value={c.id}>{c.nameBn} ({c.nameEn})</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-600 mb-1">ফসল কাটার তারিখ (Harvest Date):</label>
+                    <input 
+                      type="text"
+                      value={prodHarvestDate}
+                      onChange={(e) => setProdHarvestDate(e.target.value)}
+                      className="w-full bg-white rounded-xl border border-gray-200 p-2.5 focus:border-emerald-650 outline-none text-xs font-sans text-gray-700 font-bold"
+                      placeholder="যেমন: ১ জুন, ২০২৬ বা June 1, 2026"
+                    />
                   </div>
 
                   <div>

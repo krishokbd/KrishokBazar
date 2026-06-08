@@ -66,6 +66,36 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
     
     try {
       const order = placeOrder(name.trim(), phone.trim(), address.trim());
+      
+      // WhatsApp auto routing
+      const adminWhatsApp = "01987012893";
+      const productListStr = order.products.map((p, idx) => {
+        const unit = p.selectedUnit ? ` (${p.selectedUnit})` : "";
+        return `${idx + 1}. *${p.title}*${unit} - ${p.quantity}টি x ৳${p.price} = ৳${p.price * p.quantity}`;
+      }).join('\n');
+      
+      const waText = `*নতুন অর্ডার রিকোয়েস্ট (Riktaz AI)* 🥦🛒\n\n` +
+        `📦 *অর্ডার আইডি:* ${order.id}\n` +
+        `🚚 *ট্র্যাকিং আইডি:* ${order.trackingNumber}\n\n` +
+        `👤 *গ্রাহকের নাম:* ${order.customerName}\n` +
+        `📞 *মোবাইল নম্বর:* ${order.customerPhone}\n` +
+        `📍 *ডেলিভারি ঠিকানা:* ${order.customerAddress}\n` +
+        `💳 *পেমেন্ট মেথড:* ক্যাশ অন ডেলিভারি (COD)\n\n` +
+        `🛍️ *অর্ডারকৃত ফসল:* \n${productListStr}\n\n` +
+        `💰 *সর্বমোট মূল্য:* ৳${order.totalPrice}💸\n\n` +
+        `আরিকতাজ এআই অ্যাপলিকেশন থেকে অর্ডারটি সাবমিট করা হয়েছে। ধন্যবাদ!`;
+
+      const waUrl = `https://api.whatsapp.com/send?phone=88${adminWhatsApp}&text=${encodeURIComponent(waText)}`;
+      
+      try {
+        const opened = window.open(waUrl, '_blank');
+        if (!opened) {
+          window.location.href = waUrl;
+        }
+      } catch (err) {
+        window.location.href = waUrl;
+      }
+
       setIsCheckingOut(false);
       onOrderSuccess(order.id);
       onClose();

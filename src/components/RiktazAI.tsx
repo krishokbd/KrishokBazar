@@ -6,6 +6,7 @@ import {
   Apple, DollarSign, Calendar, ChefHat, Type, ChevronLeft, ArrowRight,
   Mic, MicOff, Maximize2, Minimize2
 } from 'lucide-react';
+import { FEMALE_AVATAR } from '../assets';
 import riktazFaqs from '../riktaz-faq.json';
 
 interface Message {
@@ -93,6 +94,23 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
   const chatInputRef = useRef('');
   const handsFreeRef = useRef(false);
   const recordingFieldRef = useRef<'chat' | 'prodTitle' | 'prodContext' | 'dietNote'>('chat');
+
+  // Listen for external app triggers to open, close or toggle the AI assistant
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    const handleClose = () => setIsOpen(false);
+    const handleToggle = () => setIsOpen((prev) => !prev);
+
+    window.addEventListener('open-riktaz-ai', handleOpen);
+    window.addEventListener('close-riktaz-ai', handleClose);
+    window.addEventListener('toggle-riktaz-ai', handleToggle);
+
+    return () => {
+      window.removeEventListener('open-riktaz-ai', handleOpen);
+      window.removeEventListener('close-riktaz-ai', handleClose);
+      window.removeEventListener('toggle-riktaz-ai', handleToggle);
+    };
+  }, []);
 
   // Sync state values with refs for asynchronous Speech Recognition callbacks
   useEffect(() => {
@@ -492,46 +510,67 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
   return (
     <div className={isFullscreen 
       ? "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm select-none p-4 font-sans"
-      : "fixed bottom-24 right-5 sm:right-6 z-40 select-none font-sans"
+      : "fixed bottom-5 right-3 xs:right-5 sm:right-6 z-50 select-none font-sans"
     }>
       
       {/* 1. FLOATING CHAT TRIGGER MODULE */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-700 via-emerald-600 to-green-500 text-white shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer ring-2 ring-white border border-emerald-50 relative animate-pulse"
-          style={{ boxShadow: '0 10px 25px -4px rgba(16, 185, 129, 0.4)' }}
+          className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white text-white shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer ring-4 ring-emerald-600/30 border border-green-350 relative overflow-visible"
+          style={{ boxShadow: '0 8px 30px rgba(16, 185, 129, 0.45)' }}
           title="রিকতাজ AI সহকারী (Riktaz AI)"
         >
-          {/* Active indicator dot */}
-          <span className="absolute top-0 right-0 h-3 w-3 rounded-full bg-red-500 border-2 border-white"></span>
-          <Sparkles className="h-5 w-5 animate-spin" style={{ animationDuration: '6s' }} />
+          {/* Animated smart radar pulse rings */}
+          <div className="absolute inset-0 rounded-full border border-emerald-400 animate-ping opacity-75 pointer-events-none" />
+          <div className="absolute -inset-1 rounded-full border border-emerald-300 opacity-25 animate-pulse pointer-events-none" />
+          
+          {/* Active indicator dot and sparkles */}
+          <span className="absolute top-0 right-0 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full bg-emerald-500 border-2 border-white z-1 flex items-center justify-center">
+            <span className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-white animate-ping"></span>
+          </span>
+          <div className="absolute -bottom-1 -left-1 bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 sm:p-1 rounded-full text-white shadow-md z-1">
+            <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5 animate-spin" style={{ animationDuration: '4s' }} />
+          </div>
+          
+          {/* Core Logo Image of the Female AI Avatar */}
+          <img 
+            src={FEMALE_AVATAR} 
+            alt="Krishok Bazar Female Logo AI avatar" 
+            className="h-full w-full object-cover rounded-full hover:rotate-12 transition duration-500"
+            referrerPolicy="no-referrer"
+          />
         </button>
       )}
 
-      {/* 2. CHAT POPUP LAYOUT BOX */}
+      {/* 2. CHAT POPUP LAYOUT BOX - OPTIMIZED STYLES FOR ALL MOBILE SCREENS */}
       {isOpen && (
         <div 
           className={isFullscreen
             ? "w-full max-w-5xl h-[85vh] rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col transition-all duration-300"
-            : "w-full max-w-[340px] sm:w-[420px] sm:max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col max-h-[80vh] min-h-[480px] transition-all duration-300"
+            : "w-[calc(100vw-24px)] max-w-[340px] xs:w-[380px] sm:w-[420px] sm:max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col h-[75vh] min-h-[460px] xs:min-h-[500px] transition-all duration-300"
           }
           style={{ boxShadow: '0 25px 50px -12px rgba(6, 78, 59, 0.25)' }}
         >
           {/* Header Bar */}
-          <div className="bg-gradient-to-r from-emerald-800 to-emerald-650 px-5 py-4 text-white flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="rounded-xl bg-white/10 p-1.5 border border-white/15">
-                <Bot className="h-5 w-5 text-emerald-150 animate-bounce" />
+          <div className="bg-gradient-to-r from-emerald-800 to-emerald-650 px-4 xs:px-5 py-3 text-white flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative h-9 w-9 rounded-full bg-white/90 p-0.5 border-2 border-emerald-400 shrink-0 overflow-hidden shadow-inner flex items-center justify-center animate-pulse">
+                <img 
+                  src={FEMALE_AVATAR} 
+                  alt="Krishok Bazar Brand Logo Avatar" 
+                  className="h-full w-full object-cover rounded-full" 
+                  referrerPolicy="no-referrer" 
+                />
               </div>
-              <div>
-                <h4 className="text-sm font-black tracking-wide flex items-center gap-1">
+              <div className="min-w-0">
+                <h4 className="text-xs xs:text-sm font-black tracking-wide flex items-center gap-1">
                   Riktaz AI
-                  <span className="text-[9px] bg-emerald-700/60 text-emerald-50 font-semibold px-1 rounded">সহকারী</span>
+                  <span className="text-[8.5px] bg-amber-500/90 text-white font-extrabold px-1 rounded">মজিদ</span>
                 </h4>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
-                  <p className="text-[10px] text-emerald-100/90 font-medium font-sans">সম্পূর্ণ সচল • নিরাপদ এগ্রি-হেল্পার</p>
+                  <p className="text-[9px] xs:text-[10px] text-emerald-100/95 font-medium font-sans truncate">সচল • ইন্টেলিজেন্ট নারী সহকারী</p>
                 </div>
               </div>
             </div>
@@ -679,8 +718,8 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
                       className={`flex gap-2.5 max-w-[85%] ${m.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
                     >
                       {m.sender === 'assistant' && (
-                        <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0 mt-0.5 text-xs">
-                          R
+                        <div className="h-8 w-8 rounded-full bg-emerald-50 border border-emerald-200 p-0.5 flex items-center justify-center shrink-0 mt-0.5 shadow-3xs overflow-hidden">
+                          <img src={FEMALE_AVATAR} alt="Riktaz AI Avatar" className="h-full w-full object-cover rounded-full" referrerPolicy="no-referrer" />
                         </div>
                       )}
                       <div 
@@ -730,8 +769,8 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
                 
                 {isLoading && (
                   <div className="flex gap-2.5 max-w-[85%]">
-                    <div className="h-7 w-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0 mt-0.5 text-xs animate-bounce">
-                      R
+                    <div className="h-8 w-8 rounded-full bg-emerald-50 border border-emerald-250 p-0.5 flex items-center justify-center shrink-0 mt-0.5 shadow-3xs overflow-hidden animate-bounce">
+                      <img src={FEMALE_AVATAR} alt="Riktaz AI avatar" className="h-full w-full object-cover rounded-full" referrerPolicy="no-referrer" />
                     </div>
                     <div className="rounded-2xl px-4 py-3 bg-white border border-emerald-50 text-gray-500 rounded-tl-none shadow-sm text-xs flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 bg-emerald-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
