@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Product, Farmer, getFormattedUnit } from '../types';
-import { useApp } from '../AppContext';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { X, Star, ShoppingCart, ShieldCheck, Phone, MapPin, Store, HelpCircle } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
@@ -122,7 +122,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
         <div className="md:w-1/2 p-6 flex flex-col bg-gray-50/50 justify-center">
           <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white aspect-[4/3] w-full shadow-inner flex items-center justify-center">
             <img
-              src={product.images[selectedImgIdx]}
+              src={
+                selectedImgIdx === 0 && product.googleDriveFolderUrl
+                  ? convertGoogleDriveLink(product.googleDriveFolderUrl)
+                  : convertGoogleDriveLink(product.images[selectedImgIdx])
+              }
               alt={`${product.title} - view`}
               className="h-full w-full object-cover transition-all"
               referrerPolicy="no-referrer"
@@ -145,7 +149,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 }`}
               >
                 <img
-                  src={imgUrl}
+                  src={
+                    idx === 0 && product.googleDriveFolderUrl
+                      ? convertGoogleDriveLink(product.googleDriveFolderUrl)
+                      : convertGoogleDriveLink(imgUrl)
+                  }
                   alt="micro th"
                   className="h-full w-full object-cover"
                   referrerPolicy="no-referrer"

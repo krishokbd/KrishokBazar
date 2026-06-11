@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { useApp } from '../AppContext';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { X, Trash2, Save, Image, Check, Sparkles, ArrowRight, Upload } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
@@ -87,6 +87,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [isFeatured, setIsFeatured] = useState(false);
   const [unit, setUnit] = useState('kg');
   const [harvestDate, setHarvestDate] = useState('');
+  const [googleDriveFolderUrl, setGoogleDriveFolderUrl] = useState('');
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -147,6 +148,51 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
     }
   };
 
+  const handleIndividualUpload = async (idx: number, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadError('');
+    setIsUploading(true);
+    const file = files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`ছবি "${file.name}" ৫ মেগাবাইটের বেশি বড়। দয়া করে ছোট ছবি নির্বাচন করুন!`);
+      setIsUploading(false);
+      return;
+    }
+    try {
+      let blobToUpload: Blob;
+      try {
+        blobToUpload = await compressImage(file);
+      } catch (compErr) {
+        console.warn("Compression failed, uploading original:", compErr);
+        blobToUpload = file;
+      }
+      let url = '';
+      if (storage) {
+        const fileRef = ref(storage, `products/${Date.now()}_idx${idx}_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+        await uploadBytes(fileRef, blobToUpload);
+        url = await getDownloadURL(fileRef);
+      } else {
+        url = await new Promise<string>((res) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result as string);
+          r.readAsDataURL(blobToUpload);
+        });
+      }
+      const newImgs = [...uploadedImages];
+      // Pad array if index is larger than length
+      while (newImgs.length <= idx) {
+        newImgs.push('');
+      }
+      newImgs[idx] = url;
+      setUploadedImages(newImgs);
+    } catch (err: any) {
+      console.error("Individual upload failed:", err);
+      setUploadError(`ছবি ${idx + 1} আপলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Sync state with product when modal opens
   useEffect(() => {
     if (product) {
@@ -162,6 +208,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setIsFeatured(!!product.isFeatured);
       setUnit(product.unit || 'kg');
       setHarvestDate(product.harvestDate || '');
+      setGoogleDriveFolderUrl(product.googleDriveFolderUrl || '');
       setConfirmDelete(false);
       setSuccessAnimation(false);
       setUploadError('');
@@ -225,6 +272,9 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       unit,
       images: finalImgs,
       harvestDate: harvestDate || undefined,
+      googleDriveFolderUrl: googleDriveFolderUrl || undefined,
+      approved: true,
+      isActive: true,
     };
 
     editProduct(product.id, updatedData);
@@ -284,6 +334,18 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="যেমন: রাজশাহীর বাঘা রাসায়নিকমুক্ত তাজা গোপালভোগ আম"
                 className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs outline-none focus:border-emerald-500 shadow-sm"
+              />
+            </div>
+
+            {/* Google Drive Folder/Image URL */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans">গুগল ড্রাইভ ফোল্ডার/ইমেজ লিংক (Google Drive Folder/Image URL) - Prioritized</label>
+              <input
+                type="text"
+                value={googleDriveFolderUrl}
+                onChange={(e) => setGoogleDriveFolderUrl(e.target.value)}
+                placeholder="গুগল ড্রাইভ বা ড্রপবক্স পাবলিক ডিরেক্ট ইমেজ শেয়ার লিংক"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs outline-none focus:border-red-500 shadow-sm font-mono text-gray-800"
               />
             </div>
 
@@ -513,22 +575,91 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                 <p className="text-[10px] text-red-650 font-bold leading-none animate-pulse font-sans">❌ {uploadError}</p>
               )}
 
-              {/* Paste Image Links directly Field */}
-              <div className="mt-2 pt-2 border-t border-dashed border-gray-100">
-                <label className="block text-[11px] font-black text-gray-750 mb-1 hover:text-emerald-800">
-                  🔗 직접 이미지 লিংক পেস্ট করুন (Pasted URLs - প্রতি লাইনে একটি করে লিংক দিন):
+              {/* Separate Image Links & Upload Buttons per Index */}
+              <div className="mt-2 pt-2 border-t border-dashed border-gray-100 space-y-3 font-sans">
+                <label className="block text-xs font-black text-gray-750 hover:text-emerald-800">
+                  🔗 ছবির নির্দিষ্ট লিংকসমূহ এবং ক্যাটাগরি অনুযায়ী আপলোড (প্রতিটি ছবির জন্য আলাদা লিংক বা ড্রাইভ লিংক দিন):
                 </label>
-                <textarea
-                  rows={2}
-                  value={uploadedImages.filter(Boolean).join('\n')}
-                  onChange={(e) => {
-                    const parsed = e.target.value.split('\n').map(u => u.trim()).filter(Boolean);
-                    setUploadedImages(parsed);
-                  }}
-                  placeholder="এখানে আপনার ছবির ওয়েব লিংক (যেমন: https://images.unsplash.com/...) পেস্ট করুন। প্রতি লাইনে একটি করে লিংক দিবেন।"
-                  className="w-full rounded-xl border border-gray-200 bg-slate-50/50 hover:bg-white text-[10px] text-gray-700 font-mono p-3 outline-none focus:border-emerald-500 transition duration-150 leading-relaxed"
-                />
-                <p className="text-[9px] text-gray-400 font-medium">পিসির কিবোর্ড থেকে কপি করা ইমেজ ও ওয়েব আর্ট লিংকগুলো এখানে পেস্ট করলেই কার্ডে লাইভ প্রদর্শিত হবে।</p>
+                
+                <div className="space-y-2">
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const currentImgUrl = uploadedImages[i] || '';
+                    return (
+                      <div key={i} className="flex items-center gap-2 bg-slate-50 border border-gray-150 rounded-xl p-2">
+                        {/* Tiny image preview bubble */}
+                        <div className="h-10 w-10 rounded-lg overflow-hidden border border-gray-200 bg-white shrink-0 flex items-center justify-center">
+                          {currentImgUrl ? (
+                            <img 
+                              src={currentImgUrl} 
+                              alt={`Slot ${i + 1}`} 
+                              className="h-full w-full object-cover" 
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+                              }}
+                            />
+                          ) : (
+                            <span className="text-[10px] text-gray-400 font-bold">খালি {i + 1}</span>
+                          )}
+                        </div>
+
+                        {/* Input Link Box */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-bold text-gray-500 mb-0.5">ছবি {i + 1} এর লিংক (গুগল ড্রাইভ বা ওয়েব লিংক)</div>
+                          <input 
+                            type="text"
+                            value={currentImgUrl}
+                            onChange={(e) => {
+                              const converted = convertGoogleDriveLink(e.target.value);
+                              const newImgs = [...uploadedImages];
+                              while (newImgs.length <= i) {
+                                newImgs.push('');
+                              }
+                              newImgs[i] = converted;
+                              setUploadedImages(newImgs);
+                            }}
+                            placeholder="ড্রাইভ শেয়ার লিংক বা ওয়েবলিংক পেস্ট করুন..."
+                            className="w-full bg-white rounded-lg border border-gray-200 px-2.5 py-1 text-[11px] font-mono outline-none focus:border-emerald-500 transition"
+                          />
+                        </div>
+
+                        {/* Device Upload action and clear */}
+                        <div className="flex flex-col gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById(`individual-upload-edit-${i}`)?.click()}
+                            className="rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-250 px-2 py-1 text-[10px] font-black cursor-pointer flex items-center gap-1 transition animate-none"
+                            title="এই পজিশনে ছবি আপলোড করুন"
+                          >
+                            <Upload className="h-3 w-3" />
+                            <span>আপলোড</span>
+                          </button>
+                          <input 
+                            id={`individual-upload-edit-${i}`}
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => handleIndividualUpload(i, e.target.files)}
+                          />
+                          {currentImgUrl && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newImgs = [...uploadedImages];
+                                newImgs[i] = '';
+                                setUploadedImages(newImgs);
+                              }}
+                              className="text-red-500 hover:text-red-700 hover:underline text-[9px] font-bold"
+                            >
+                              মুছুন
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[9px] text-gray-450 font-medium">✨ গুগল ড্রাইভের লিংক কপি করে পেস্ট করলে এটি স্বয়ংক্রিয়ভাবে সরাসরি লোডযোগ্য ছবিতে রূপান্তরিত হবে!</p>
               </div>
 
               {/* Progress Slider Indicator */}

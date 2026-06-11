@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FarmerPost, PostComment } from '../types';
+import { FarmerPost, PostComment, Product } from '../types';
 
 // Lazy-loaded Supabase Config Check
 export const getSupabaseConfig = () => {
@@ -179,6 +179,65 @@ export const supabaseService = {
       return true;
     } catch (err) {
       console.error(`[SUPABASE COMMENT SYNC ERROR] Failed to write nested comment logs:`, err);
+      return false;
+    }
+  },
+
+  /**
+   * Syncs a product record directly to Supabase
+   */
+  async syncProduct(product: Product): Promise<boolean> {
+    const { url, key, isConfigured } = getSupabaseConfig();
+    if (!isConfigured) {
+      console.log(`[SUPABASE INTEGRATION LOG] Safe Fallback Active. Product '${product.title}' (ID: ${product.id}) saved natively over Firestore. This instantly updates the customer facing catalog.`);
+      return false;
+    }
+
+    try {
+      console.log(`[SUPABASE SYNCING] Upserting product '${product.title}' to Supabase table 'products'...`);
+      const response = await fetch(`${url}/rest/v1/products`, {
+        method: 'POST',
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          discount_price: product.discountPrice || null,
+          discountPrice: product.discountPrice || null,
+          category: product.category,
+          description: product.description,
+          images: product.images,
+          stock: product.stock,
+          farmer_id: product.farmerId || null,
+          farmerId: product.farmerId || null,
+          farmer_name: product.farmerName || null,
+          farmerName: product.farmerName || null,
+          is_verified: product.isVerified || false,
+          isVerified: product.isVerified || false,
+          rating: product.rating || null,
+          unit: product.unit || null,
+          is_ready_to_cook: product.isReadyToCook || false,
+          isReadyToCook: product.isReadyToCook || false,
+          is_featured: product.isFeatured || false,
+          isFeatured: product.isFeatured || false,
+          googleDriveFolderUrl: product.googleDriveFolderUrl || null,
+          google_drive_folder_url: product.googleDriveFolderUrl || null
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Supabase responses error: status ${response.status}`);
+      }
+
+      console.log(`[SUPABASE SUCCESS] Product '${product.id}' successfully upserted to remote database.`);
+      return true;
+    } catch (err) {
+      console.error(`[SUPABASE PRODUCT SYNC ERROR] Failed to push product to Supabase:`, err);
       return false;
     }
   }

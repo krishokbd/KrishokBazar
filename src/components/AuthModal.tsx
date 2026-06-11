@@ -14,7 +14,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTab = 'login' }) => {
-  const { login, registerCustomer, registerFarmer } = useApp();
+  const { login, loginAsFarmerDirectly, farmers, registerCustomer, registerFarmer } = useApp();
   const [activeTab, setActiveTab] = useState<'login' | 'register-customer' | 'register-farmer'>(defaultTab);
   
   // States
@@ -25,6 +25,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   const [successMsg, setSuccessMsg] = useState('');
   const [showAdminRole, setShowAdminRole] = useState(false);
   const [titleClickCount, setTitleClickCount] = useState(0);
+
+  // Admin select-a-farmer bypass states
+  const [showFarmerImpersonator, setShowFarmerImpersonator] = useState(false);
+  const [impersonatorSearch, setImpersonatorSearch] = useState('');
 
   const handleTitleClick = () => {
     setTitleClickCount(prev => {
@@ -63,6 +67,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
 
     if (!phone) {
       setErrorMsg('মোবাইল নম্বর প্রদান করুন।');
+      return;
+    }
+
+    const isAdmin = (phone === '01931355398' || phone === '01939052257' || phone === 'admin') && password === 'Ajzakir@2020';
+    if (isAdmin) {
+      setShowFarmerImpersonator(true);
+      setErrorMsg('');
+      setSuccessMsg('');
       return;
     }
 
@@ -239,115 +251,195 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
 
           {/* TAB 1: PORTAL LOGIN ACCESS */}
           {activeTab === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              
-              {/* DEFAULT CREDENTIALS INFO CALLOUT FOR FARMERS */}
-              <div className="rounded-2xl border border-emerald-150 bg-emerald-50/70 p-3.5 text-emerald-850 text-xs tracking-tight font-sans text-left leading-relaxed select-none">
-                <span className="font-black text-[13px] block mb-1">💡 ডেমো কুইক এক্সেস লকবক্স:</span>
-                <ul className="list-disc pl-4 space-y-1 text-[11px] font-medium text-emerald-900/90">
-                  <li>সম্মানিত আমাদের <strong>সকল নিবন্ধিত কৃষকের ডিফল্ট লগইন পাসওয়ার্ড</strong> হলো: <code className="bg-white/95 px-1.5 py-0.5 rounded-md font-sans font-black text-emerald-750">Ajzakir@2020</code></li>
-                  <li>মাস্টার <strong>এডমিন অ্যাক্সেস নম্বরসমূহ</strong>: <code className="bg-white/95 px-1 py-0.5 rounded-md font-mono font-bold">01931355398</code> অথবা <code className="bg-white/95 px-1 py-0.5 rounded-md font-mono font-bold">01939052257</code> (পাসওয়ার্ড: <code className="bg-white/95 px-1 py-0.5 rounded-md font-sans font-black text-emerald-750">Ajzakir@2020</code>)</li>
-                  <li>যেকোনো ফোন নাম্বার দিয়ে কৃষক রোল সিলেক্ট করে পাসওয়ার্ড <code className="bg-white/95 px-1 py-0.5 rounded-md font-sans">Ajzakir@2020</code> দিলে অটো-রেজিস্টার হয়ে প্রবেশ করা যাবে!</li>
-                </ul>
-              </div>
+            showFarmerImpersonator ? (
+              <div className="space-y-4 font-sans text-left">
+                <div className="bg-amber-50 rounded-2xl p-4 border border-amber-150">
+                  <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full font-black uppercase tracking-wider">অ্যাডমিন বাইপাস লগইন (Farmer Impersonation)</span>
+                  <h4 className="text-sm font-black text-amber-900 mt-1.5 font-sans">কৃষক ইম্পার্সনেশন ডিরেক্টরি (Select Farmer)</h4>
+                  <p className="text-xs text-amber-800 leading-relaxed mt-1 font-semibold">
+                    আপনি সফলভাবে মাস্টার অ্যাডমিন কী ভেরিফাই করেছেন। ড্যাশবোর্ড লোড করতে নিচে তালিকাভুক্ত যেকোন একজন নিবন্ধিত কৃষকের ছবিতে বা নামের উপর ক্লিক করুন।
+                  </p>
+                </div>
 
-              {/* Role switcher tags */}
-              <div>
-                <label className="block text-[10px] uppercase font-black text-gray-400 mb-2 tracking-wider">ড্যাশবোর্ড রোল নির্বাচন করুন:</label>
-                <div className={`grid ${showAdminRole ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
-                  {[
-                    { role: 'Customer', label: '🛒 সম্মানিত ক্রেতা' },
-                    { role: 'Farmer', label: '🌾 অংশীদার কৃষক' },
-                    ...(showAdminRole ? [{ role: 'Admin', label: '👑 প্রধান এডমিন' }] : [])
-                  ].map((x) => (
+                {/* SEARCH INPUT */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans font-sans">খামারি খুঁজুন (Search Farmer by Name/Phone)</label>
+                  <input
+                    type="text"
+                    placeholder="নাম বা ফোন নম্বর দিয়ে ফিল্টার করুন..."
+                    value={impersonatorSearch}
+                    onChange={(e) => setImpersonatorSearch(e.target.value)}
+                    className="w-full rounded-2xl border border-gray-200 py-2.5 px-4 text-xs font-medium text-gray-700 outline-none focus:border-emerald-500 bg-white"
+                  />
+                </div>
+
+                {/* FARMER LIST */}
+                <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 border border-gray-150 rounded-2xl p-2 bg-slate-50 space-y-1">
+                  {farmers.filter(f => 
+                    f.name.toLowerCase().includes(impersonatorSearch.toLowerCase()) ||
+                    f.phone.includes(impersonatorSearch) ||
+                    f.district.toLowerCase().includes(impersonatorSearch.toLowerCase())
+                  ).map(f => (
                     <button
-                      key={x.role}
+                      key={f.id}
                       type="button"
-                      onClick={() => { 
-                        setLoginRole(x.role as any);
-                        setErrorMsg('');
-                        setSuccessMsg('');
-                        if (x.role === 'Admin') {
-                          setPhone('01931355398');
-                          setPassword('Ajzakir@2020');
-                        } else if (x.role === 'Farmer') {
-                          setPhone('01712345100');
-                        } else {
-                          setPhone('01931355398');
-                        }
+                      onClick={() => {
+                        const res = loginAsFarmerDirectly(f);
+                        setSuccessMsg(res.message);
+                        setTimeout(() => {
+                          onClose();
+                          // reset state
+                          setPhone('');
+                          setPassword('');
+                          setShowFarmerImpersonator(false);
+                          setSuccessMsg('');
+                        }, 1200);
                       }}
-                      className={`rounded-xl py-2.5 text-xs font-bold text-center border transition-all cursor-pointer ${
-                        loginRole === x.role
-                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm'
-                          : 'border-gray-200 text-gray-500 hover:bg-gray-50/50'
-                      }`}
+                      className="w-full flex items-center gap-3 p-2 hover:bg-emerald-50 rounded-xl transition-all text-left group cursor-pointer border border-transparent hover:border-emerald-100"
                     >
-                      {x.label}
+                      <img 
+                        src={f.avatar || (f.gender === 'female' ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100' : 'https://images.unsplash.com/photo-1595273670150-db0a3e398436?w=100')} 
+                        alt={f.name}
+                        className="h-10 w-10 rounded-full object-cover bg-gray-250 border border-gray-200 shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-xs font-bold text-gray-800 truncate group-hover:text-emerald-800 leading-tight flex items-center gap-1.5 font-sans">
+                          {f.name} 
+                          {f.verified && <span className="text-[9px] bg-emerald-100 text-emerald-850 px-1.5 py-0.2 rounded font-sans font-bold">ভেরিফাইড</span>}
+                        </h5>
+                        <p className="text-[10px] text-gray-400 font-semibold truncate mt-0.5">📞 {f.phone} | 📍 {f.district}</p>
+                      </div>
                     </button>
                   ))}
+                  {farmers.filter(f => 
+                    f.name.toLowerCase().includes(impersonatorSearch.toLowerCase()) ||
+                    f.phone.includes(impersonatorSearch) ||
+                    f.district.toLowerCase().includes(impersonatorSearch.toLowerCase())
+                  ).length === 0 && (
+                    <p className="text-center text-xs text-gray-400 py-4 font-sans">কোনো কৃষক পাওয়া যায়নি!</p>
+                  )}
                 </div>
-              </div>
 
-              {/* Mobile phone select */}
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans">মোবাইল নম্বর (Mobile Number)</label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="tel"
-                    required
-                    placeholder="১১ ডিজিটের মোবাইল নম্বর দিন"
-                    value={phone}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setPhone(val);
-                      if (val === '01931355398' || val === '01939052257' || val === 'admin') {
-                        setShowAdminRole(true);
-                        setLoginRole('Admin');
-                      }
-                    }}
-                    className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-700 outline-none focus:border-emerald-500"
-                  />
+                <button
+                  type="button"
+                  onClick={() => setShowFarmerImpersonator(false)}
+                  className="w-full text-center text-xs font-black text-emerald-700 hover:text-emerald-800 py-1"
+                >
+                  ← লগইন ফর্মে ফিরে যান (Back to Form)
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                
+                {/* DEFAULT CREDENTIALS INFO CALLOUT FOR FARMERS */}
+                <div className="rounded-2xl border border-emerald-150 bg-emerald-50/70 p-3.5 text-emerald-850 text-xs tracking-tight font-sans text-left leading-relaxed select-none">
+                  <span className="font-black text-[13px] block mb-1 font-sans">💡 ডেমো কুইক এক্সেস লকবক্স:</span>
+                  <ul className="list-disc pl-4 space-y-1 text-[11px] font-medium text-emerald-950">
+                    <li>সম্মানিত আমাদের <strong>সকল নিবন্ধিত কৃষকের ডিফল্ট লগইন পাসওয়ার্ড</strong> হলো: <code className="bg-white/95 px-1.5 py-0.5 rounded-md font-sans font-black text-emerald-750">Ajzakir@2020</code></li>
+                    <li>মাস্টার <strong>এডমিন অ্যাক্সেস নম্বরসমূহ</strong>: <code className="bg-white/95 px-1 py-0.5 rounded-md font-mono font-bold">01931355398</code> অথবা <code className="bg-white/95 px-1 py-0.5 rounded-md font-mono font-bold">01939052257</code> (পাসওয়ার্ড: <code className="bg-white/95 px-1 py-0.5 rounded-md font-sans font-black text-emerald-750">Ajzakir@2020</code>)</li>
+                    <li>যেকোনো ফোন নাম্বার দিয়ে কৃষক রোল সিলেক্ট করে পাসওয়ার্ড <code className="bg-white/95 px-1 py-0.5 rounded-md font-sans">Ajzakir@2020</code> দিলে অটো-রেজিস্টার হয়ে প্রবেশ করা যাবে!</li>
+                  </ul>
                 </div>
-              </div>
 
-              {/* Password field */}
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans">পাসওয়ার্ড (Password)</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="password"
-                    required
-                    placeholder="নিরাপত্তা পাসওয়ার্ড দিন"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-750 outline-none focus:border-emerald-500"
-                  />
+                {/* Role switcher tags */}
+                <div>
+                  <label className="block text-[10px] uppercase font-black text-gray-400 mb-2 tracking-wider">ড্যাশবোর্ড রোল নির্বাচন করুন:</label>
+                  <div className={`grid ${showAdminRole ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
+                    {[
+                      { role: 'Customer', label: '🛒 সম্মানিত ক্রেতা' },
+                      { role: 'Farmer', label: '🌾 অংশীদার কৃষক' },
+                      ...(showAdminRole ? [{ role: 'Admin', label: '👑 প্রধান এডমিন' }] : [])
+                    ].map((x) => (
+                      <button
+                        key={x.role}
+                        type="button"
+                        onClick={() => { 
+                          setLoginRole(x.role as any);
+                          setErrorMsg('');
+                          setSuccessMsg('');
+                          if (x.role === 'Admin') {
+                            setPhone('01931355398');
+                            setPassword('Ajzakir@2020');
+                          } else if (x.role === 'Farmer') {
+                            setPhone('01712345100');
+                          } else {
+                            setPhone('01931355398');
+                          }
+                        }}
+                        className={`rounded-xl py-2.5 text-xs font-bold text-center border transition-all cursor-pointer ${
+                          loginRole === x.role
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm'
+                            : 'border-gray-200 text-gray-500 hover:bg-gray-50/50'
+                        }`}
+                      >
+                        {x.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 py-3.5 text-xs font-bold text-white shadow-md active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-2"
-              >
-                লগইন নিশ্চিত করুন (Secure Login)
-                <ArrowRight className="h-4 w-4" />
-              </button>
+                {/* Mobile phone select */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans">মোবাইল নম্বর (Mobile Number)</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+                    <input
+                      type="tel"
+                      required
+                      placeholder="১১ ডিজিটের মোবাইল নম্বর দিন"
+                      value={phone}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPhone(val);
+                        if (val === '01931355398' || val === '01939052257' || val === 'admin') {
+                          setShowAdminRole(true);
+                          setLoginRole('Admin');
+                        }
+                      }}
+                      className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-700 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
 
-              <div className="text-center pt-2">
-                <span className="text-[11px] text-gray-400">
-                  নিবন্ধিত অ্যাকাউন্ট নেই?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('register-customer')}
-                    className="text-emerald-700 font-extrabold hover:underline"
-                  >
-                    নতুন অ্যাকাউন্ট তৈরি করুন
-                  </button>
-                </span>
-              </div>
-            </form>
+                {/* Password field */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1.5 font-sans">পাসওয়ার্ড (Password)</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="নিরাপত্তা পাসওয়ার্ড দিন"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full rounded-2xl border border-gray-200 py-3 pl-10 pr-4 text-xs font-medium text-gray-750 outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 py-3.5 text-xs font-bold text-white shadow-md active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-2"
+                >
+                  লগইন নিশ্চিত করুন (Secure Login)
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+
+                <div className="text-center pt-2">
+                  <span className="text-[11px] text-gray-400 font-sans">
+                    নিবন্ধিত অ্যাকাউন্ট নেই?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('register-customer')}
+                      className="text-emerald-700 font-extrabold hover:underline"
+                    >
+                      নতুন অ্যাকাউন্ট তৈরি করুন
+                    </button>
+                  </span>
+                </div>
+              </form>
+            )
           )}
 
           {/* TAB 2: CUSTOMER REGISTER */}

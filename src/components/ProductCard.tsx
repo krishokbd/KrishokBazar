@@ -5,8 +5,10 @@
 
 import React from 'react';
 import { Product, getFormattedUnit } from '../types';
-import { useApp } from '../AppContext';
-import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall } from 'lucide-react';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
+import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 
 interface ProductCardProps {
   product: Product;
@@ -15,7 +17,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, onEditProduct }) => {
-  const { addToCart, currentUser, language } = useApp();
+  const { addToCart, currentUser, language, editProduct } = useApp();
 
   const isWeightBased = !['piece', 'pcs', 'pc', 'টি', 'piece/পিস', 'পিস'].includes(product.unit?.toLowerCase().trim() || '');
   const [selectedPack, setSelectedPack] = React.useState<string>(isWeightBased ? '1kg' : '1pc');
@@ -74,24 +76,86 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
       {/* ADMIN CONTROL PANEL HEADER */}
       {((currentUser?.role === 'Admin' || (typeof window !== 'undefined' && window.location.hash === '#admin')) && onEditProduct) && (
         <div className="bg-amber-500/15 border-b border-amber-500/30 px-3 py-2 flex items-center justify-between text-[9px] font-black text-amber-900 uppercase shrink-0">
-          <span className="flex items-center gap-1">🛡️ Inline Edit Active</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditProduct(product);
-            }}
-            className="rounded bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-0.5 font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow"
-          >
-            ✏️ সংশোধন করুন
-          </button>
+          <span className="flex items-center gap-1">🛡️ Admin Mode</span>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                document.getElementById(`quick-upload-${product.id}`)?.click();
+              }}
+              className="rounded bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-0.5 font-bold flex items-center gap-0.5 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow font-sans"
+              title="এই পণ্যটিতে সরাসরি ১টি ছবি আপলোড করুন"
+            >
+              <Camera className="h-2.5 w-2.5" />
+              <span>📷 আপলোড</span>
+            </button>
+            <input 
+              id={`quick-upload-${product.id}`}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onClick={(e) => e.stopPropagation()}
+              onChange={async (e) => {
+                e.stopPropagation();
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+                const file = files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                  alert("ছবি ৫ মেগাবাইটের বেশি বড় হলে আপলোড করা যাবে না!");
+                  return;
+                }
+                const confirmUpload = window.confirm(`আপনি কি এই পণ্যটিতে "${file.name}" ছবিটি প্রথম ছবি হিসেবে আপলোড করতে চান?`);
+                if (!confirmUpload) return;
+                
+                try {
+                  let downloadUrl = '';
+                  if (storage) {
+                    const fileRef = ref(storage, `products/${Date.now()}_card_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+                    await uploadBytes(fileRef, file);
+                    downloadUrl = await getDownloadURL(fileRef);
+                  } else {
+                    downloadUrl = await new Promise<string>((res) => {
+                      const r = new FileReader();
+                      r.onload = () => res(r.result as string);
+                      r.readAsDataURL(file);
+                    });
+                  }
+                  
+                  const currentImages = product.images || [];
+                  const newImages = [downloadUrl, ...currentImages].slice(0, 5); // Max 5
+                  editProduct(product.id, { images: newImages });
+                  alert("ফটো সফলভাবে আপলোড ও পণ্যের সাথে যুক্ত করা হয়েছে!");
+                } catch (err) {
+                  console.error("Card quick upload failed:", err);
+                  alert("দুঃখিত, আপলোড ব্যর্থ হয়েছে।");
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditProduct(product);
+              }}
+              className="rounded bg-indigo-650 hover:bg-indigo-700 text-white px-2 py-0.5 font-bold flex items-center gap-0.5 transition-all cursor-pointer hover:scale-105 active:scale-95 shadow font-sans"
+            >
+              ✏️ সংশোধন
+            </button>
+          </div>
         </div>
       )}
 
       {/* BADGES & COVERS CONTAINER */}
       <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
         <img
-          src={product.images && product.images.length > 0 && product.images[0] ? product.images[0] : 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500'}
+          src={
+            product.googleDriveFolderUrl 
+              ? convertGoogleDriveLink(product.googleDriveFolderUrl) 
+              : (product.images && product.images.length > 0 && product.images[0] 
+                  ? convertGoogleDriveLink(product.images[0]) 
+                  : 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500')
+          }
           alt={product.title}
           className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108"
           referrerPolicy="no-referrer"

@@ -52,6 +52,7 @@ export interface Product {
   farmName?: string;
   unit?: string; // unit of measure e.g. kg, piece, 500g
   isActive?: boolean;
+  googleDriveFolderUrl?: string;
 }
 
 export interface OrderItem {

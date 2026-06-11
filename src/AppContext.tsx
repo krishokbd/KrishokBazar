@@ -8,7 +8,7 @@ import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Cat
 import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
-import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
 import { logAnalyticsEvent } from './lib/analytics';
 import { supabaseService } from './lib/supabaseService';
 
@@ -37,6 +37,7 @@ interface AppContextType {
 
   // Auth actions
   login: (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string) => { success: boolean; message: string; subStatus?: string };
+  loginAsFarmerDirectly: (farmer: Farmer) => { success: boolean; message: string };
   logout: () => void;
   updateProfile: (name: string, phone: string, address: string) => void;
   registerCustomer: (name: string, phone: string, password?: string, address?: string, gender?: 'male' | 'female') => { success: boolean; message: string };
@@ -91,10 +92,13 @@ interface AppContextType {
 
   // OFFERS & SUBSCRIPTIONS STUFF
   offers: Offer[];
+  customerPlans: any[];
+  farmerPlans: any[];
   membershipSubmissions: MembershipSubmission[];
   addOffer: (offerData: Omit<Offer, 'id'>) => void;
   editOffer: (id: string, offerData: Partial<Offer>) => void;
   deleteOffer: (id: string) => void;
+  updateSubscriptionPlan: (role: 'customer' | 'farmer', id: string, updatedFields: Partial<any>) => void;
   submitMembershipRequest: (phone: string, txId: string, categorySlug?: string, amount?: number) => void;
   approveMembershipRequest: (submissionId: string) => void;
   rejectMembershipRequest: (submissionId: string) => void;
@@ -195,6 +199,165 @@ const DEFAULT_OFFERS: Offer[] = [
   }
 ];
 
+export const DEFAULT_CUSTOMER_PLANS = [
+  {
+    id: 'bronze',
+    name: 'ব্রোঞ্জ প্ল্যান (Bronze Plan)',
+    nameEn: 'Bronze Plan',
+    badge: 'লাইট ভ্যালু',
+    badgeEn: 'Light Value',
+    price: 499,
+    desc: 'মৌসুমী তাজা সবজি ও ধনেপাতা/শাক আইটেমগুলো সতেজ ডেলিভারি। সাধারণ খাদকের জন্য যুতসই।',
+    descEn: 'Delivery of basic seasonal vegetables and herbs. Highly affordable.',
+    perks: ['২-৩ ক্যাটাগরির তাজা সবুজ শাকসবজি', 'ভেষজ ও ধনেপাতা ফ্রী অ্যাসোর্টমেন্ট', '২৫% ডেলিভারি চার্জ ডিসকাউন্ট'],
+    perksEn: ['2-3 Veggies Pre-Chopped', 'Clean Hygienic Pack', '25% Shipping Subsidy']
+  },
+  {
+    id: 'silver',
+    name: 'সিলভার প্ল্যান (Silver Plan)',
+    nameEn: 'Silver Plan',
+    badge: 'সবজি স্পেশাল',
+    badgeEn: 'Veg Special',
+    price: 500,
+    desc: 'রান্না উপযোগী কাটা-ধোয়া রেডি-টু-কুক সবজি ও পাতার আইটেমগুলো সতেজ ডেলিভারি। ব্যস্ত গৃহিণীদের প্রিয়।',
+    descEn: 'Pre-washed, chopped ready-to-cook fresh vegetables and greens.',
+    perks: ['৩-৪ ক্যাটাগরির রেডি-টু-কুক সবজি', 'প্রাক-ধৌত ও হাইজেনিক প্যাকিং', '৫০% ডেলিভারি চার্জ ছাড়'],
+    perksEn: ['3-4 Veggies Pre-Chopped', 'Premium Pack', '50% Off Delivery Fee']
+  },
+  {
+    id: 'gold',
+    name: 'গোল্ড প্ল্যান (Gold Plan)',
+    nameEn: 'Gold Plan',
+    badge: 'মসলা ও মিট ডিল',
+    badgeEn: 'Meat & Spice Combo',
+    price: 999,
+    desc: 'কাটা সবজি, বিশেষ ম্যারিনেট করা মুরগী/গরুর মাংসের রেডি প্যাকেট এবং হাতভাঙা খাঁটি হলুদ ও মরিচ গুড়া।',
+    descEn: 'Chopped vegetables, marinated meat cuts, and stone-ground pure spices.',
+    perks: ['সিলভার প্ল্যানের সকল সুবিধা অন্তর্ভুক্ত', 'ম্যারিনেট করা মাংসের রেডি প্যাকেট', 'হাতভাঙা সতেজ হলুদ/মরিচ গুড়া', 'ফ্ল্যাট ৮০% ডেলিভারি ডিসকাউন্ট'],
+    perksEn: ['Includes Silver Bundle', 'Marinated Meat packets', 'Stoneground spices', 'Flat 80% Shipping Discount']
+  },
+  {
+    id: 'platinum',
+    name: 'প্লাটিনাম সুপার (Platinum Plan)',
+    nameEn: 'Platinum Super',
+    badge: 'ভিআইপি আনলিমিটেড',
+    badgeEn: 'VIP Unlimited',
+    price: 1399,
+    desc: 'ডেলিভারি চার্জ সম্পূর্ণ ফ্রী। কাস্টম কাটা সবজি ও মাংস এবং সরাসরি খামার অথবা বাজার থেকে লাইভ ভিডিও কলে বাছার কভারেজ।',
+    descEn: 'Zero shipping charges forever. Fully customizable vegetable cuts and live video assistance.',
+    perks: ['গোল্ড প্ল্যানের সকল সুবিধা অন্তর্ভুক্ত', 'সম্পূর্ণ কাস্টম সাইজ কাটা মাংস ও সবজি', 'আনলিমিটেড ডেলিভারি চার্জ ফ্রি!', 'ভিআইপি খামারি ভিডিও নির্বাচন সাপোর্ট'],
+    perksEn: ['Includes Gold Bundle', 'Custom cuts support', 'Zero delivery fee forever', 'Live Video pick option']
+  }
+];
+
+export const DEFAULT_FARMER_PLANS = [
+  {
+    id: 'farmer_silver',
+    name: 'সিলভার খামারি স্পনসর (Silver Plan)',
+    nameEn: 'Silver Farmer Sponsor',
+    badge: 'বেসিক ভেরিফাইড',
+    badgeEn: 'Basic Verified',
+    price: 1000,
+    desc: 'নিজস্ব অনলাইন খামার পোর্টাল, লাইভ অর্ডার নোটিফিকেশন সুবিধা এবং ১টি ডেডিকেটেড ক্যাটাগরি বুস্টিং প্রোগ্রাম।',
+    descEn: 'Online farmer store portal, real-time orders, and 1 category boost.',
+    perks: ['৫টি বেশি প্রোডাক্ট লিস্টিং', 'ভেরিফাইড খামারি সিলভার ব্যাজ', 'বিকাশ-নগদ ৩ ঘণ্টায় পেমেন্ট উইথড্রয়াল', '৫০% সেলস বৃদ্ধির গ্যারান্টি'],
+    perksEn: ['Up to 5 Products', 'Verified Silver Badge', '3-Hour Bkash Payouts', '50% Guaranteed Sales Boost']
+  },
+  {
+    id: 'farmer_gold',
+    name: 'গোল্ড খামারি স্পনসর (Gold Plan)',
+    nameEn: 'Gold Farmer Sponsor',
+    badge: 'ট্রাস্টেড কানেক্ট',
+    badgeEn: 'Trusted Connect',
+    price: 2000,
+    desc: 'সিলভারের সকল সুবিধা, ৩টি ক্যাটাগরি বুস্টিং, বিশেষ প্রোমোশনাল ব্যানার এবং সরাসরি বায়ার লিড।',
+    descEn: 'Includes Silver benefits plus 3 category boosts and direct retail leads.',
+    perks: ['১৫টি পন্য লিস্টিং সাপোর্ট', 'ভেরিফাইড খামারি গোল্ডেন ব্যাজ', 'গ্রাহকদের খামারে লাইভ স্ট্রিম ব্যবস্থা', '৮০% সেলস বৃদ্ধির গ্যারান্টি'],
+    perksEn: ['Up to 15 Products', 'Verified Gold Badge', 'Live Stream to buyer', '80% Guaranteed Sales Boost']
+  },
+  {
+    id: 'farmer_platinum',
+    name: 'প্লাটিনাম খামারি স্পনসর (Platinum Plan)',
+    nameEn: 'Platinum Farmer Sponsor',
+    badge: 'আল্টিমেট স্পনসর',
+    badgeEn: 'Ultimate Sponsor',
+    price: 3000,
+    desc: 'ঢাকার ক্রেতার কাছে আমাদের নিজস্ব ট্রাকে ফ্রী ফসল ডেলিভারি ও সর্বোচ্চ কভারেজ।',
+    descEn: 'Free truck collection to Dhaka buyers and ultimate home-page feature placement.',
+    perks: ['আনলিমিটেড প্রোডাক্ট লিস্টিং সুবিধা', 'ভেরিফাইড খামারি ডায়মন্ড ব্যাজ', 'হোমপেজে ফিক্সড ব্যানার বুস্ট', '১২০% সেলস গ্রোথ নিশ্চিত গ্যারান্টি'],
+    perksEn: ['Unlimited products', 'Verified Diamond badge', 'Homepage banner feature', '120% Sales growth guarantee']
+  },
+  {
+    id: 'farmer_partner',
+    name: 'কৃষক ভেরিফাইড পার্টনার (Partner Plan)',
+    nameEn: 'Farmer Verified Partner',
+    badge: 'ভেরিফাইড পার্টনার',
+    badgeEn: 'Verified Partner',
+    price: 250,
+    desc: 'কুরিয়ার সংগ্রহ হব থেকে সরাসরি ঢাকার ক্রেতার কাছে ফসল কভারেজ।',
+    descEn: 'Crop coverage from regional courier hubs directly to Dhaka customers.',
+    perks: ['১০টি অর্ডার অগ্রাধিকার', 'ভেরিফাইড খামারি গ্রীন ব্যাজ', 'বিকাশ-নগদ পেমেন্ট উইথড্রয়াল', '৫০% সেলস গ্রোথ গ্যারান্টি'],
+    perksEn: ['10 Order priority', 'Verified green badge', 'Bkash payout', '50% Sales growth guarantee']
+  }
+];
+
+export const sortProductsBySerial = (list: Product[]) => {
+  return [...list].sort((a, b) => {
+    const isCbA = a.id.startsWith('cb');
+    const isCbB = b.id.startsWith('cb');
+    if (isCbA && !isCbB) return -1;
+    if (!isCbA && isCbB) return 1;
+    
+    const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+    const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+    return numB - numA;
+  });
+};
+
+export const convertGoogleDriveLink = (url: string): string => {
+  if (!url) return '';
+  const clean = url.trim();
+  // Match file ID from Google Drive share link
+  // e.g., https://drive.google.com/file/d/1vC3z6gVjG1bEqxV2Vf6cUXQ65p/view?usp=sharing
+  // or https://drive.google.com/open?id=1vC3z6gVjG1bEqxV2Vf6cUXQ65p
+  // or https://docs.google.com/file/d/1vC3z6gVjG1bEqxV2Vf6cUXQ65p/edit
+  let fileId = '';
+  
+  const fileDMatch = clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch && fileDMatch[1]) {
+    fileId = fileDMatch[1];
+  } else {
+    const idParamMatch = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idParamMatch && idParamMatch[1]) {
+      fileId = idParamMatch[1];
+    }
+  }
+
+  if (fileId) {
+    // Return direct embed/image URL
+    return `https://lh3.googleusercontent.com/d/${fileId}`;
+  }
+
+  return clean;
+};
+
+// Helper to recursively remove any undefined properties from data objects passed to Firestore
+export const sanitizeFirestoreData = <T extends Record<string, any>>(obj: T): T => {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeFirestoreData(item)) as any;
+  }
+  const result = { ...obj } as any;
+  for (const key of Object.keys(result)) {
+    if (result[key] === undefined) {
+      delete result[key];
+    } else if (result[key] !== null && typeof result[key] === 'object') {
+      result[key] = sanitizeFirestoreData(result[key]);
+    }
+  }
+  return result;
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
     return (localStorage.getItem('kb_language') as 'bn' | 'en') || 'bn';
@@ -274,12 +437,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('kb_products');
-    const base = saved ? JSON.parse(saved) : demoProducts;
+    let base = saved ? JSON.parse(saved) : demoProducts;
+    
+    // Force seeding 150+ products if the saved array size is suspiciously small (e.g. less than 140)
+    if (!base || base.length < 140) {
+      base = demoProducts;
+      localStorage.setItem('kb_products', JSON.stringify(demoProducts));
+    }
+    
     const hasCb = base.some((p: any) => p.id === 'cb1');
     if (!hasCb) {
-      return [...COMBO_BASKETS_DEFAULT, ...base];
+      const fullList = [...COMBO_BASKETS_DEFAULT, ...base];
+      const sortedList = sortProductsBySerial(fullList);
+      localStorage.setItem('kb_products', JSON.stringify(sortedList));
+      return sortedList;
     }
-    return base;
+    return sortProductsBySerial(base);
   });
 
   const DEFAULT_POSTS: FarmerPost[] = [
@@ -378,6 +551,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [offers, setOffers] = useState<Offer[]>(() => {
     const saved = localStorage.getItem('kb_offers');
     return saved ? JSON.parse(saved) : DEFAULT_OFFERS;
+  });
+
+  const [customerPlans, setCustomerPlans] = useState<any[]>(() => {
+    const saved = localStorage.getItem('kb_customer_plans');
+    return saved ? JSON.parse(saved) : DEFAULT_CUSTOMER_PLANS;
+  });
+
+  const [farmerPlans, setFarmerPlans] = useState<any[]>(() => {
+    const saved = localStorage.getItem('kb_farmer_plans');
+    return saved ? JSON.parse(saved) : DEFAULT_FARMER_PLANS;
   });
 
   const [membershipSubmissions, setMembershipSubmissions] = useState<MembershipSubmission[]>(() => {
@@ -550,10 +733,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         items.push({ id: docSnap.id, ...docSnap.data() } as Product);
       });
       if (items.length > 0) {
-        setProducts(items);
+        setProducts(sortProductsBySerial(items));
       } else {
         // Automatically seed empty remote database
         console.log("Firestore empty: seeding default agricultural items.");
+        const fullComboList = [...COMBO_BASKETS_DEFAULT, ...demoProducts];
+        setProducts(sortProductsBySerial(fullComboList));
+        
         demoProducts.forEach(async (p) => {
           try {
             await setDoc(doc(db, 'products', p.id), p);
@@ -563,7 +749,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'products');
+      handleFirestoreError(error, OperationType.GET, 'products');
     });
 
     // 2. FARMERS LIVE SYNC
@@ -575,6 +761,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (items.length > 0) {
         setFarmers(items);
       } else {
+        console.log("Firestore empty: seeding default verified farmers...");
+        setFarmers(demoFarmers);
         demoFarmers.forEach(async (f) => {
           try {
             await setDoc(doc(db, 'farmers', f.id), f);
@@ -584,7 +772,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'farmers');
+      handleFirestoreError(error, OperationType.GET, 'farmers');
     });
 
     // 3. ORDERS LIVE SYNC
@@ -889,6 +1077,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentUser(newClient);
       return { success: true, message: 'অটো-নিবন্ধনের মাধ্যমে গ্রাহক হিসেবে সফল লগইন!' };
     }
+  };
+
+  const loginAsFarmerDirectly = (farmer: Farmer) => {
+    const farmerUser: User = {
+      id: `user-farmer-${farmer.id}`,
+      phone: farmer.phone,
+      role: 'Farmer',
+      name: farmer.name,
+      address: farmer.address,
+      farmerId: farmer.id,
+      district: farmer.district,
+      password: (farmer as any).password || 'Ajzakir@2020',
+      status: farmer.status,
+      subscriptionStatus: (farmer as any).subscriptionStatus || 'none'
+    };
+    setCurrentUser(farmerUser);
+    return { success: true, message: `${farmer.name} হিসেবে সফলভাবে লগইন হয়েছেন!` };
   };
 
   const logout = () => {
@@ -1384,13 +1589,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const farmer = farmers.find(f => f.id === productData.farmerId);
     const newId = `p${products.length + 1000}`;
 
-    const finalImages = productData.images && productData.images.length >= 3 
-      ? productData.images 
+    let finalImages = productData.images && productData.images.length >= 1 
+      ? [...productData.images] 
       : [
           'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-1',
           'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-2',
           'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-3'
         ];
+    
+    // Pad to 3 images to prevent carousel breaking if the design expects at least 3 images
+    while (finalImages.length < 3) {
+      finalImages.push(finalImages[0]);
+    }
 
     const newProduct: Product = {
       ...productData,
@@ -1402,7 +1612,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     if (isFirebaseConfigured && db) {
-      setDoc(doc(db, 'products', newProduct.id), newProduct).catch(err => {
+      const sanitized = sanitizeFirestoreData(newProduct);
+      setDoc(doc(db, 'products', newProduct.id), sanitized).catch(err => {
         handleFirestoreError(err, OperationType.CREATE, `products/${newProduct.id}`);
       });
       if (farmer) {
@@ -1411,6 +1622,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setProducts(prev => [newProduct, ...prev]);
+
+    // Sync product to Supabase
+    supabaseService.syncProduct(newProduct).catch(err => {
+      console.warn("Silent failure syncing new product to Supabase:", err);
+    });
 
     if (!isFirebaseConfigured) {
       setFarmers(prev => prev.map(f => {
@@ -1425,11 +1641,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const editProduct = (productId: string, productData: Partial<Product>) => {
     if (isFirebaseConfigured && db) {
-      updateDoc(doc(db, 'products', productId), productData).catch(err => {
+      const sanitized = sanitizeFirestoreData(productData);
+      updateDoc(doc(db, 'products', productId), sanitized).catch(err => {
         handleFirestoreError(err, OperationType.UPDATE, `products/${productId}`);
       });
     }
-    setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...productData } as Product : p));
+    setProducts(prev => {
+      const nextList = prev.map(p => p.id === productId ? { ...p, ...productData } as Product : p);
+      const updatedProduct = nextList.find(p => p.id === productId);
+      if (updatedProduct) {
+        supabaseService.syncProduct(updatedProduct).catch(err => {
+          console.warn("Silent failure syncing edited product to Supabase:", err);
+        });
+      }
+      return nextList;
+    });
     triggerSync('products');
   };
 
@@ -1546,7 +1772,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('kb_blogs', JSON.stringify(updated));
     setBlogs(updated);
     if (isFirebaseConfigured && db) {
-      updateDoc(doc(db, 'blogs', postId), postData).catch(() => {});
+      const sanitized = sanitizeFirestoreData(postData);
+      updateDoc(doc(db, 'blogs', postId), sanitized).catch(() => {});
     }
   };
 
@@ -1561,7 +1788,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateFarmer = (farmerId: string, updatedData: Partial<Farmer>) => {
     if (isFirebaseConfigured && db) {
-      updateDoc(doc(db, 'farmers', farmerId), updatedData).catch(err => {
+      const sanitized = sanitizeFirestoreData(updatedData);
+      updateDoc(doc(db, 'farmers', farmerId), sanitized).catch(err => {
         handleFirestoreError(err, OperationType.UPDATE, `farmers/${farmerId}`);
       });
       if ('verified' in updatedData) {
@@ -2033,6 +2261,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       editBlogPost,
       deleteBlogPost,
       login,
+      loginAsFarmerDirectly,
       logout,
       updateProfile,
       registerCustomer,

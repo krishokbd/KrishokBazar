@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../AppContext';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
 import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings } from '../types';
 import { 
@@ -355,10 +355,55 @@ export const AdminCMSDashboard: React.FC = () => {
     }
   };
 
+  const handleAdminIndividualUpload = async (idx: number, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setAdminUploadError('');
+    setAdminIsUploadingImage(true);
+    const file = files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`ছবি "${file.name}" ৫ মেগাবাইটের বেশি বড়। দয়া করে ছোট ছবি নির্বাচন করুন!`);
+      setAdminIsUploadingImage(false);
+      return;
+    }
+    try {
+      let blobToUpload: Blob;
+      try {
+        blobToUpload = await compressImage(file);
+      } catch (compErr) {
+        console.warn("Compression failed, uploading original:", compErr);
+        blobToUpload = file;
+      }
+      let url = '';
+      if (storage) {
+        const fileRef = ref(storage, `products/${Date.now()}_idx${idx}_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+        await uploadBytes(fileRef, blobToUpload);
+        url = await getDownloadURL(fileRef);
+      } else {
+        url = await new Promise<string>((res) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result as string);
+          r.readAsDataURL(blobToUpload);
+        });
+      }
+      const newImgs = [...adminProdImages];
+      while (newImgs.length <= idx) {
+        newImgs.push('');
+      }
+      newImgs[idx] = url;
+      setAdminProdImages(newImgs);
+    } catch (err: any) {
+      console.error("Individual upload failed:", err);
+      setAdminUploadError(`ছবি ${idx + 1} আপলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।`);
+    } finally {
+      setAdminIsUploadingImage(false);
+    }
+  };
+
   const [adminProdFarmerId, setAdminProdFarmerId] = useState('');
   const [adminProdIsFeatured, setAdminProdIsFeatured] = useState(false);
   const [adminProdIsVerified, setAdminProdIsVerified] = useState(true);
   const [adminProdHarvestDate, setAdminProdHarvestDate] = useState('');
+  const [adminProdGoogleDriveFolderUrl, setAdminProdGoogleDriveFolderUrl] = useState('');
 
   // Admin Farmer Profile Editing state
   const [adminEditingFarmer, setAdminEditingFarmer] = useState<Farmer | null>(null);
@@ -1261,6 +1306,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     setAdminProdIsFeatured(false);
                     setAdminProdIsVerified(true);
                     setAdminProdHarvestDate('May 30, 2026');
+                    setAdminProdGoogleDriveFolderUrl('');
                   }}
                   className="rounded-xl px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-500 text-white font-bold text-xs shadow hover:scale-101 cursor-pointer flex items-center gap-1 self-start sm:self-auto"
                 >
@@ -1296,6 +1342,17 @@ export const AdminCMSDashboard: React.FC = () => {
                           onChange={(e) => setAdminProdTitle(e.target.value)}
                           className="w-full bg-white rounded-xl border border-gray-200 p-2"
                           placeholder="যেমন: সতেজ লাল পেঁয়াজ ৫ কেজি ব্যাগ"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-gray-650 mb-1 font-sans">গুগল ড্রাইভ ফোল্ডার/ইমেজ লিংক (Google Drive Folder/Image URL) - Prioritized:</label>
+                        <input 
+                          type="text"
+                          value={adminProdGoogleDriveFolderUrl}
+                          onChange={(e) => setAdminProdGoogleDriveFolderUrl(e.target.value)}
+                          className="w-full bg-white rounded-xl border border-gray-200 p-2 font-mono text-gray-800"
+                          placeholder="গুগল ড্রাইভ বা ড্রপবক্স পাবলিক ডিরেক্ট ইমেজ শেয়ার লিংক"
                         />
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -1369,45 +1426,88 @@ export const AdminCMSDashboard: React.FC = () => {
                         </div>
                         <div className="col-span-2 space-y-3">
                           <label className="block font-sans text-xs font-bold text-gray-750 mb-0.5 hover:text-emerald-800">
-                            🖼️ পণ্যের ছবিসমূহ (Product Images - সর্বোচ্চ ৫টি):
+                            🖼️ পণ্যের ছবিসমূহ এবং নির্দিষ্ট লিংক (Product Images - সর্বোচ্চ ৫টি):
                           </label>
-                          
-                          {/* Rich Drag & Drop file upload selector */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div 
-                              onClick={() => document.getElementById('admin-file-upload-input-add')?.click()}
-                              className="group border-2 border-dashed border-emerald-350 hover:border-emerald-500 rounded-2xl p-4 bg-slate-50 hover:bg-white flex flex-col items-center justify-center gap-2 cursor-pointer transition text-center"
-                            >
-                              <input 
-                                id="admin-file-upload-input-add"
-                                type="file" 
-                                multiple
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={(e) => handleAdminImageUpload(e.target.files)}
-                              />
-                              <Upload className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition duration-200" />
-                              <div className="space-y-0.5">
-                                <p className="font-bold text-emerald-800 text-[11px] font-sans">নতুন ছবি আপলোড করতে ক্লিক করুন</p>
-                                <p className="text-[9.5px] text-gray-400 font-sans font-medium">মোবাইল ক্যামেরা বা গ্যালারি থেকে সরাসরি</p>
-                              </div>
-                            </div>
 
-                            {/* Direct URL block */}
-                            <div>
-                              <textarea
-                                rows={3}
-                                value={adminProdImages.filter(Boolean).join('\n')}
-                                onChange={(e) => {
-                                  const parsed = e.target.value.split('\n').map(u => u.trim()).filter(Boolean);
-                                  setAdminProdImages(parsed);
-                                }}
-                                placeholder="অথবা ছবির ওয়েব লিংক পেস্ট করুন (প্রতি লাইনে একটি করে লিংক দিন)"
-                                className="w-full h-full rounded-2xl border border-gray-250 hover:border-emerald-400 bg-white p-2.5 text-[9.5px] font-mono outline-none focus:ring-1 focus:ring-emerald-500 transition leading-snug resize-none"
-                              />
-                            </div>
+                          <div className="space-y-2">
+                            {[0, 1, 2, 3, 4].map((i) => {
+                              const currentImgUrl = adminProdImages[i] || '';
+                              return (
+                                <div key={i} className="flex items-center gap-2 bg-slate-50 border border-gray-150 rounded-xl p-2">
+                                  {/* Tiny image preview bubble */}
+                                  <div className="h-10 w-10 rounded-lg overflow-hidden border border-gray-200 bg-white shrink-0 flex items-center justify-center">
+                                    {currentImgUrl ? (
+                                      <img 
+                                        src={currentImgUrl} 
+                                        alt={`Slot ${i + 1}`} 
+                                        className="h-full w-full object-cover" 
+                                        referrerPolicy="no-referrer"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+                                        }}
+                                      />
+                                    ) : (
+                                      <span className="text-[10px] text-gray-400 font-bold">খালি {i + 1}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Input Link Box */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-[10px] font-bold text-gray-500 mb-0.5">ছবি {i + 1} এর লিংক (গুগল ড্রাইভ বা ওয়েব লিংক)</div>
+                                    <input 
+                                      type="text"
+                                      value={currentImgUrl}
+                                      onChange={(e) => {
+                                        const converted = convertGoogleDriveLink(e.target.value);
+                                        const newImgs = [...adminProdImages];
+                                        while (newImgs.length <= i) {
+                                          newImgs.push('');
+                                        }
+                                        newImgs[i] = converted;
+                                        setAdminProdImages(newImgs);
+                                      }}
+                                      placeholder="ড্রাইভ শেয়ার লিংক বা ওয়েবলিংক পেস্ট করুন..."
+                                      className="w-full bg-white rounded-lg border border-gray-250 px-2.5 py-1 text-[11px] font-mono outline-none focus:border-emerald-500 transition"
+                                    />
+                                  </div>
+
+                                  {/* Device Upload action and clear */}
+                                  <div className="flex flex-col gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => document.getElementById(`individual-upload-add-${i}`)?.click()}
+                                      className="rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-250 px-2 py-1 text-[10px] font-black cursor-pointer flex items-center gap-1 transition animate-none"
+                                      title="এই পজিশনে ছবি আপলোড করুন"
+                                    >
+                                      <Upload className="h-3 w-3" />
+                                      <span>আপলোড</span>
+                                    </button>
+                                    <input 
+                                      id={`individual-upload-add-${i}`}
+                                      type="file" 
+                                      accept="image/*" 
+                                      className="hidden" 
+                                      onChange={(e) => handleAdminIndividualUpload(i, e.target.files)}
+                                    />
+                                    {currentImgUrl && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newImgs = [...adminProdImages];
+                                          newImgs[i] = '';
+                                          setAdminProdImages(newImgs);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 hover:underline text-[9px] font-bold"
+                                      >
+                                        মুছুন
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-
+                          
                           {/* Error block */}
                           {adminUploadError && (
                             <p className="text-[10px] text-red-650 font-bold font-sans">❌ {adminUploadError}</p>
@@ -1420,37 +1520,7 @@ export const AdminCMSDashboard: React.FC = () => {
                               <span>ছবি আপলোড ও প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
                             </div>
                           )}
-
-                          {/* Beautiful image list strip with delete buttons */}
-                          <div className="p-2.5 bg-slate-100/60 rounded-2xl border border-gray-100">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 font-sans">তাত্ক্ষণিক ইমেজ স্ট্রিপ ({adminProdImages.filter(Boolean).length} / ৫)</span>
-                            {adminProdImages.filter(Boolean).length > 0 ? (
-                              <div className="flex flex-wrap gap-2 flex-row">
-                                {adminProdImages.filter(Boolean).map((imgUrl, idx) => (
-                                  <div key={idx} className="relative h-12 w-12 rounded-lg overflow-hidden border border-gray-200 group bg-white shadow-xs shrink-0">
-                                    <img 
-                                      src={imgUrl} 
-                                      className="h-full w-full object-cover" 
-                                      alt="Product Thumb"
-                                      referrerPolicy="no-referrer"
-                                    />
-                                    <button 
-                                      type="button"
-                                      onClick={() => {
-                                        setAdminProdImages(prev => prev.filter((_, i) => i !== idx));
-                                      }}
-                                      className="absolute inset-0 bg-red-650/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                                      title="ছবি ডিলিট করুন"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-gray-400 italic">কোনো ছবি যুক্ত করা হয়নি। দয়া করে ছবি আপলোড বা পেস্ট করুন।</p>
-                            )}
-                          </div>
+                          <p className="text-[9.5px] text-emerald-800 font-bold">✨ প্রতিটি ছবির জন্য গুগল ড্রাইভ বা ওয়েবলিংক এখানে দিতে পারেন। ড্রাইভ লিংকগুলো স্বয়ংক্রিয়ভাবে সরাসরি লোডযোগ্য ছবিতে রূপান্তরিত হয়ে যাবে!</p>
                         </div>
                       </div>
 
@@ -1523,7 +1593,10 @@ export const AdminCMSDashboard: React.FC = () => {
                           images: adminProdImages,
                           farmerId: adminProdFarmerId || targetFarmer.id,
                           farmerName: targetFarmer.name,
-                          harvestDate: adminProdHarvestDate || undefined
+                          harvestDate: adminProdHarvestDate || undefined,
+                          googleDriveFolderUrl: adminProdGoogleDriveFolderUrl || undefined,
+                          approved: true,
+                          isActive: true
                         };
 
                         if (adminEditingProduct) {
@@ -1580,6 +1653,17 @@ export const AdminCMSDashboard: React.FC = () => {
                             onChange={(e) => setAdminProdTitle(e.target.value)}
                             className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition"
                             placeholder="যেমন: সতেজ লাল পেঁয়াজ ৫ কেজি ব্যাগ"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1 font-sans">গুগল ড্রাইভ ফোল্ডার/ইমেজ লিংক (Google Drive Folder/Image URL) - Prioritized:</label>
+                          <input 
+                            type="text"
+                            value={adminProdGoogleDriveFolderUrl}
+                            onChange={(e) => setAdminProdGoogleDriveFolderUrl(e.target.value)}
+                            className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none transition font-mono"
+                            placeholder="গুগল ড্রাইভ বা ড্রপবক্স পাবলিক ডিরেক্ট ইমেজ শেয়ার লিংক"
                           />
                         </div>
                         
@@ -1665,45 +1749,88 @@ export const AdminCMSDashboard: React.FC = () => {
 
                         <div className="space-y-3">
                           <label className="block font-sans text-xs font-bold text-gray-750 mb-0.5 hover:text-emerald-800">
-                            🖼️ পণ্যের ছবিসমূহ (Product Images - সর্বোচ্চ ৫টি):
+                            🖼️ পণ্যের ছবিসমূহ এবং নির্দিষ্ট লিংক (Product Images - সর্বোচ্চ ৫টি):
                           </label>
-                          
-                          {/* Rich Drag & Drop file upload selector */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div 
-                              onClick={() => document.getElementById('admin-file-upload-input-edit')?.click()}
-                              className="group border-2 border-dashed border-emerald-300 hover:border-emerald-500 rounded-2xl p-4 bg-slate-50 hover:bg-white flex flex-col items-center justify-center gap-2 cursor-pointer transition text-center"
-                            >
-                              <input 
-                                id="admin-file-upload-input-edit"
-                                type="file" 
-                                multiple
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={(e) => handleAdminImageUpload(e.target.files)}
-                              />
-                              <Upload className="h-5 w-5 text-emerald-600 group-hover:scale-110 transition duration-200" />
-                              <div className="space-y-0.5">
-                                <p className="font-bold text-emerald-800 text-[11px] font-sans">নতুন ছবি আপলোড করতে ক্লিক করুন</p>
-                                <p className="text-[9.5px] text-gray-400 font-sans font-medium">মোবাইল ক্যামেরা বা গ্যালারি থেকে সরাসরি</p>
-                              </div>
-                            </div>
 
-                            {/* Direct URL block */}
-                            <div>
-                              <textarea
-                                rows={3}
-                                value={adminProdImages.filter(Boolean).join('\n')}
-                                onChange={(e) => {
-                                  const parsed = e.target.value.split('\n').map(u => u.trim()).filter(Boolean);
-                                  setAdminProdImages(parsed);
-                                }}
-                                placeholder="অথবা ছবির ওয়েব লিংক পেস্ট করুন (প্রতি লাইনে একটি করে লিংক দিন)"
-                                className="w-full h-full rounded-2xl border border-gray-250 hover:border-emerald-400 bg-white p-2.5 text-[9.5px] font-mono outline-none focus:ring-1 focus:ring-emerald-500 transition leading-snug resize-none"
-                              />
-                            </div>
+                          <div className="space-y-2">
+                            {[0, 1, 2, 3, 4].map((i) => {
+                              const currentImgUrl = adminProdImages[i] || '';
+                              return (
+                                <div key={i} className="flex items-center gap-2 bg-slate-50 border border-gray-150 rounded-xl p-2">
+                                  {/* Tiny image preview bubble */}
+                                  <div className="h-10 w-10 rounded-lg overflow-hidden border border-gray-200 bg-white shrink-0 flex items-center justify-center">
+                                    {currentImgUrl ? (
+                                      <img 
+                                        src={currentImgUrl} 
+                                        alt={`Slot ${i + 1}`} 
+                                        className="h-full w-full object-cover" 
+                                        referrerPolicy="no-referrer"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+                                        }}
+                                      />
+                                    ) : (
+                                      <span className="text-[10px] text-gray-400 font-bold">খালি {i + 1}</span>
+                                    )}
+                                  </div>
+
+                                  {/* Input Link Box */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-[10px] font-bold text-gray-500 mb-0.5">ছবি {i + 1} এর লিংক (গুগল ড্রাইভ বা ওয়েব লিংক)</div>
+                                    <input 
+                                      type="text"
+                                      value={currentImgUrl}
+                                      onChange={(e) => {
+                                        const converted = convertGoogleDriveLink(e.target.value);
+                                        const newImgs = [...adminProdImages];
+                                        while (newImgs.length <= i) {
+                                          newImgs.push('');
+                                        }
+                                        newImgs[i] = converted;
+                                        setAdminProdImages(newImgs);
+                                      }}
+                                      placeholder="ড্রাইভ শেয়ার লিংক বা ওয়েবলিংক পেস্ট করুন..."
+                                      className="w-full bg-white rounded-lg border border-gray-250 px-2.5 py-1 text-[11px] font-mono outline-none focus:border-emerald-500 transition"
+                                    />
+                                  </div>
+
+                                  {/* Device Upload action and clear */}
+                                  <div className="flex flex-col gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => document.getElementById(`individual-upload-edit-cms-${i}`)?.click()}
+                                      className="rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-250 px-2 py-1 text-[10px] font-black cursor-pointer flex items-center gap-1 transition animate-none"
+                                      title="এই পজিশনে ছবি আপলোড করুন"
+                                    >
+                                      <Upload className="h-3 w-3" />
+                                      <span>আপলোড</span>
+                                    </button>
+                                    <input 
+                                      id={`individual-upload-edit-cms-${i}`}
+                                      type="file" 
+                                      accept="image/*" 
+                                      className="hidden" 
+                                      onChange={(e) => handleAdminIndividualUpload(i, e.target.files)}
+                                    />
+                                    {currentImgUrl && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newImgs = [...adminProdImages];
+                                          newImgs[i] = '';
+                                          setAdminProdImages(newImgs);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 hover:underline text-[9px] font-bold"
+                                      >
+                                        মুছুন
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-
+                          
                           {/* Error block */}
                           {adminUploadError && (
                             <p className="text-[10px] text-red-650 font-bold font-sans">❌ {adminUploadError}</p>
@@ -1716,37 +1843,7 @@ export const AdminCMSDashboard: React.FC = () => {
                               <span>ছবি আপলোড ও প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</span>
                             </div>
                           )}
-
-                          {/* Beautiful image list strip with delete buttons */}
-                          <div className="p-2.5 bg-slate-100/60 rounded-2xl border border-gray-100">
-                            <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 font-sans">তাত্ক্ষণিক ইমেজ স্ট্রিপ ({adminProdImages.filter(Boolean).length} / ৫)</span>
-                            {adminProdImages.filter(Boolean).length > 0 ? (
-                              <div className="flex flex-wrap gap-2 flex-row">
-                                {adminProdImages.filter(Boolean).map((imgUrl, idx) => (
-                                  <div key={idx} className="relative h-12 w-12 rounded-lg overflow-hidden border border-gray-200 group bg-white shadow-xs shrink-0">
-                                    <img 
-                                      src={imgUrl} 
-                                      className="h-full w-full object-cover" 
-                                      alt="Product Thumb"
-                                      referrerPolicy="no-referrer"
-                                    />
-                                    <button 
-                                      type="button"
-                                      onClick={() => {
-                                        setAdminProdImages(prev => prev.filter((_, i) => i !== idx));
-                                      }}
-                                      className="absolute inset-0 bg-red-650/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                                      title="ছবি ডিলিট করুন"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-gray-400 italic">কোনো ছবি যুক্ত করা হয়নি। দয়া করে ছবি আপলোড বা পেস্ট করুন।</p>
-                            )}
-                          </div>
+                          <p className="text-[9.5px] text-emerald-800 font-bold">✨ প্রতিটি ছবির জন্য গুগল ড্রাইভ বা ওয়েবলিংক এখানে দিতে পারেন। ড্রাইভ লিংকগুলো স্বয়ংক্রিয়ভাবে সরাসরি লোডযোগ্য ছবিতে রূপান্তরিত হয়ে যাবে!</p>
                         </div>
                       </div>
                     </div>
@@ -1807,7 +1904,10 @@ export const AdminCMSDashboard: React.FC = () => {
                             images: adminProdImages,
                             farmerId: adminProdFarmerId || targetFarmer.id,
                             farmerName: targetFarmer.name,
-                            harvestDate: adminProdHarvestDate || undefined
+                            harvestDate: adminProdHarvestDate || undefined,
+                            googleDriveFolderUrl: adminProdGoogleDriveFolderUrl || undefined,
+                            approved: true,
+                            isActive: true
                           };
 
                           editProduct(adminEditingProduct.id, prodPayload);
@@ -1951,6 +2051,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminProdIsFeatured(!!p.isFeatured);
                                 setAdminProdIsVerified(p.isVerified);
                                 setAdminProdHarvestDate(p.harvestDate || '');
+                                setAdminProdGoogleDriveFolderUrl(p.googleDriveFolderUrl || '');
                                 window.scrollTo({ top: 120, behavior: 'smooth' });
                               }}
                               className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-805 rounded font-bold text-[9px] border border-amber-200 cursor-pointer transition duration-150 shadow-xs"

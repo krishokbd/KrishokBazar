@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './AppContext';
 import { logAnalyticsEvent } from './lib/analytics';
 import { Header } from './components/Header';
@@ -168,6 +168,17 @@ const AppContent: React.FC = () => {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [activeFarmerProfile, setActiveFarmerProfile] = useState<Farmer | null>(null);
+
+  // Redirect on user role change
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === 'Farmer') {
+        setView('farmer-dashboard');
+      } else if (currentUser.role === 'Admin') {
+        setView('admin');
+      }
+    }
+  }, [currentUser]);
 
   // Conditional subscription auto-trigger timing logic helper
   const isEligibleForSubscriptionTrigger = 
@@ -633,33 +644,6 @@ const AppContent: React.FC = () => {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* UNIQUE SUBSCRIPTION PROMO & HERO ANNOUNCEMENT BANNER */}
-      <div className="bg-gradient-to-r from-amber-500 via-yellow-500 to-emerald-600 text-white py-2 px-4 shadow-sm text-xs relative overflow-hidden select-none">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2 md:gap-4">
-          <div className="flex items-center gap-2">
-            <span className="bg-white/20 text-white font-black text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-md shrink-0 block">
-              👑 PREMIUM & PARTNER LAUNCH
-            </span>
-            <p className="text-[11px] font-bold text-amber-50 tracking-tight leading-snug">
-              উপভোগ করুন কাটা-ধোয়া <span className="underline decoration-yellow-300 decoration-2">রেডি-টু-কুক সবজি</span> ও ম্যারিনেট করা মাংসের ফ্রি হোম ডেলিভারি! কৃষকদের জন্য থাকছে বিশেষ সবুজ ক্রেস্ট পার্টনারশিপ।
-            </p>
-          </div>
-          <div className="flex bg-white/10 rounded-lg p-0.5 border border-white/20 text-[10px] items-center gap-1 shrink-0">
-            <button
-              onClick={() => { setIsSubscriptionOpen(true); setSubscriptionDefaultRole('customer'); }}
-              className="px-2.5 py-1 bg-white text-emerald-950 font-black rounded-md hover:bg-emerald-50 transition-all cursor-pointer"
-            >
-              মেম্বারশিপ প্ল্যান ও সুযোগ-সুবিধা জানুন 🛍️
-            </button>
-            <button
-              onClick={() => { setIsSubscriptionOpen(true); setSubscriptionDefaultRole('farmer'); }}
-              className="px-2.5 py-1 text-white hover:bg-white/10 rounded-md font-black transition-all cursor-pointer"
-            >
-              কৃষক ভেরিফিকেশন স্পনসর (৮০% সেলস বৃদ্ধি) 🚜
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* CHANNELS ALERT */}
       {successOrderId && (
@@ -804,22 +788,22 @@ const AppContent: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Grid limit of 8 products on home or curated featured items */}
+                {/* Grid limit of 12 freshest active standard products (excluding combo baskets) */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {(products.filter((p) => p.isFeatured).length > 0
-                    ? products.filter((p) => p.isFeatured)
-                    : products.slice(0, 8)
-                  ).map((p) => (
-                    <ProductCard 
-                      key={p.id} 
-                      product={p} 
-                      onOpenQuickView={(prod) => {
-                        setSelectedProductId(prod.id);
-                        setView('product-details');
-                      }} 
-                      onEditProduct={setEditingProduct}
-                    />
-                  ))}
+                  {products
+                    .filter((p) => !p.id.startsWith('cb') && p.isActive !== false)
+                    .slice(0, 12)
+                    .map((p) => (
+                      <ProductCard 
+                        key={p.id} 
+                        product={p} 
+                        onOpenQuickView={(prod) => {
+                          setSelectedProductId(prod.id);
+                          setView('product-details');
+                        }} 
+                        onEditProduct={setEditingProduct}
+                      />
+                    ))}
                 </div>
               </div>
             </section>

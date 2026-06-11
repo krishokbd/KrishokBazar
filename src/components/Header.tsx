@@ -409,103 +409,11 @@ export const Header: React.FC<HeaderProps> = ({
               🍔 <span className="font-sans font-black">{language === 'en' ? 'MENU' : 'মেনু'}</span>
             </button>
 
-            {/* MOBILE MENU TOGGLE */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-xl border border-gray-100 p-1.5 text-gray-600 hover:bg-gray-50 flex lg:hidden"
-            >
-              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
+            {/* MOBILE MENU TOGGLE CANCELLED - SINGLE 🍔 MENU BUTTON CONTROLS ALL DIRECTORY OPTIONS */}
 
           </div>
         </div>
       </div>
-
-      {/* MOBILE DRAWER NAVIGATION */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-3 shadow-inner">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="সবজি, চাল বা মধু খুঁজুন..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full rounded-xl border border-gray-150 py-2 pl-9 pr-4 text-xs outline-none focus:border-emerald-500 bg-gray-50"
-            />
-          </div>
-
-          <nav className="flex flex-col gap-1 font-bold text-xs text-gray-650">
-            <button 
-              onClick={() => handleNavClick('home')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'home' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              হোম (Home)
-            </button>
-            <button 
-              onClick={() => handleNavClick('shop')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'shop' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              সব পণ্য (Shop)
-            </button>
-            <button 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setView('home');
-                setTimeout(() => {
-                  document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
-                }, 150);
-              }}
-              className="text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
-            >
-              কম্বো বাস্কেট (Combo Basket)
-            </button>
-            <button 
-              onClick={() => handleNavClick('ready-to-cook')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'ready-to-cook' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              রেডি-টু-কুক (Ready To Cook)
-            </button>
-            <button 
-              onClick={() => handleNavClick('farmers')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'farmers' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              ভেরিফাইড কৃষক (Verified Farmers)
-            </button>
-            <button 
-              onClick={() => handleNavClick('blog')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'blog' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              {language === 'en' ? 'Blog' : 'ব্লগ (Blog)'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('social-feed')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'social-feed' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              {language === 'en' ? "Farmers' Social Yard" : "কৃষকের সামাজিক উঠান (Social Yard)"}
-            </button>
-            <button 
-              onClick={() => handleNavClick('our-story')}
-              className={`text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all ${currentView === 'our-story' ? 'bg-emerald-50 text-emerald-700 font-bold' : ''}`}
-            >
-              আমাদের গল্প (About Our Story)
-            </button>
-            <button 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                document.getElementById('footer-contact')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-left py-2 px-3 hover:bg-emerald-50 hover:text-emerald-700 rounded-xl transition-all"
-            >
-              যোগাযোগ (Contact)
-            </button>
-            <div className="border-t border-gray-100 my-1 pt-2 px-3 flex items-center gap-1.5 text-emerald-800 text-[11px] font-bold">
-              <MapPin className="h-4 w-4 text-emerald-600 shrink-0 animate-pulse" />
-              <span>ডেলিভারি জোন: ঢাকা জেলা (Dhaka)</span>
-            </div>
-          </nav>
-        </div>
-      )}
 
       {/* 3. ELEGANT 8-SECTION MAIN CATEGORY MENU OVERLAY (DRAWER-STYLE) */}
       {isMainMenuOpen && (
@@ -552,7 +460,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="space-y-3">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider block px-1">আমাদের ডিরেক্টরি ও সেবা (৮টি আলাদা সেকশন)</span>
+                <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider block px-1">আমাদের ডিরেক্টরি ও সেবা (১০টি আলাদা সেকশন)</span>
                 
                 <div className="grid grid-cols-1 gap-2.5">
                   

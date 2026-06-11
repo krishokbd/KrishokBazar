@@ -12,49 +12,51 @@ export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscr
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
 
   useEffect(() => {
-    let idleTimer: NodeJS.Timeout;
-    let scrollTriggered = false;
+    if (!offers || offers.length === 0) return;
 
-    // Trigger banner display
-    const triggerBanner = () => {
-      if (isDismissed) return;
-      // Pick a random banner or cycle starting with the first one
-      setActiveBannerIdx(0);
+    const timers: NodeJS.Timeout[] = [];
+    let recurringInterval: NodeJS.Timeout;
+
+    // Trigger banner display and reset dismissal state so it shows up
+    const triggerBanner = (indexToTrigger?: number) => {
+      setIsDismissed(false);
+      setActiveBannerIdx((prev) => {
+        if (indexToTrigger !== undefined) return indexToTrigger % offers.length;
+        if (prev === -1) return 0;
+        return (prev + 1) % offers.length;
+      });
     };
 
-    // 1. Scroll Detector Trigger
-    const handleScroll = () => {
-      if (!scrollTriggered) {
-        scrollTriggered = true;
-        // Wait 1.5 seconds after first scroll to show premium banner
-        setTimeout(triggerBanner, 1500);
-      }
-    };
+    // 1. Ad after 1 minute (60,000 ms)
+    const t1 = setTimeout(() => {
+      triggerBanner(0);
+    }, 60 * 1000);
+    timers.push(t1);
 
-    // 2. 20-25 Second Idle Timer Configuration
-    const resetIdleTimer = () => {
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => {
+    // 2. Ad after 5 minutes (300,000 ms)
+    const t2 = setTimeout(() => {
+      triggerBanner(1);
+    }, 5 * 60 * 1000);
+    timers.push(t2);
+
+    // 3. Ad after 10 minutes (600,000 ms)
+    const t3 = setTimeout(() => {
+      triggerBanner(2);
+
+      // 4. Thereafter, set up an ad every 15 minutes (900,000 ms)
+      recurringInterval = setInterval(() => {
         triggerBanner();
-      }, 22000); // 22 seconds idle time
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('mousemove', resetIdleTimer);
-    window.addEventListener('keypress', resetIdleTimer);
-    window.addEventListener('touchstart', resetIdleTimer);
-
-    // Initial timer setup
-    resetIdleTimer();
+      }, 15 * 60 * 1000);
+    }, 10 * 60 * 1000);
+    timers.push(t3);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('mousemove', resetIdleTimer);
-      window.removeEventListener('keypress', resetIdleTimer);
-      window.removeEventListener('touchstart', resetIdleTimer);
-      clearTimeout(idleTimer);
+      timers.forEach((t) => clearTimeout(t));
+      if (recurringInterval) {
+        clearInterval(recurringInterval);
+      }
     };
-  }, [isDismissed]);
+  }, [offers]);
 
   if (activeBannerIdx === -1 || isDismissed || !offers || offers.length === 0) return null;
 

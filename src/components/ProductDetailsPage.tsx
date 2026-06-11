@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useApp } from '../AppContext';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Product, Farmer, Review, getFormattedUnit } from '../types';
 import { 
   ArrowLeft, 
@@ -275,7 +275,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             {/* LARGE VIEWPORT BOX WITH NAVIGATION CHEVRONS */}
             <div className="relative overflow-hidden rounded-2xl border border-gray-150-soft bg-gray-50 aspect-square w-full flex items-center justify-center shadow-inner group">
               <img
-                src={product.images[selectedImgIdx]}
+                src={
+                  selectedImgIdx === 0 && product.googleDriveFolderUrl
+                    ? convertGoogleDriveLink(product.googleDriveFolderUrl)
+                    : convertGoogleDriveLink(product.images[selectedImgIdx])
+                }
                 alt={`${product.title} - Main Preview image`}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 referrerPolicy="no-referrer"
@@ -359,7 +363,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   }`}
                 >
                   <img
-                    src={imgUrl}
+                    src={
+                      idx === 0 && product.googleDriveFolderUrl
+                        ? convertGoogleDriveLink(product.googleDriveFolderUrl)
+                        : convertGoogleDriveLink(imgUrl)
+                    }
                     alt={`${product.title} gallery thumbnail ${idx + 1}`}
                     className="h-full w-full object-cover"
                     referrerPolicy="no-referrer"
