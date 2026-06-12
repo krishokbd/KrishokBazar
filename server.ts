@@ -63,6 +63,35 @@ async function startServer() {
   // Enable JSON request body parsing
   app.use(express.json());
 
+  // Standard PWA logo proxy routes mapped to the header logo
+  const logoUrl = "https://cdn.shopify.com/s/files/1/0991/0717/6761/files/Gemini_Generated_Image_ce5s9yce5s9yce5s.png?v=1779307577";
+
+  app.get("/icon-192.png", async (req, res) => {
+    try {
+      const response = await fetch(logoUrl);
+      if (!response.ok) throw new Error("Fetch failed");
+      const arrayBuffer = await response.arrayBuffer();
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.send(Buffer.from(arrayBuffer));
+    } catch (e) {
+      res.redirect(logoUrl);
+    }
+  });
+
+  app.get("/icon-512.png", async (req, res) => {
+    try {
+      const response = await fetch(logoUrl);
+      if (!response.ok) throw new Error("Fetch failed");
+      const arrayBuffer = await response.arrayBuffer();
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.send(Buffer.from(arrayBuffer));
+    } catch (e) {
+      res.redirect(logoUrl);
+    }
+  });
+
   // API Route for Riktaz AI Assistant (Server-Proxy to secure Gemini API key)
   app.post("/api/riktaz-ai", async (req, res) => {
     try {

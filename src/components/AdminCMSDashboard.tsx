@@ -276,6 +276,18 @@ export const AdminCMSDashboard: React.FC = () => {
   const [bannerFormTitleEn, setBannerFormTitleEn] = useState('');
   const [bannerFormSubtitleBn, setBannerFormSubtitleBn] = useState('');
   const [bannerFormSubtitleEn, setBannerFormSubtitleEn] = useState('');
+  const [bannerFormBadgeBn, setBannerFormBadgeBn] = useState('');
+  const [bannerFormBadgeEn, setBannerFormBadgeEn] = useState('');
+  const [bannerFormBtn1TextBn, setBannerFormBtn1TextBn] = useState('');
+  const [bannerFormBtn1TextEn, setBannerFormBtn1TextEn] = useState('');
+  const [bannerFormBtn1Link, setBannerFormBtn1Link] = useState('');
+  const [bannerFormBtn2TextBn, setBannerFormBtn2TextBn] = useState('');
+  const [bannerFormBtn2TextEn, setBannerFormBtn2TextEn] = useState('');
+  const [bannerFormBtn2Link, setBannerFormBtn2Link] = useState('');
+  const [bannerFormBtn3TextBn, setBannerFormBtn3TextBn] = useState('');
+  const [bannerFormBtn3TextEn, setBannerFormBtn3TextEn] = useState('');
+  const [bannerFormBtn3Link, setBannerFormBtn3Link] = useState('');
+  const [bannerFormBgColorTint, setBannerFormBgColorTint] = useState('');
 
   // Special Promo Banners editing state
   const [editingOffer, setEditingOffer] = useState<any | null>(null);
@@ -288,6 +300,8 @@ export const AdminCMSDashboard: React.FC = () => {
   const [offerFormTagBn, setOfferFormTagBn] = useState('');
   const [offerFormTagEn, setOfferFormTagEn] = useState('');
   const [offerFormImage, setOfferFormImage] = useState('');
+  const [offerFormLink, setOfferFormLink] = useState('');
+  const [offerFormCategorySlug, setOfferFormCategorySlug] = useState('');
 
   // Admin Custom Product Editor state
   const [adminEditingProduct, setAdminEditingProduct] = useState<Product | null>(null);
@@ -418,6 +432,7 @@ export const AdminCMSDashboard: React.FC = () => {
   const [adminFarmerFormBalance, setAdminFarmerFormBalance] = useState(0);
   const [adminFarmerFormBio, setAdminFarmerFormBio] = useState('');
   const [adminFarmerFormAvatar, setAdminFarmerFormAvatar] = useState('');
+  const [adminFarmerFormPassword, setAdminFarmerFormPassword] = useState('');
   const [adminFarmerFormLandSize, setAdminFarmerFormLandSize] = useState('');
   const [adminFarmerFormSalesAmount, setAdminFarmerFormSalesAmount] = useState(0);
   const [adminFarmerFormSalesCount, setAdminFarmerFormSalesCount] = useState(0);
@@ -777,7 +792,7 @@ export const AdminCMSDashboard: React.FC = () => {
                 : 'text-gray-600 hover:bg-gray-250/60 hover:text-gray-900 bg-white border border-gray-100'
             }`}
           >
-            🖼️ হোম স্লাইডার ({banners.length})
+            🎨 Banner & Design Editor ({banners.length})
           </button>
           <button
             onClick={() => setAdminActiveTab('reviews')}
@@ -936,6 +951,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                   setAdminFarmerFormBalance(f.balance);
                                   setAdminFarmerFormBio(f.bio || '');
                                   setAdminFarmerFormAvatar(f.avatar || '');
+                                  setAdminFarmerFormPassword(f.password || 'Ajzakir@2020');
                                   setAdminFarmerFormLandSize(f.landSize || '');
                                   setAdminFarmerFormSalesAmount(f.salesAmount || 0);
                                   setAdminFarmerFormSalesCount(f.salesCount || 0);
@@ -1025,6 +1041,7 @@ export const AdminCMSDashboard: React.FC = () => {
                               setAdminFarmerFormBalance(f.balance);
                               setAdminFarmerFormBio(f.bio || '');
                               setAdminFarmerFormAvatar(f.avatar || '');
+                              setAdminFarmerFormPassword(f.password || 'Ajzakir@2020');
                               setAdminFarmerFormLandSize(f.landSize || '');
                               setAdminFarmerFormSalesAmount(f.salesAmount || 0);
                               setAdminFarmerFormSalesCount(f.salesCount || 0);
@@ -1144,15 +1161,43 @@ export const AdminCMSDashboard: React.FC = () => {
                       </div>
 
                       {/* EXTRA DETAILED FARMER METRIC FIELDS FOR ADMIN */}
-                      <div>
-                        <label className="block font-bold text-gray-600 mb-1">প্রোফাইল ছবি (Avatar URL):</label>
-                        <input 
-                          type="text"
-                          value={adminFarmerFormAvatar}
-                          onChange={(e) => setAdminFarmerFormAvatar(e.target.value)}
-                          className="w-full rounded-xl border border-gray-200 p-2 text-xs font-mono"
-                          placeholder="https://images.unsplash.com/... বা ডেমো"
-                        />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 border border-gray-150 p-3 rounded-2xl">
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1">প্রোফাইল ছবি (Avatar URL):</label>
+                          <div className="flex items-center gap-2">
+                            <div className="h-9 w-9 rounded-full border border-gray-250 bg-white overflow-hidden shrink-0">
+                              <img 
+                                src={(adminFarmerFormAvatar && (adminFarmerFormAvatar.startsWith('http') || adminFarmerFormAvatar.startsWith('data:'))) 
+                                  ? adminFarmerFormAvatar 
+                                  : (adminEditingFarmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR)
+                                } 
+                                className="h-full w-full object-cover" 
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = adminEditingFarmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR;
+                                }}
+                              />
+                            </div>
+                            <input 
+                              type="text"
+                              value={adminFarmerFormAvatar}
+                              onChange={(e) => setAdminFarmerFormAvatar(e.target.value)}
+                              className="flex-1 rounded-xl border border-gray-200 p-2 text-xs font-mono"
+                              placeholder="ছবির লিংক দিন বা ডেমো"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-gray-600 mb-1">লগইন পাসওয়ার্ড (Password):</label>
+                          <input 
+                            type="text"
+                            value={adminFarmerFormPassword}
+                            onChange={(e) => setAdminFarmerFormPassword(e.target.value)}
+                            placeholder="পাসওয়ার্ড দিন..."
+                            className="w-full rounded-xl border border-gray-200 p-2 text-xs font-mono font-bold text-blue-750"
+                          />
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-2">
@@ -1256,6 +1301,7 @@ export const AdminCMSDashboard: React.FC = () => {
                               balance: adminFarmerFormBalance,
                               bio: adminFarmerFormBio,
                               avatar: adminFarmerFormAvatar,
+                              password: adminFarmerFormPassword,
                               landSize: adminFarmerFormLandSize,
                               salesAmount: adminFarmerFormSalesAmount,
                               salesCount: adminFarmerFormSalesCount
@@ -2300,6 +2346,18 @@ export const AdminCMSDashboard: React.FC = () => {
                               setBannerFormTitleEn(slide.titleEn);
                               setBannerFormSubtitleBn(slide.subtitleBn);
                               setBannerFormSubtitleEn(slide.subtitleEn);
+                              setBannerFormBadgeBn(slide.badgeBn || '');
+                              setBannerFormBadgeEn(slide.badgeEn || '');
+                              setBannerFormBtn1TextBn(slide.btn1TextBn || '');
+                              setBannerFormBtn1TextEn(slide.btn1TextEn || '');
+                              setBannerFormBtn1Link(slide.btn1Link || '');
+                              setBannerFormBtn2TextBn(slide.btn2TextBn || '');
+                              setBannerFormBtn2TextEn(slide.btn2TextEn || '');
+                              setBannerFormBtn2Link(slide.btn2Link || '');
+                              setBannerFormBtn3TextBn(slide.btn3TextBn || '');
+                              setBannerFormBtn3TextEn(slide.btn3TextEn || '');
+                              setBannerFormBtn3Link(slide.btn3Link || '');
+                              setBannerFormBgColorTint(slide.bgColorTint || '');
                               window.scrollTo({ top: 120, behavior: 'smooth' });
                             }}
                             className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg shrink-0 cursor-pointer font-bold"
@@ -2351,6 +2409,8 @@ export const AdminCMSDashboard: React.FC = () => {
                         setOfferFormTagBn('সীমিত সময়ের অফার');
                         setOfferFormTagEn('Limited Offer');
                         setOfferFormImage('https://images.unsplash.com/photo-1542838132-92c53300491e?w=500');
+                        setOfferFormLink('');
+                        setOfferFormCategorySlug('');
                         window.scrollTo({ top: 120, behavior: 'smooth' });
                       }}
                       className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg cursor-pointer font-bold shrink-0 shadow-sm"
@@ -2385,9 +2445,11 @@ export const AdminCMSDashboard: React.FC = () => {
                               setOfferFormTagBn(offer.tagBn);
                               setOfferFormTagEn(offer.tagEn);
                               setOfferFormImage(offer.image);
+                              setOfferFormLink(offer.link || '');
+                              setOfferFormCategorySlug(offer.categorySlug || '');
                               window.scrollTo({ top: 120, behavior: 'smooth' });
                             }}
-                            className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg shrink-0 cursor-pointer font-bold animate-pulse-slow"
+                            className="inline-flex items-center gap-1 text-[10px] p-1.5 px-3 border border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg shrink-0 cursor-pointer font-bold"
                           >
                             <Edit className="h-3 w-3 text-amber-600" />
                             Edit
@@ -2422,6 +2484,65 @@ export const AdminCMSDashboard: React.FC = () => {
                       <h3 className="text-sm font-bold text-gray-800 mt-1">
                         {editingBannerIndex !== null ? `স্লাইড নং-${editingBannerIndex + 1} পরিবর্তন করুন` : 'নতুন ব্যানার স্লাইড সংযুক্তি'}
                       </h3>
+                    </div>
+
+                    {/* Interactive Live Banner Preview Card */}
+                    <div className="relative h-44 rounded-2xl overflow-hidden border border-gray-200 my-2 shadow-inner font-sans bg-gray-50">
+                      {bannerFormImage ? (
+                        <img 
+                          src={bannerFormImage} 
+                          className="absolute inset-0 h-full w-full object-cover" 
+                          referrerPolicy="no-referrer" 
+                          alt="Banner Preview" 
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-slate-900 flex items-center justify-center text-gray-400 text-[10px]">
+                          [কোনো পটভূমি ছবি দেওয়া হয়নি / No BG URL Provided]
+                        </div>
+                      )}
+                      {/* Gradient overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-r ${bannerFormBgColorTint || 'from-black/80'} via-black/40 to-transparent z-10`} />
+                      
+                      {/* Banner Content elements */}
+                      <div className="absolute inset-0 z-20 p-4 flex flex-col justify-between text-white text-left">
+                        <div>
+                          {bannerFormBadgeBn && (
+                            <span className="inline-block text-[8px] bg-emerald-600/90 text-white font-extrabold px-1.5 py-0.5 rounded mb-1">
+                              🌱 {bannerFormBadgeBn}
+                            </span>
+                          )}
+                          <h4 className="text-xs sm:text-sm font-black text-white leading-tight line-clamp-1">
+                            {bannerFormTitleBn || '[বাংলা টাইটেল স্লোগান]'}
+                          </h4>
+                          <p className="text-[9px] text-gray-200 line-clamp-1 mt-0.5">
+                            {bannerFormSubtitleBn || '[বাংলা সাবটাইটেল]'}
+                          </p>
+                        </div>
+
+                        {/* Preview Buttons */}
+                        <div className="flex flex-wrap gap-1">
+                          {bannerFormBtn1TextBn && (
+                            <span className="text-[7px] bg-emerald-600 text-white font-extrabold px-1.5 py-0.5 rounded inline-block">
+                              {bannerFormBtn1TextBn}
+                            </span>
+                          )}
+                          {bannerFormBtn2TextBn && (
+                            <span className="text-[7px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded inline-block">
+                              {bannerFormBtn2TextBn}
+                            </span>
+                          )}
+                          {bannerFormBtn3TextBn && (
+                            <span className="text-[7px] bg-sky-500 text-white font-extrabold px-1.5 py-0.5 rounded inline-block">
+                              {bannerFormBtn3TextBn}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Preview Badge Indicator */}
+                      <span className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[8px] px-1.5 py-0.5 rounded z-30 font-bold tracking-wider font-mono">
+                        🖥 LIVE PREVIEW
+                      </span>
                     </div>
 
                     <div className="space-y-3 px-0.5 text-xs">
@@ -2476,6 +2597,90 @@ export const AdminCMSDashboard: React.FC = () => {
                         />
                       </div>
 
+                      <div className="grid grid-cols-2 gap-2 pb-1 text-xs">
+                        <div>
+                          <label className="block font-bold text-gray-655 mb-1">বাংলা ব্যাজ (Badge BN):</label>
+                          <input 
+                            type="text"
+                            value={bannerFormBadgeBn}
+                            onChange={(e) => setBannerFormBadgeBn(e.target.value)}
+                            placeholder="🌱 শতভাগ গ্যারান্টিড সতেজ"
+                            className="w-full rounded-xl border border-gray-200 p-2"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-gray-655 mb-1">ডিজাইন ব্যাকগ্রাউন্ড টিন্ট (Tailwind Class):</label>
+                          <input 
+                            type="text"
+                            value={bannerFormBgColorTint}
+                            onChange={(e) => setBannerFormBgColorTint(e.target.value)}
+                            placeholder="from-black/80"
+                            className="w-full rounded-xl border border-gray-200 p-2 font-mono text-[10px]"
+                            title=" Tailwind gradient class যেমন: from-indigo-950/85"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-100 pt-2 space-y-2">
+                        <span className="block font-bold text-emerald-800 text-[10px] uppercase font-mono">CTA  বাটন ১ (Primary Button)</span>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <input 
+                            type="text"
+                            value={bannerFormBtn1TextBn}
+                            onChange={(e) => setBannerFormBtn1TextBn(e.target.value)}
+                            placeholder="বাটন ১ টেক্সট (পণ্য কিনুন)"
+                            className="w-full rounded-xl border border-gray-200 p-2"
+                          />
+                          <input 
+                            type="text"
+                            value={bannerFormBtn1Link}
+                            onChange={(e) => setBannerFormBtn1Link(e.target.value)}
+                            placeholder="shop, combo বা URL"
+                            className="w-full rounded-xl border border-gray-200 p-2 font-mono text-[10px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-100 pt-2 space-y-2">
+                        <span className="block font-bold text-emerald-800 text-[10px] uppercase font-mono">CTA বাটন ২ (Secondary Button)</span>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <input 
+                            type="text"
+                            value={bannerFormBtn2TextBn}
+                            onChange={(e) => setBannerFormBtn2TextBn(e.target.value)}
+                            placeholder="বাটন ২ টেক্সট (সাপ্তাহিক বাস্কেট)"
+                            className="w-full rounded-xl border border-gray-200 p-2"
+                          />
+                          <input 
+                            type="text"
+                            value={bannerFormBtn2Link}
+                            onChange={(e) => setBannerFormBtn2Link(e.target.value)}
+                            placeholder="combo, shop, বা URL"
+                            className="w-full rounded-xl border border-gray-200 p-2 font-mono text-[10px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-100 pt-2 space-y-2">
+                        <span className="block font-bold text-emerald-800 text-[10px] uppercase font-mono">CTA বাটন ৩ (WhatsApp Contact)</span>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <input 
+                            type="text"
+                            value={bannerFormBtn3TextBn}
+                            onChange={(e) => setBannerFormBtn3TextBn(e.target.value)}
+                            placeholder="বাটন ৩ টেক্সট (WhatsApp অর্ডার)"
+                            className="w-full rounded-xl border border-gray-200 p-2"
+                          />
+                          <input 
+                            type="text"
+                            value={bannerFormBtn3Link}
+                            onChange={(e) => setBannerFormBtn3Link(e.target.value)}
+                            placeholder="https://wa.me/..."
+                            className="w-full rounded-xl border border-gray-200 p-2 font-mono text-[10px]"
+                          />
+                        </div>
+                      </div>
+
                       <div className="flex gap-2 pt-2">
                         {editingBannerIndex !== null && (
                           <button
@@ -2486,8 +2691,20 @@ export const AdminCMSDashboard: React.FC = () => {
                               setBannerFormTitleEn('');
                               setBannerFormSubtitleBn('');
                               setBannerFormSubtitleEn('');
+                              setBannerFormBadgeBn('');
+                              setBannerFormBadgeEn('');
+                              setBannerFormBtn1TextBn('');
+                              setBannerFormBtn1TextEn('');
+                              setBannerFormBtn1Link('');
+                              setBannerFormBtn2TextBn('');
+                              setBannerFormBtn2TextEn('');
+                              setBannerFormBtn2Link('');
+                              setBannerFormBtn3TextBn('');
+                              setBannerFormBtn3TextEn('');
+                              setBannerFormBtn3Link('');
+                              setBannerFormBgColorTint('');
                             }}
-                            className="w-1/3 py-2 border rounded-xl hover:bg-gray-100 text-[10px] font-bold text-gray-500 cursor-pointer text-center"
+                            className="w-1/3 py-2 border rounded-xl hover:bg-gray-100 text-[10px] font-bold text-gray-500 cursor-pointer text-center font-bold"
                           >
                             বাতিল
                           </button>
@@ -2500,7 +2717,19 @@ export const AdminCMSDashboard: React.FC = () => {
                               titleBn: bannerFormTitleBn,
                               titleEn: bannerFormTitleEn,
                               subtitleBn: bannerFormSubtitleBn,
-                              subtitleEn: bannerFormSubtitleEn
+                              subtitleEn: bannerFormSubtitleEn,
+                              badgeBn: bannerFormBadgeBn,
+                              badgeEn: bannerFormBadgeEn,
+                              btn1TextBn: bannerFormBtn1TextBn,
+                              btn1TextEn: bannerFormBtn1TextEn,
+                              btn1Link: bannerFormBtn1Link,
+                              btn2TextBn: bannerFormBtn2TextBn,
+                              btn2TextEn: bannerFormBtn2TextEn,
+                              btn2Link: bannerFormBtn2Link,
+                              btn3TextBn: bannerFormBtn3TextBn,
+                              btn3TextEn: bannerFormBtn3TextEn,
+                              btn3Link: bannerFormBtn3Link,
+                              bgColorTint: bannerFormBgColorTint
                             };
 
                             if (editingBannerIndex !== null) {
@@ -2517,6 +2746,18 @@ export const AdminCMSDashboard: React.FC = () => {
                             setBannerFormTitleEn('');
                             setBannerFormSubtitleBn('');
                             setBannerFormSubtitleEn('');
+                            setBannerFormBadgeBn('');
+                            setBannerFormBadgeEn('');
+                            setBannerFormBtn1TextBn('');
+                            setBannerFormBtn1TextEn('');
+                            setBannerFormBtn1Link('');
+                            setBannerFormBtn2TextBn('');
+                            setBannerFormBtn2TextEn('');
+                            setBannerFormBtn2Link('');
+                            setBannerFormBtn3TextBn('');
+                            setBannerFormBtn3TextEn('');
+                            setBannerFormBtn3Link('');
+                            setBannerFormBgColorTint('');
                           }}
                           className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm cursor-pointer text-center font-bold"
                         >
@@ -2634,6 +2875,49 @@ export const AdminCMSDashboard: React.FC = () => {
                               onChange={(e) => setOfferFormCtaEn(e.target.value)}
                               className="w-full rounded-xl border border-gray-200 p-2.5 text-xs font-mono text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition"
                             />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-3">
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">লিংক অ্যাকশন (Redirect Action):</label>
+                            <select 
+                              value={offerFormLink} 
+                              onChange={(e) => {
+                                setOfferFormLink(e.target.value);
+                                if (e.target.value !== '') {
+                                  setOfferFormCategorySlug(''); // clear category slug if redirect link action is chosen
+                                }
+                              }}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition bg-white"
+                            >
+                              <option value="">কোনোটিই নয় / No Action</option>
+                              <option value="premium">💎 কৃষাণ মেম্বারশিপ স্ক্রীন</option>
+                              <option value="combo">📦 ফ্যামিলি কম্বো বাস্কেট সেকশন</option>
+                              <option value="shop">🛒 সতেজ বাজার (Shop All)</option>
+                              <option value="our-story">🌾 আমাদের গল্প পেজ</option>
+                              <option value="home">🏡 হোমপেজ</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block font-bold text-gray-600 mb-1 font-sans">নির্দিষ্ট ক্যাটাগরি ও ফিল্টার লিঙ্ক:</label>
+                            <select 
+                              value={offerFormCategorySlug} 
+                              onChange={(e) => {
+                                setOfferFormCategorySlug(e.target.value);
+                                if (e.target.value !== '') {
+                                  setOfferFormLink(''); // clear link action if category slug is chosen
+                                }
+                              }}
+                              className="w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 focus:ring-2 focus:ring-amber-100 outline-none transition bg-white"
+                            >
+                              <option value="">কোনোটিই নয় / Select Category</option>
+                              {categories?.map((cat) => (
+                                <option key={cat.slug} value={cat.slug}>
+                                  🌿 {cat.nameBn} ({cat.slug})
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </div>
@@ -3583,6 +3867,98 @@ export const AdminCMSDashboard: React.FC = () => {
                         className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
                         value={settingsForm.footerCopyrightBn}
                         onChange={(e) => setSettingsForm({ ...settingsForm, footerCopyrightBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section CC: A to Z Layout Section Title Customizers */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-3 font-sans md:col-span-2">
+                  <h3 className="font-black text-emerald-850 border-b border-gray-100 pb-2 uppercase tracking-wider flex items-center gap-1.5 font-bold">
+                    🎨 সকল মেইন পেজ সেকশন টাইটেল এবং ডিজাইন Customizer (CMS)
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">ফ্যামিলি কম্বো বাস্কেট সেকশন টাইটেল (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.sectionComboTitleBn || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sectionComboTitleBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">কম্বো বাস্কেট সেকশন সাবটাইটেল (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.sectionComboSubtitleBn || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sectionComboSubtitleBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">তাজা অফার ও বাজার সেকশন টাইটেল (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.sectionMarketTitleBn || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sectionMarketTitleBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">তাজা অফার সেকশন সাবটাইটেল (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.sectionMarketSubtitleBn || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sectionMarketSubtitleBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">ক্যাটাগরি সেকশন টাইটেল (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.sectionCategoriesTitleBn || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sectionCategoriesTitleBn: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">ক্যাটাগরি সেকশন সাবটাইটেল (বাংলা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none"
+                        value={settingsForm.sectionCategoriesSubtitleBn || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, sectionCategoriesSubtitleBn: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-3 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">গ্লোবাল কন্টাক্ট এবং WhatsApp নম্বর (শুধুমাত্র সংখ্যা)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none font-mono text-[10px]"
+                        value={settingsForm.whatsappContactNumber || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, whatsappContactNumber: e.target.value })}
+                        placeholder="e.g. 01931355398"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 mb-1">ব্র্যান্ড মেইন প্রাইমারী কালার (Tailwind Class)</label>
+                      <input
+                        type="text"
+                        className="w-full rounded-xl border border-gray-200 py-2 px-3 bg-white outline-none font-mono text-[10px]"
+                        value={settingsForm.primaryBrandColor || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, primaryBrandColor: e.target.value })}
+                        placeholder="e.g. emerald-650"
                       />
                     </div>
                   </div>

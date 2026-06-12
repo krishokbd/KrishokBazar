@@ -30,7 +30,7 @@ const categoryThemeMap: Record<string, { bg: string; text: string; icon: string;
 };
 
 export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ selectedCategory, onSelectCategory }) => {
-  const { categories } = useApp();
+  const { categories, siteSettings } = useApp();
 
   return (
     <section className="py-8 bg-gray-50/50">
@@ -39,9 +39,11 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ selectedCategory
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-bottom justify-between gap-2 mb-6">
           <div>
-            <span className="text-xs font-bold text-emerald-600 tracking-wider uppercase block">পণ্য ও শ্রেণীবিভাগ</span>
+            <span className="text-xs font-bold text-emerald-600 tracking-wider uppercase block">
+              {siteSettings?.sectionCategoriesSubtitleBn || 'পণ্য ও শ্রেণীবিভাগ'}
+            </span>
             <h2 className="text-2xl font-black text-gray-800 tracking-tight font-sans mt-0.5">
-              ক্যাটাগরি অনুযায়ী শপিং করুন
+              {siteSettings?.sectionCategoriesTitleBn || 'ক্যাটাগরি অনুযায়ী শপিং করুন'}
             </h2>
           </div>
           <p className="text-xs text-gray-400 font-mono tracking-wide max-w-xs self-end">

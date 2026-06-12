@@ -25,10 +25,15 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery
 }) => {
-  const { currentUser, logout, cart, language, toggleLanguage } = useApp();
+  const { currentUser, logout, cart, language, toggleLanguage, harvestAlerts } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [hasUnreadAlerts, setHasUnreadAlerts] = useState(true);
+  const [isPushEnabled, setIsPushEnabled] = useState(
+    typeof window !== 'undefined' ? ('Notification' in window && Notification.permission === 'granted') : false
+  );
 
   const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -255,14 +260,156 @@ export const Header: React.FC<HeaderProps> = ({
               <Download className="h-4.5 w-4.5" />
             </button>
 
-            {/* NOTIFICATION TEST TRIGGER */}
-            <button
-              onClick={handleTriggerPushNotification}
-              className="rounded-2xl border border-gray-100 p-2 text-gray-650 bg-gray-50/50 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition-all cursor-pointer"
-              title="পুশ নোটিফিকেশন চালু / টেস্ট করুন"
-            >
-              <Bell className="h-4.5 w-4.5" />
-            </button>
+            {/* NOTIFICATION INTERACTIVE BELL & DROPDOWN */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setNotificationsOpen(!notificationsOpen);
+                  setHasUnreadAlerts(false);
+                }}
+                className={`relative rounded-2xl border p-2 transition-all cursor-pointer flex items-center justify-center ${notificationsOpen ? 'bg-amber-50 border-amber-300 text-amber-700 ring-2 ring-amber-100' : 'border-gray-100 text-gray-650 bg-gray-50/50 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200'}`}
+                title="সোনালী ফসলসংগ্রহ এলার্ট ও নোটিফিকেশন"
+              >
+                <Bell className={`h-4.5 w-4.5 ${hasUnreadAlerts && harvestAlerts?.length > 0 ? 'animate-bounce-subtle' : ''}`} />
+                {hasUnreadAlerts && harvestAlerts?.length > 0 && (
+                  <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                )}
+              </button>
+              
+              {/* FLOATING DROPDOWN LIST */}
+              {notificationsOpen && (
+                <div 
+                  className="absolute right-0 mt-3 w-80 sm:w-[420px] rounded-3xl bg-white border border-gray-150 shadow-2xl p-4 z-50 text-gray-800 animate-fadeIn"
+                  style={{ boxShadow: '0 20px 40px -15px rgba(0,0,0,0.15)' }}
+                >
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-black text-xs sm:text-[13px] text-gray-850">
+                        {language === 'en' ? 'Seasonal Crop Alerts 🌾' : 'সোনালী ফসলসংগ্রহ এলার্ট 🌾'}
+                      </span>
+                      <span className="text-[10px] bg-amber-500 text-white font-black px-2 py-0.5 rounded-full">
+                        {harvestAlerts?.length || 0} Live
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => setNotificationsOpen(false)}
+                      className="text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50 p-1 transition cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Push Notification Toggle Button */}
+                  <div className="bg-amber-50/50 rounded-2xl border border-amber-100/70 p-3 mb-3 flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-black text-amber-950 leading-snug">
+                          {language === 'en' ? 'Live Harvest Push Alerts' : 'লাইভ ফসলসংগ্রহ পুশ বিজ্ঞপ্তি'}
+                        </p>
+                        <p className="text-[9px] text-amber-800/85 leading-normal mt-[2px]">
+                          {language === 'en' ? 'Receive instant browser alerts when crops are harvested.' : 'কৃষক মাঠে ফসল কাটার সাথে সাথে তাৎক্ষণিক আপডেট পান।'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await handleTriggerPushNotification();
+                          setIsPushEnabled(typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted');
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all shrink-0 ${isPushEnabled ? 'bg-emerald-600 hover:bg-emerald-750 text-white shadow-3xs' : 'bg-amber-600 text-white hover:bg-amber-700 hover:scale-102 flex items-center gap-1'}`}
+                      >
+                        {isPushEnabled 
+                          ? (language === 'en' ? '✓ Active' : '✓ সচল রয়েছে') 
+                          : (language === 'en' ? 'Enable Now' : 'চালু করুন 🔔')
+                        }
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* List of Alerts */}
+                  <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 pr-1 space-y-2.5">
+                    {(!harvestAlerts || harvestAlerts.length === 0) ? (
+                      <div className="text-center py-8 text-gray-400">
+                        <Bell className="h-8 w-8 mx-auto stroke-1 mb-2 text-gray-300" />
+                        <p className="text-xs font-bold">
+                          {language === 'en' ? 'No active seasonal alerts.' : 'বর্তমানে কোনো সক্রিয় বিজ্ঞপ্তি নেই।'}
+                        </p>
+                      </div>
+                    ) : (
+                      harvestAlerts.map((alert) => {
+                        const isJustHarvested = alert.statusEn === 'Just Harvested';
+                        const isTomorrow = alert.statusEn === 'Harvesting Tomorrow';
+                        
+                        return (
+                          <div key={alert.id} className="pt-2.5 first:pt-0 flex gap-3 items-start">
+                            <div className="h-11 w-11 rounded-xl overflow-hidden border border-gray-100 shrink-0 shadow-3xs">
+                              <img 
+                                src={alert.imageUrl} 
+                                alt={alert.cropNameBn} 
+                                className="h-full w-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-full uppercase leading-none ${
+                                  isJustHarvested 
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                    : isTomorrow 
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200 animate-pulse' 
+                                      : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                }`}>
+                                  {language === 'en' ? alert.statusEn : alert.statusBn}
+                                </span>
+                                <span className="text-[8.5px] text-gray-400 font-bold font-sans">
+                                  {alert.harvestDate}
+                                </span>
+                              </div>
+                              <h5 className="text-[11px] font-black text-gray-800 leading-tight mt-1 font-sans">
+                                {language === 'en' ? alert.cropNameEn : alert.cropNameBn}
+                              </h5>
+                              <p className="text-[9.5px] text-gray-500 leading-normal mt-[2px] line-clamp-2">
+                                {language === 'en' ? alert.descriptionEn : alert.descriptionBn}
+                              </p>
+                              
+                              {/* Direct Crop link details and navigation */}
+                              <div className="mt-1 bg-gray-50 p-1.5 rounded-xl flex items-center justify-between gap-2 border border-gray-100">
+                                <span className="text-[8.5px] text-emerald-750 font-extrabold truncate">
+                                  🚜 {alert.farmerName} ({language === 'en' ? alert.district : `${alert.district}`})
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setNotificationsOpen(false);
+                                    setView('shop');
+                                    // Extract first word of crop name to match in product search query
+                                    const searchPhrase = (language === 'en' ? alert.cropNameEn : alert.cropNameBn).split(' ')[0];
+                                    setSearchQuery(searchPhrase);
+                                  }}
+                                  className="text-[8.5px] font-black text-white hover:bg-emerald-750 bg-emerald-650 px-2 py-0.5 rounded-md transition cursor-pointer"
+                                >
+                                  {language === 'en' ? 'Buy Now' : 'কিনুন 🛍️'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-2.5 mt-2.5 text-center">
+                    <p className="text-[9px] text-gray-400 font-extrabold uppercase tracking-wide">
+                      {language === 'en' 
+                        ? 'DAALAL-MUKT DIRECT AGRI ANNOUNCEMENTS' 
+                        : 'দালাল-মুক্ত সরাসরি কৃষক বাজার নোটিফিকেশন সিস্টেম'
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* RIKTAZ AI OFFICIAL TRIGGER WITH LOGO */}
             <button

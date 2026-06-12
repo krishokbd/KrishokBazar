@@ -618,6 +618,14 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   premiumMembershipPriceUSD: 5,
   premiumMembershipPriceBDT: 600,
   premiumFreeDeliveryActive: true,
-  premiumReadyToCookOptionActive: true
+  premiumReadyToCookOptionActive: true,
+  sectionComboTitleBn: 'সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট',
+  sectionComboSubtitleBn: 'সরাসরি কৃষকের মাঠের বাছাই করা তাজা কম্বো বাস্কেট অফারসমূহ। বিস্তারিত বিবরণ ও উপাদান তালিকা ওজনের সাথে বিস্তারিত পাতায় দেখে নিন।',
+  sectionMarketTitleBn: 'আজকের সতেজ কৃষিপণ্য বাজার (Daily Fresh Market)',
+  sectionMarketSubtitleBn: 'ভোরাই সরাসরি খামার থেকে কুরিয়ার করে ঢাকায় আনা শতভাগ সতেজ ও রাসায়নিক মুক্ত কৃষিপণ্য। সঠিক ওজন ও নিরাপদ খাদ্যের নিশ্চয়তা।',
+  sectionCategoriesTitleBn: 'পণ্য ক্যাটাগরি অনুযায়ী শপিং করুন',
+  sectionCategoriesSubtitleBn: 'তাজা শাকসবজি থেকে শুরু করে খাঁটি মধু, দেশী চাল ও ডালের ক্যাটাগরি সমূহ নির্বিঘ্নে অন্বেষণ করুন।',
+  whatsappContactNumber: '01931355398',
+  primaryBrandColor: 'emerald-600'
 };
 

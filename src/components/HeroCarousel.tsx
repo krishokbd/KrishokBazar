@@ -53,7 +53,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFar
               }`}
             >
               {/* Overlay Gradient to protect readability */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
+              <div className={`absolute inset-0 bg-gradient-to-r ${banner.bgColorTint || 'from-black/80'} via-black/40 to-transparent z-10`} />
               
               <img
                 src={banner.image}
@@ -65,7 +65,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFar
               {/* Dynamic Content Overlay - Centered on Mobile, Left-bound on Desktop */}
               <div className="absolute inset-x-0 bottom-0 top-0 z-20 flex flex-col justify-center px-6 sm:px-12 md:px-24 text-white max-w-4xl">
                 <span className="inline-flex self-start items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-emerald-50 mb-3 border border-emerald-500 animate-pulse">
-                  🌱 শতভাগ গ্যারান্টিড সতেজ
+                  🌱 {banner.badgeBn || 'শতভাগ গ্যারান্টিড সতেজ'}
                 </span>
                 
                 <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight font-sans leading-tight">
@@ -83,29 +83,43 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFar
                 {/* CALL TO ACTION BUTTONS */}
                 <div className="mt-6 flex flex-wrap gap-2 sm:gap-4">
                   <button
-                    onClick={onShopNow}
+                    onClick={() => {
+                      if (banner.btn1Link === 'combo') {
+                        document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
+                      } else if (banner.btn1Link && banner.btn1Link.startsWith('http')) {
+                        window.open(banner.btn1Link, '_blank');
+                      } else {
+                        onShopNow();
+                      }
+                    }}
                     className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-5 py-3 text-xs sm:text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-sans"
                   >
                     <ShoppingBag className="h-4 w-4" />
-                    পণ্য কিনুন
+                    {banner.btn1TextBn || 'পণ্য কিনুন'}
                   </button>
                   <button
                     onClick={() => {
-                      document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
+                      if (banner.btn2Link && banner.btn2Link.startsWith('http')) {
+                        window.open(banner.btn2Link, '_blank');
+                      } else if (banner.btn2Link === 'shop') {
+                        onShopNow();
+                      } else {
+                        document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
+                      }
                     }}
                     className="flex items-center gap-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 px-4 py-3 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                   >
                     <Users className="h-4 w-4" />
-                    সাপ্তাহিক বাস্কেট
+                    {banner.btn2TextBn || 'সাপ্তাহিক বাস্কেট'}
                   </button>
                   <a
-                    href="https://wa.me/8801931355398?text=%E0%A6%86%E0%A6%B8%E0%A6%B8%E0%A6%BE%E0%A6%B2%E0%A6%BE%E0%A6%AE%E0%A7%81%20%E0%A6%86%E0%A6%B2%E0%A6%BE%E0%A6%8Raw%E2%80%8D%E0%A6%95%E0%A7%81%E0%A6%AE%E0%A6%8C%20%E0%A6%86%E0%A6%AE%E0%A6%BF%20%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95%20%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0%20%E0%A6%A5%E0%A7%87%E0%A6%95%E0%A7%87%20%E0%A6%B8%E0%A6%BE%E0%A6%AA%E0%A7%8D%E0%A6%A4%E0%A6%BE%E0%A6%B9%E0%A6%BF%E0%A6%95%20%E0%A6%AC%E0%A6%BE%E0%A6%B8%E0%A7%8D%E0%A6%95%E0%A7%87%E0%A6%9F%20%E0%A6%AC%E0%A6%BE%20%E0%A6%AA%E0%A6%A3%E0%A7%8D%E0%A6%AF%20%E0%A6%93%E0%A6%B0%E0%A7%8D%E0%A6%A1%E0%A6%BE%E0%A6%B0%20%E0%A6%95%E0%A6%B0%E0%A6%A4%E0%A7%87%20%E0%A6%96%E0%A6%BE%E0%A6%87%E0%A7%8D"
+                    href={banner.btn3Link || "https://wa.me/8801931355398"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 rounded-xl bg-green-500 hover:bg-green-600 px-4 py-3 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center text-white"
                   >
                     <PhoneCall className="h-4 w-4" />
-                    WhatsApp অর্ডার
+                    {banner.btn3TextBn || 'WhatsApp অর্ডার'}
                   </a>
                 </div>
               </div>

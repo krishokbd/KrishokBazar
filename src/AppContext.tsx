@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment } from './types';
+import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert } from './types';
 import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
@@ -15,6 +15,9 @@ import { supabaseService } from './lib/supabaseService';
 interface AppContextType {
   farmers: Farmer[];
   products: Product[];
+  harvestAlerts: HarvestAlert[];
+  addHarvestAlert: (cropNameBn: string, cropNameEn: string, farmerName: string, district: string, imageUrl: string, statusBn: HarvestAlert['statusBn'], statusEn: HarvestAlert['statusEn'], harvestDate: string, descriptionBn: string, descriptionEn: string, productId?: string) => void;
+  deleteHarvestAlert: (alertId: string) => void;
   orders: Order[];
   reviews: Review[];
   currentUser: User | null;
@@ -384,54 +387,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const COMBO_BASKETS_DEFAULT: Product[] = [
     {
       id: 'cb1',
-      title: 'সাপ্তাহিক রেশনের বাজেট কম্বো বাস্কেট',
-      description: 'গোল লাল আলু ২ কেজি, তাল বেগুন ১ কেজি, দেশী পেঁয়াজ ১ কেজি, রসুনের সেরা কোয়ালিটি ২৫০ গ্রাম, তাজা ধনে পাতা ২৫০ গ্রাম, কাঁচামরিচ ২৫০ গ্রাম, নরম কচি লম্বা লাউ ১টি।',
+      title: 'সাপ্তাহিক বাজেট কো-অপ সস্তাই বাস্কেট (Budget Offer)',
+      description: 'বাজেট সচেতন ডাল-ভাতের বাঙালি পরিবারের ১ সপ্তাহের সেরা তাজা সবজির কমপ্লিট সল্যুশন! গোল লাল আলু ২ কেজি, বেগুন ১ কেজি, দেশী পেঁয়াজ ১ কেজি, রসুনের সেরা কোয়ালিটি ২৫০ গ্রাম, তাজা ধনে পাতা ২৫০ গ্রাম, কচি কাঁচামরিচ ২৫০ গ্রাম, ও কচি লম্বা লতা লাউ ১টি।',
       price: 550,
-      discountPrice: 490,
+      discountPrice: 500,
       category: 'ready-to-cook',
       farmerId: 'f5',
       farmerName: 'Fazle Rabbi',
       farmName: 'Fazle Rabbi অর্গানিক এগ্রো',
       rating: 4.9,
       stock: 25,
-      images: ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80'],
+      images: [
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80'
+      ],
       isVerified: true,
       isReadyToCook: true,
-      harvestDate: 'May 30, 2026'
+      harvestDate: 'June 12, 2026'
     },
     {
       id: 'cb2',
-      title: 'ফ্যামিলি সাইজ প্রিমিয়াম সবজি কম্বো বাস্কেট',
-      description: 'গোল কড়া সাদা ফুলকপি ২টি, তাজা কচি বাঁধাকপি ২টি, লাল আলু ৩ কেজি, নরম তাল বেগুন ২ কেজি, মিষ্টি তাজা গাজর ১ কেজি, লাল টমেটো ২ কেজি, কচি পটল ১ কেজি, কড়া সুগন্ধি লেবু ১ ডজন।',
-      price: 980,
-      discountPrice: 850,
+      title: 'ফ্যামিলি সাইজ প্রিমিয়াম কম্বো বাস্কেট (Standard Family)',
+      description: 'মাঝারি বাঙালি পরিবারের ১ সপ্তাহের সেরা সতেজ পুষ্টির ডাবল অফার! বড় কড়া ফুলকপি ২টি, তাজা কচি বাঁধাকপি ২টি, লাল আলু ৩ কেজি, নরম তাল বেগুন ২ কেজি, মিষ্টি তাজা গাজর ১ কেজি, টসটসে লাল টমেটো ২ কেজি, কচি পটল ১ কেজি, এবং সুগন্ধি কাগজি লেবু ১২টি।',
+      price: 1100,
+      discountPrice: 1000,
       category: 'ready-to-cook',
       farmerId: 'f12',
       farmerName: 'Ayesha Begum',
       farmName: 'Ayesha Begum অর্গানিক এগ্রো',
       rating: 4.8,
       stock: 18,
-      images: ['https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80'],
+      images: [
+        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1000&auto=format&fit=crop&q=80'
+      ],
       isVerified: true,
       isReadyToCook: true,
-      harvestDate: 'May 29, 2026'
+      harvestDate: 'June 12, 2026'
     },
     {
       id: 'cb3',
-      title: 'ফিটনেস ও ওয়েট লস গ্রিন কম্বো বাস্কেট',
-      description: 'মিষ্টি কচি পেঁপে ২ কেজি, রসালো টাটকা শসা ২ কেজি, বড় তেতো করলা ১ কেজি, কচি মিষ্টি পানি লাউ ১টি, ডাঁটা শাক ৩ আঁটি, লাল শাক ৩ আঁটি, টক সুগন্ধি লেবু ১ ডজন।',
-      price: 780,
-      discountPrice: 690,
+      title: 'মেগা ডেক্স মেম্বার ফ্যামিলি বাস্কেট (Elite Basket)',
+      description: 'বড় ও পুষ্টি সচেতন সুখী যৌথ পরিবারের ১৫ দিনের সমৃদ্ধ কম্বো প্যাক! ৩ কেজি ঐতিহ্যবাহী বালাম চাল, ১ কেজি লাল আটা, ২ কেজি ব্রকলি ও ফুলকপি, দেশী তাল বেগুন ২ কেজি, গাজর ২ কেজি, শসা ২ কেজি, ঘানি ভাঙা খাঁটি সর্ষের তেল ১ লিটার, ও মিষ্টি লেবু ১ ডজন।',
+      price: 1650,
+      discountPrice: 1500,
       category: 'ready-to-cook',
       farmerId: 'f23',
       farmerName: 'Sultana Razia',
       farmName: 'Sultana Razia অর্গানিক এগ্রো',
       rating: 5.0,
       stock: 15,
-      images: ['https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80'],
+      images: [
+        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1000&auto=format&fit=crop&q=80'
+      ],
       isVerified: true,
       isReadyToCook: true,
-      harvestDate: 'May 30, 2026'
+      harvestDate: 'June 12, 2026'
+    },
+    {
+      id: 'cb4',
+      title: 'সুপ্রিম রিচ ফ্যামিলি উৎসব সুপার বাস্কেট (Supreme Combo)',
+      description: 'উৎসবের সতেজ আনন্দ ঘরে নিয়ে আসার মাসের সেরা আয়োজন! ১ কেজি চাক ভাঙা সুন্দরবনের খাঁটি মধু, ৫ কেজি চিনিগুঁড়া সুগন্ধি বাসমতি চাল, ২ লিটার খাঁটি সর্ষের তেল, ৩ কেজি নতুন লাল আলু, ৩ কেজি তাজা টমেটো, ২ কেজি কচি লাউ, এবং ২ কেজি পাহাড়ি সবুজ মাল্টা।',
+      price: 2200,
+      discountPrice: 2000,
+      category: 'ready-to-cook',
+      farmerId: 'f12',
+      farmerName: 'Ayesha Begum',
+      farmName: 'Ayesha Begum অর্গানিক এগ্রো',
+      rating: 4.9,
+      stock: 12,
+      images: [
+        'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80'
+      ],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'June 12, 2026'
     }
   ];
 
@@ -445,14 +489,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem('kb_products', JSON.stringify(demoProducts));
     }
     
-    const hasCb = base.some((p: any) => p.id === 'cb1');
-    if (!hasCb) {
-      const fullList = [...COMBO_BASKETS_DEFAULT, ...base];
-      const sortedList = sortProductsBySerial(fullList);
-      localStorage.setItem('kb_products', JSON.stringify(sortedList));
-      return sortedList;
-    }
-    return sortProductsBySerial(base);
+    // Extract non-combo items and insert the 4 upgraded combo baskets cleanly so they are always in sync
+    const baseWithoutCombos = base.filter((p: any) => !p.id.startsWith('cb'));
+    const fullList = [...COMBO_BASKETS_DEFAULT, ...baseWithoutCombos];
+    const sortedList = sortProductsBySerial(fullList);
+    
+    localStorage.setItem('kb_products', JSON.stringify(sortedList));
+    return sortedList;
   });
 
   const DEFAULT_POSTS: FarmerPost[] = [
@@ -503,6 +546,78 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date(Date.now() - 43200000).toISOString()
     }
   ];
+
+  const DEFAULT_HARVEST_ALERTS: HarvestAlert[] = [
+    {
+      id: 'ha-1',
+      cropNameBn: 'রাজশাহীর ল্যাংড়া ও গোপালভোগ আম',
+      cropNameEn: 'Himsagar & Lengra Mangoes from Rajshahi',
+      farmerName: 'Abdur Rahman',
+      district: 'Rajshahi',
+      imageUrl: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80',
+      statusBn: 'সদ্য সংগৃহীত',
+      statusEn: 'Just Harvested',
+      harvestDate: 'June 12, 2026',
+      descriptionBn: 'আমের রাজা হিমসাগর ও ল্যাংড়া আম এখন সম্পূর্ণ প্রাকৃতিক উপায়ে ডালপাকা মিষ্টি স্বাদে ভরপুর। সরাসরি খামারি আব্দুর রহমানের বাগান থেকে পেড়ে ২৪ ঘন্টায় পৌঁছাবে আপনার ঘরে!',
+      descriptionEn: 'The king of mangoes, Himsagar and Lengra, is ready. Sourced directly from grower Abdur Rahmans orchard, they will reach your home in pristine fresh condition.',
+      productId: 'p1',
+      createdAt: new Date(Date.now() - 3600000).toISOString()
+    },
+    {
+      id: 'ha-2',
+      cropNameBn: 'কুষ্টিয়ার সতেজ ফুলকপি ও শীতকালীন সবজি',
+      cropNameEn: 'Fresh Organic Cauliflower from Kushtia',
+      farmerName: 'Fazle Rabbi',
+      district: 'Kushtia',
+      imageUrl: 'https://images.unsplash.com/photo-1568584711271-6c929fb49b60?w=600&auto=format&fit=crop&q=80',
+      statusBn: 'আগামীকাল সংগ্রহ',
+      statusEn: 'Harvesting Tomorrow',
+      harvestDate: 'June 13, 2026',
+      descriptionBn: 'সম্পূর্ণ অর্গ্যানিক পদ্ধতিতে উৎপাদিত কুষ্টিয়ার সতেজ ফুলকপি ক্ষেত থেকে সরাসরি তোলা হচ্ছে আগামীকাল ভোরে। কোনো কেমিক্যাল বা ফরমালিন নেই। এখনই বুকিং দিন।',
+      descriptionEn: 'Grown with zero chemicals, these fresh Kushtia cauliflowers are being harvested tomorrow morning. Pre-book to claim your fresh batch.',
+      productId: 'cb2',
+      createdAt: new Date(Date.now() - 4 * 3600000).toISOString()
+    },
+    {
+      id: 'ha-3',
+      cropNameBn: 'মাগুরার লাল টুকটুকে বেদানা ও বোম্বাই লিচু',
+      cropNameEn: 'Red Bedana Litchi Selection from Magura',
+      farmerName: 'Parvez Mosharrof',
+      district: 'Magura',
+      imageUrl: 'https://images.unsplash.com/photo-1421167418805-7f170a738eb4?w=600&auto=format&fit=crop&q=80',
+      statusBn: 'আসন্ন',
+      statusEn: 'Upcoming',
+      harvestDate: 'June 20, 2026',
+      descriptionBn: 'লাল টসটসে মিষ্টি বোম্বাই লিচু সংগ্রহের প্রস্তুতি চলছে। খামারি পারভেজের বাগান থেকে সরাসরি প্রি-বুকিং ডিল। আগামী সপ্তাহে প্রথম চালান তোলা হবে।',
+      descriptionEn: 'Juicy, deep crimson Bedana litchis are ripening and preparation for harvest is underway. Sourced directly from farmer Parvez.',
+      productId: 'p4',
+      createdAt: new Date(Date.now() - 12 * 3600000).toISOString()
+    },
+    {
+      id: 'ha-4',
+      cropNameBn: 'সুন্দরবনের খাঁটি চাকভাঙ্গা প্রাকৃতিক খলিশা মধু',
+      cropNameEn: 'Sundarbans Pure Khālisha Wild Flower Honey',
+      farmerName: 'Moul Bakul Sardar',
+      district: 'Satkhira',
+      imageUrl: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=600&auto=format&fit=crop&q=80',
+      statusBn: 'সদ্য সংগৃহীত',
+      statusEn: 'Just Harvested',
+      harvestDate: 'June 10, 2026',
+      descriptionBn: 'সুন্দরবনের গভীর থেকে সদ্য সংগৃহীত খাঁটি সোনালী চাকের মধু। কোনো প্রিজারভেটিভ বা বাড়তি চিনি মেলানো হয়নি। ল্যাব টেস্টে ১০০% খাঁটি প্রমাণিত।',
+      descriptionEn: 'Pure and organic wild flower honey directly harvested by expert honey hunters in Sundarbans forest. Chemically verified and completely raw.',
+      productId: 'p3',
+      createdAt: new Date(Date.now() - 24 * 3600000).toISOString()
+    }
+  ];
+
+  const [harvestAlerts, setHarvestAlerts] = useState<HarvestAlert[]>(() => {
+    const saved = localStorage.getItem('kb_harvest_alerts');
+    return saved ? JSON.parse(saved) : DEFAULT_HARVEST_ALERTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('kb_harvest_alerts', JSON.stringify(harvestAlerts));
+  }, [harvestAlerts]);
 
   const [posts, setPosts] = useState<FarmerPost[]>(() => {
     const saved = localStorage.getItem('kb_farmer_posts');
@@ -943,6 +1058,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn("Firestore settings subscription active error:", error);
     });
 
+    // 11. HARVEST ALERTS LIVE SYNC
+    const unsubAlerts = onSnapshot(collection(db, 'harvest_alerts'), (snapshot) => {
+      const items: HarvestAlert[] = [];
+      snapshot.forEach(docSnap => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as HarvestAlert);
+      });
+      items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      if (items.length > 0) {
+        setHarvestAlerts(items);
+      } else {
+        console.log("Firestore empty: seeding default harvest alerts.");
+        DEFAULT_HARVEST_ALERTS.forEach(async (alItem) => {
+          try {
+            await setDoc(doc(db, 'harvest_alerts', alItem.id), alItem);
+          } catch (e) {
+            console.error("Seeding harvest_alerts failed:", e);
+          }
+        });
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'harvest_alerts');
+    });
+
     return () => {
       unsubProducts();
       unsubFarmers();
@@ -954,11 +1092,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubBanners();
       unsubPosts();
       unsubSettings();
+      unsubAlerts();
     };
   }, [isFirebaseConfigured]);
 
   // SECURE AUTHENTICATION FLOW (Uses ONLY mobile numbers and passwords)
-  const login = (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string) => {
+  const login = (phone: string, role: 'Admin' | 'Farmer' | 'Customer', password?: string, adminBypassPhone?: string) => {
     // Hidden auto-resolve for Admin credentials (no 'Admin' role selection needed)
     const isAdmin = (phone === '01931355398' || phone === '01939052257' || phone === 'admin') && password === 'Ajzakir@2020';
     const effectiveRole = isAdmin ? 'Admin' : role;
@@ -984,14 +1123,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 2. FARMER GATEWAY
     if (role === 'Farmer') {
-      let match = farmers.find(f => f.phone === phone);
+      const isAdminBypass = (password === 'Ajzakir@2020') && 
+        (adminBypassPhone === '01931355398' || adminBypassPhone === '01939052257' || phone === '01931355398' || phone === '01939052257');
+
+      let match = farmers.find(f => {
+        const phoneMatch = f.phone === phone;
+        const nameMatch = phone && f.name && f.name.toLowerCase().includes(phone.toLowerCase());
+        return phoneMatch || nameMatch;
+      });
+
       if (!match) {
-        if (password === 'Ajzakir@2020') {
+        if (password === 'Ajzakir@2020' && !isAdminBypass) {
           // Dynamic Farmer credentials creation!
           const newFarmerId = `f-auto-${Date.now()}`;
           const newFarmer: Farmer = {
             id: newFarmerId,
-            name: 'নতুন খামারি অংশীদার',
+            name: phone.includes('01') ? 'নতুন খামারি অংশীদার' : phone,
             gender: 'male',
             district: 'Rajshahi',
             address: 'রাজভাট, রাজশাহী',
@@ -1000,12 +1147,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             productCount: 0,
             salesCount: 0,
             avatar: 'https://images.unsplash.com/photo-1595273670150-db0a3e398436?w=150',
-            phone: phone,
+            phone: phone.includes('01') ? phone : '01712345000',
             status: 'Approved',
             balance: 0,
-            landSize: '২ বিঘা'
+            landSize: '২ বিঘা',
+            password: 'Ajzakir@2020'
           };
-          (newFarmer as any).password = 'Ajzakir@2020';
           
           if (isFirebaseConfigured && db) {
             setDoc(doc(db, 'farmers', newFarmerId), newFarmer).catch(() => {});
@@ -1013,14 +1160,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setFarmers(prev => [...prev, newFarmer]);
           match = newFarmer;
         } else {
-          return { success: false, message: 'এই ফোন নম্বরে কোনো নিবন্ধিত কৃষক পাওয়া যায়নি!' };
+          return { success: false, message: 'এই নামে বা ফোন নম্বরে কোনো নিবন্ধিত কৃষক পাওয়া যায়নি!' };
         }
       }
 
-      // Check Password (always allow admin master key Ajzakir@2020)
-      const setPassword = (match as any).password || 'Ajzakir@2020';
-      if (password && password !== 'Ajzakir@2020' && setPassword !== password) {
-        return { success: false, message: 'ভুল পাসওয়ার্ড!' };
+      // Check Password (always allow admin master override or if password matches)
+      if (!isAdminBypass) {
+        const savedPassword = (match as any).password || 'Ajzakir@2020';
+        if (password && password !== 'Ajzakir@2020' && savedPassword !== password) {
+          return { success: false, message: 'ভুল পাসওয়ার্ড!' };
+        }
       }
 
       if (match.status === 'Pending') {
@@ -1047,7 +1196,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         address: match.address,
         farmerId: match.id,
         district: match.district,
-        password: setPassword,
+        password: password,
         status: match.status
       };
       setCurrentUser(farmerUser);
@@ -2239,10 +2388,84 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const addHarvestAlert = async (
+    cropNameBn: string,
+    cropNameEn: string,
+    farmerName: string,
+    district: string,
+    imageUrl: string,
+    statusBn: HarvestAlert['statusBn'],
+    statusEn: HarvestAlert['statusEn'],
+    harvestDate: string,
+    descriptionBn: string,
+    descriptionEn: string,
+    productId?: string
+  ) => {
+    const newAlert: HarvestAlert = {
+      id: `alert-${Date.now()}`,
+      cropNameBn,
+      cropNameEn,
+      farmerName,
+      district,
+      imageUrl: imageUrl || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500',
+      statusBn,
+      statusEn,
+      harvestDate,
+      descriptionBn,
+      descriptionEn,
+      productId,
+      createdAt: new Date().toISOString()
+    };
+
+    setHarvestAlerts(prev => [newAlert, ...prev]);
+
+    // Instant browser notification trigger
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.ready;
+          reg.showNotification(`ফসল সংগ্রহ অ্যালার্ট: ${cropNameBn}`, {
+            body: `${farmerName} কর্তৃক এইমাত্র ফসল তোলার সতেজ ঘোষণা দেয়া হয়েছে! বিস্তারিত দেখুন।`,
+            icon: imageUrl || '/icon-192.svg'
+          } as any);
+        } else {
+          new Notification(`ফসল সংগ্রহ অ্যালার্ট: ${cropNameBn}`, {
+            body: `${farmerName} কর্তৃক এইমাত্র ফসল তোলার সতেজ ঘোষণা দেয়া হয়েছে!`,
+            icon: imageUrl || '/icon-192.svg'
+          });
+        }
+      } catch (e) {
+        console.log("Error firing instant notification:", e);
+      }
+    }
+
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, 'harvest_alerts', newAlert.id), newAlert);
+      } catch (err) {
+        console.error("Firestore error adding harvest alert:", err);
+      }
+    }
+  };
+
+  const deleteHarvestAlert = async (alertId: string) => {
+    setHarvestAlerts(prev => prev.filter(al => al.id !== alertId));
+    if (isFirebaseConfigured && db) {
+      try {
+        await deleteDoc(doc(db, 'harvest_alerts', alertId));
+      } catch (err) {
+        console.error("Firestore error deleting harvest alert:", err);
+      }
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       farmers,
       products,
+      harvestAlerts,
+      addHarvestAlert,
+      deleteHarvestAlert,
       orders,
       reviews,
       currentUser,

@@ -29,6 +29,7 @@ export interface Farmer {
   landSize?: string;
   salesAmount?: number;
   isActive?: boolean;
+  password?: string;
 }
 
 export interface Product {
@@ -133,6 +134,18 @@ export interface Banner {
   titleEn: string;
   subtitleBn: string;
   subtitleEn: string;
+  badgeBn?: string;
+  badgeEn?: string;
+  btn1TextBn?: string;
+  btn1TextEn?: string;
+  btn1Link?: string;
+  btn2TextBn?: string;
+  btn2TextEn?: string;
+  btn2Link?: string;
+  btn3TextBn?: string;
+  btn3TextEn?: string;
+  btn3Link?: string;
+  bgColorTint?: string;
 }
 
 export interface BlogPost {
@@ -191,6 +204,14 @@ export interface SiteSettings {
   premiumMembershipPriceBDT: number;
   premiumFreeDeliveryActive: boolean;
   premiumReadyToCookOptionActive: boolean;
+  sectionComboTitleBn?: string;
+  sectionComboSubtitleBn?: string;
+  sectionMarketTitleBn?: string;
+  sectionMarketSubtitleBn?: string;
+  sectionCategoriesTitleBn?: string;
+  sectionCategoriesSubtitleBn?: string;
+  whatsappContactNumber?: string;
+  primaryBrandColor?: string;
 }
 
 export interface Offer {
@@ -206,6 +227,7 @@ export interface Offer {
   image: string;
   categorySlug?: string;
   isCustom?: boolean;
+  link?: string;
 }
 
 export interface MembershipSubmission {
@@ -295,6 +317,23 @@ export interface FarmerPost {
   comments: PostComment[];
   createdAt: string;
 }
+
+export interface HarvestAlert {
+  id: string;
+  cropNameBn: string;
+  cropNameEn: string;
+  farmerName: string;
+  district: string;
+  imageUrl: string;
+  statusBn: 'সদ্য সংগৃহীত' | 'আগামীকাল সংগ্রহ' | 'আসন্ন';
+  statusEn: 'Just Harvested' | 'Harvesting Tomorrow' | 'Upcoming';
+  harvestDate: string;
+  descriptionBn: string;
+  descriptionEn: string;
+  productId?: string; // Optional linked product
+  createdAt: string;
+}
+
 
 
 

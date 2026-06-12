@@ -4,10 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { WifiOff, RefreshCw, X as CloseIcon } from 'lucide-react';
 import { AppProvider, useApp } from './AppContext';
 import { logAnalyticsEvent } from './lib/analytics';
 import { Header } from './components/Header';
 import { HeroCarousel } from './components/HeroCarousel';
+import { SeasonalHarvestBanner } from './components/SeasonalHarvestBanner';
 import { CategoriesGrid } from './components/CategoriesGrid';
 import { ProductCard } from './components/ProductCard';
 import { ProductModal } from './components/ProductModal';
@@ -18,6 +21,7 @@ import { OrderSuccessModal } from './components/OrderSuccessModal';
 import { ProductDetailsPage } from './components/ProductDetailsPage';
 import { FarmerStoreProfilePage } from './components/FarmerStoreProfilePage';
 import { AdminCMSDashboard } from './components/AdminCMSDashboard';
+import { AdminLoginView } from './components/AdminLoginView';
 import { OrderHistory } from './components/OrderHistory';
 import { FarmerDashboard } from './components/FarmerDashboard';
 import { RiktazAI } from './components/RiktazAI';
@@ -152,7 +156,7 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   // Route state
-  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog'>('home');
+  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog' | 'admin-login'>('home');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedFarmerStoreId, setSelectedFarmerStoreId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,6 +180,11 @@ const AppContent: React.FC = () => {
         setView('farmer-dashboard');
       } else if (currentUser.role === 'Admin') {
         setView('admin');
+      }
+    } else {
+      // If user logs out and was in admin or farmer dashboard, send them home
+      if (currentView === 'admin' || currentView === 'farmer-dashboard') {
+        setView('home');
       }
     }
   }, [currentUser]);
@@ -440,10 +449,17 @@ const AppContent: React.FC = () => {
   };
 
   const [isOfflineState, setIsOfflineState] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+  const [offlineDismissed, setOfflineDismissed] = useState(false);
 
   React.useEffect(() => {
-    const handleOnline = () => setIsOfflineState(false);
-    const handleOffline = () => setIsOfflineState(true);
+    const handleOnline = () => {
+      setIsOfflineState(false);
+      setOfflineDismissed(false);
+    };
+    const handleOffline = () => {
+      setIsOfflineState(true);
+      setOfflineDismissed(false);
+    };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
@@ -455,8 +471,8 @@ const AppContent: React.FC = () => {
   // 1. Initial load path parser and popstate/hashchange listener for SEO & client hash routing
   React.useEffect(() => {
     const handleLocationChange = () => {
-      const path = window.location.pathname;
-      const hash = window.location.hash;
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
       let matchedView: any = 'home';
       
       if (path === '/shop' || hash === '#shop') matchedView = 'shop';
@@ -464,7 +480,13 @@ const AppContent: React.FC = () => {
       else if (path === '/farmers' || hash === '#farmers' || hash === '#farmer-directory') matchedView = 'farmers';
       else if (path === '/dashboard' || hash === '#dashboard') matchedView = 'customer-dashboard';
       else if (path === '/farmer-portal' || hash === '#farmer-portal') matchedView = 'farmer-dashboard';
-      else if (path === '/admin' || hash === '#admin') matchedView = 'admin';
+      else if (path === '/admin' || hash === '#admin' || path === '/admin-login' || hash === '#admin-login' || path.startsWith('/admin')) {
+        if (currentUser && currentUser.role === 'Admin') {
+          matchedView = 'admin';
+        } else {
+          matchedView = 'admin-login';
+        }
+      }
       else if (path === '/blog' || hash === '#blog') matchedView = 'blog';
       else if (path === '/social-feed' || hash === '#social-feed') matchedView = 'social-feed';
       else if (path === '/our-story' || hash === '#our-story') matchedView = 'our-story';
@@ -480,7 +502,7 @@ const AppContent: React.FC = () => {
       window.removeEventListener('popstate', handleLocationChange);
       window.removeEventListener('hashchange', handleLocationChange);
     };
-  }, []);
+  }, [currentUser]);
 
   // 2. Sync active view back to URL path and log Firebase Analytics screen_view on changes
   React.useEffect(() => {
@@ -491,6 +513,7 @@ const AppContent: React.FC = () => {
     else if (currentView === 'customer-dashboard') path = '/dashboard';
     else if (currentView === 'farmer-dashboard') path = '/farmer-portal';
     else if (currentView === 'admin') path = '/admin';
+    else if (currentView === 'admin-login') path = '/admin-login';
     else if (currentView === 'blog') path = '/blog';
     else if (currentView === 'social-feed') path = '/social-feed';
     else if (currentView === 'our-story') path = '/our-story';
@@ -573,7 +596,7 @@ const AppContent: React.FC = () => {
       "name": "কৃষক বাজার (Krishok Bazar)",
       "description": description,
       "url": window.location.origin,
-      "logo": `${window.location.origin}/icon-192.svg`,
+      "logo": "https://cdn.shopify.com/s/files/1/0991/0717/6761/files/Gemini_Generated_Image_ce5s9yce5s9yce5s.png?v=1779307577",
       "telephone": siteSettings.footerPhone || "01931355398",
       "address": {
         "@type": "PostalAddress",
@@ -679,6 +702,11 @@ const AppContent: React.FC = () => {
           />
         )}
 
+        {/* ADMIN LOGIN VIEW */}
+        {currentView === 'admin-login' && (
+          <AdminLoginView onBackToHome={() => setView('home')} />
+        )}
+
         {/* CHIEF ADMIN DASHBOARD */}
         {currentView === 'admin' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -769,6 +797,16 @@ const AppContent: React.FC = () => {
               onCallHelp={() => handleOpenAuthModal()}
             />
 
+            {/* Seasonal Harvest Bulletin Alerts Banner */}
+            <SeasonalHarvestBanner
+              onViewCrop={(alert) => {
+                setView('shop');
+                const searchPhrase = (language === 'en' ? alert.cropNameEn : alert.cropNameBn).split(' ')[0];
+                setSearchQuery(searchPhrase);
+              }}
+              onOpenAuthModal={() => handleOpenAuthModal()}
+            />
+
             {/* Featured category system */}
             <CategoriesGrid 
               selectedCategory={selectedCategory} 
@@ -780,8 +818,12 @@ const AppContent: React.FC = () => {
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <span className="text-xs font-bold text-blue-600 tracking-wider uppercase block">বিশেষ ছাড় ও সতেজ অফার</span>
-                    <h2 className="text-lg sm:text-2xl font-black text-gray-800 font-sans mt-0.5">সেরা অফার ও তাজা ফসল</h2>
+                    <span className="text-xs font-bold text-blue-600 tracking-wider uppercase block">
+                      {siteSettings?.sectionMarketSubtitleBn || 'বিশেষ ছাড় ও সতেজ অফার'}
+                    </span>
+                    <h2 className="text-lg sm:text-2xl font-black text-gray-800 font-sans mt-0.5">
+                      {siteSettings?.sectionMarketTitleBn || 'সেরা অফার ও তাজা ফসল'}
+                    </h2>
                   </div>
                   <button onClick={() => setView('shop')} className="text-xs text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1">
                     সব পণ্য দেখুন <ArrowRight className="h-4 w-4" />
@@ -814,14 +856,14 @@ const AppContent: React.FC = () => {
                 <div className="text-center max-w-xl mx-auto mb-10">
                   <span className="text-xs font-black tracking-widest text-emerald-600 uppercase">পারিবারিক সাশ্রয়ী প্যাকেজ</span>
                   <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-1.5 leading-snug">
-                    সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট
+                    {siteSettings?.sectionComboTitleBn || 'সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট'}
                   </h2>
                   <p className="text-xs text-gray-400 mt-2 font-medium">
-                    সরাসরি কৃষকের মাঠের বাছাই করা তাজা কম্বো বাস্কেট অফারসমূহ। বিস্তারিত বিবরণ ও উপাদান তালিকা ওজনের সাথে বিস্তারিত পাতায় দেখে নিন।
+                    {siteSettings?.sectionComboSubtitleBn || 'সরাসরি কৃষকের মাঠের বাছাই করা তাজা কম্বো বাস্কেট অফারসমূহ। বিস্তারিত বিবরণ ও উপাদান তালিকা ওজনের সাথে বিস্তারিত পাতায় দেখে নিন।'}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {products.filter(p => p.id.startsWith('cb')).map((basket) => {
                     const originalPrice = basket.price;
                     const displayPrice = basket.discountPrice || basket.price;
@@ -1354,9 +1396,59 @@ const AppContent: React.FC = () => {
         onClose={() => setSuccessOrderId(null)}
       />
 
-      <ScrollingBanners onOpenSubscription={() => setIsSubscriptionOpen(true)} />
+      <ScrollingBanners onOpenSubscription={() => setIsSubscriptionOpen(true)} setView={setView} />
       <FloatingSocials />
       <RiktazAI setView={setView} setSelectedProductId={setSelectedProductId} />
+
+      {/* BILINGUAL OFFLINE MODE TOAST NOTIFICATION */}
+      <AnimatePresence>
+        {isOfflineState && !offlineDismissed && (
+          <motion.div
+            initial={{ opacity: 0, y: 70, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 xs:bottom-6 max-w-sm w-[calc(100%-2rem)] bg-slate-900/95 border border-amber-500/40 text-white p-3.5 rounded-2xl shadow-2xl backdrop-blur-md z-[10000] flex flex-col gap-2.5 font-sans"
+          >
+            <div className="flex items-start gap-2.5">
+              <div className="bg-amber-500/10 p-1.5 rounded-lg text-amber-500 shrink-0 mt-0.5 animate-pulse">
+                <WifiOff className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-amber-400">
+                  {language === 'bn' ? 'ইন্টারনেট সংযোগ বিচ্ছিন্ন!' : 'You are Offline!'}
+                </p>
+                <p className="text-[10.5px] text-gray-300 leading-snug mt-0.5">
+                  {language === 'bn' 
+                    ? 'আপনি অফলাইন মোডে আছেন। সতেজ পণ্যের লাইভ ডেটা পেতে আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন।' 
+                    : 'Viewing in offline mode. Live updates for safe food require a stable connection.'}
+                </p>
+              </div>
+              <button 
+                onClick={() => setOfflineDismissed(true)} 
+                className="text-gray-400 hover:text-white transition p-1 hover:bg-white/10 rounded-lg cursor-pointer"
+                aria-label="Dismiss"
+              >
+                <CloseIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-end gap-2 border-t border-white/10 pt-2 text-[10px]">
+              <span className="flex items-center gap-1.5 text-gray-400 mr-auto text-[9.5px]">
+                <span className="h-2 w-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+                {language === 'bn' ? 'অফলাইন সেশন' : 'Offline Session'}
+              </span>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-md"
+              >
+                <RefreshCw className="h-3 w-3" />
+                {language === 'bn' ? 'পুনরায় চেষ্টা' : 'Retry'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

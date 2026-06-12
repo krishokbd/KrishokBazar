@@ -4,10 +4,11 @@ import { Sparkles, X, ChevronRight } from 'lucide-react';
 
 interface ScrollingBannersProps {
   onOpenSubscription: () => void;
+  setView?: (view: any) => void;
 }
 
-export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscription }) => {
-  const { language, offers } = useApp();
+export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscription, setView }) => {
+  const { language, offers, categories, setSelectedCategory } = useApp();
   const [activeBannerIdx, setActiveBannerIdx] = useState<number>(-1);
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
 
@@ -126,7 +127,26 @@ export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscr
         <button
           onClick={() => {
             handleClose();
-            onOpenSubscription();
+            if (currentBanner.categorySlug) {
+              if (setSelectedCategory) setSelectedCategory(currentBanner.categorySlug);
+              if (setView) setView('shop');
+            } else if (currentBanner.link) {
+              const targetLink = currentBanner.link;
+              if (targetLink.startsWith('http')) {
+                window.open(targetLink, '_blank');
+              } else if (targetLink === 'premium') {
+                onOpenSubscription();
+              } else if (targetLink === 'combo') {
+                if (setView) setView('home');
+                setTimeout(() => {
+                  document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              } else if (targetLink === 'shop' || targetLink === 'home' || targetLink === 'our-story') {
+                if (setView) setView(targetLink);
+              }
+            } else {
+              onOpenSubscription();
+            }
           }}
           className="flex-1 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-extrabold text-[11px] py-2 px-3 text-center shadow-md hover:scale-[1.01] hover:brightness-105 active:scale-95 transition-all cursor-pointer font-bold"
         >

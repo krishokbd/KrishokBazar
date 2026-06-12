@@ -158,9 +158,34 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "farmerId", "farmerName", "avatar", "content", "likes", "createdAt"]
+    },
+    "HarvestAlert": {
+      "title": "Harvest Notification Alert",
+      "description": "Represents an announcement about a seasonal crop becoming ready for harvest",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "cropNameBn": { "type": "string" },
+        "cropNameEn": { "type": "string" },
+        "farmerName": { "type": "string" },
+        "district": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "statusBn": { "type": "string" },
+        "statusEn": { "type": "string" },
+        "harvestDate": { "type": "string" },
+        "descriptionBn": { "type": "string" },
+        "descriptionEn": { "type": "string" },
+        "productId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "cropNameBn", "cropNameEn", "farmerName", "district", "imageUrl", "statusBn", "statusEn", "harvestDate", "descriptionBn", "descriptionEn", "createdAt"]
     }
   },
   "firestore": {
+    "/harvest_alerts/{alertId}": {
+      "schema": "HarvestAlert",
+      "description": "Seasonal harvest bulletins and subscriber notifications"
+    },
     "/posts/{postId}": {
       "schema": "FarmerPost",
       "description": "Social feed updates and discussions from partner growers"
