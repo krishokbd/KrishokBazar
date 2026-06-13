@@ -33,6 +33,8 @@ import { useSubscriptionTimer } from './hooks/useSubscriptionTimer';
 import { VerifiedFarmersView } from './components/VerifiedFarmersView';
 import { BlogView } from './components/BlogView';
 import { ScrollingBanners } from './components/ScrollingBanners';
+import { WeeklyCombosView } from './components/WeeklyCombosView';
+import { BottomNavigation } from './components/BottomNavigation';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
   ShieldCheck, 
@@ -156,7 +158,7 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   // Route state
-  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog' | 'admin-login'>('home');
+  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog' | 'admin-login' | 'weekly-combos'>('home');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedFarmerStoreId, setSelectedFarmerStoreId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -683,7 +685,7 @@ const AppContent: React.FC = () => {
       )}
 
       {/* MAIN LAYOUTS WRAPPER */}
-      <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0 pb-16 md:pb-0">
 
         {/* DEDICATED PRODUCT DETAILS PAGE */}
         {currentView === 'product-details' && selectedProductId && (
@@ -761,6 +763,16 @@ const AppContent: React.FC = () => {
         {currentView === 'blog' && (
           <BlogView 
             onBack={() => setView('home')}
+          />
+        )}
+
+        {/* STANDALONE WEEKLY COMBOS PAGE */}
+        {currentView === 'weekly-combos' && (
+          <WeeklyCombosView 
+            onBackToHome={() => {
+              setView('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         )}
 
@@ -1317,39 +1329,53 @@ const AppContent: React.FC = () => {
         </main>
 
       {/* FOOTER */}
-      <footer className="bg-emerald-50/40 text-emerald-950 border-t border-emerald-100 py-12 text-xs select-none">
+      <footer className="bg-emerald-900 text-emerald-50 border-t border-emerald-950 py-12 text-xs select-none">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
           
           {/* Bottom Copyright and Navigation Bar */}
-          <div className="sm:flex sm:items-center sm:justify-between text-gray-650 font-medium">
+          <div className="sm:flex sm:items-center sm:justify-between text-emerald-100 font-medium">
             <div className="space-y-4 text-left">
-              <p className="text-[11px] text-gray-500 font-sans">© 2026 কৃষক বাজার (Krishok Bazar). সামাজিক এগ্রো-উদ্যোগ। যথাযথ কপিরাইট সংরক্ষিত।</p>
+              <p className="text-[11px] text-emerald-300 font-sans">© 2026 কৃষক বাজার (Krishok Bazar). সামাজিক এগ্রো-উদ্যোগ। যথাযথ কপিরাইট সংরক্ষিত।</p>
               {/* social media links as requested by user */}
               <div className="flex items-center gap-3">
-                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-250/80 text-emerald-800 hover:bg-emerald-600 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ফেসবুক">
+                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ফেসবুক">
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M9 8H7v3h2v9h4v-9h3.6l.4-3H13V6c0-.5.5-1 1-1h3V1H13c-3 0-4 1.5-4 4v3z"/></svg>
                 </a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-250/80 text-emerald-800 hover:bg-emerald-600 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ইউটিউব">
+                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ইউটিউব">
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M23.5 6.4c-.3-1.2-1.3-2.1-2.5-2.4C18.8 3.5 12 3.5 12 3.5s-6.8 0-9 .5c-1.2.3-2.2 1.2-2.5 2.4C0 8.6 0 12 0 12s0 3.4.5 5.6c.3 1.2 1.3 2.1 2.5 2.4 2.2.5 9 .5 9 .5s6.8 0 9-.5c1.2-.3 2.2-1.2 2.5-2.4.5-2.2.5-5.6.5-5.6s0-3.4-.5-5.6zM9.5 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
                 </a>
-                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-250/80 text-emerald-800 hover:bg-emerald-600 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="টুইটার / এক্স">
+                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="টুইটার / এক্স">
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M18.2 2.4h3.3l-7.2 8.2 8.5 11h-6.6l-5.2-6.8-5.9 6.8H1.8l7.7-8.8L1.3 2.4h6.8l4.7 6.2 5.4-6.2zm-1.2 17.6h1.8L7.1 4.3H5.1l11.9 15.7z"/></svg>
                 </a>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-gray-250/80 text-emerald-800 hover:bg-emerald-600 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ইনস্টাগ্রাম">
+                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ইনস্টাগ্রাম">
                   <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.1c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.5.6.2 1 .5 1.4 1s.7.8 1 1.4c.2.4.4 1 .5 2.2.1 1.3.1 1.6.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.5 2.2-.2.6-.5 1-1 1.4s-.8.7-1.4 1c-.4.2-1 .4-2.2.5-1.3.1-1.6.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.5-.6-.2-1-.5-1.4-1s-.7-.8-1-1.4c-.2-.4-.4-1-.5-2.2-.1-1.3-.1-1.6-.1-4.9s0-3.6.1-4.9c.1-1.2.3-1.8.5-2.2.2-.6.5-1 1-1.4s.8-.7 1.4-1c.4-.2 1-.4 2.2-.5 1.3-.1 1.6-.1 4.9-.1M12 0C8.7 0 8.3 0 7 .1 5.7.2 4.8.4 4 .7c-.8.3-1.5.7-2.1 1.4C1.2 2.7.8 3.4.5 4.2.2 5 .1 5.9.1 7.2 0 8.5 0 8.9 0 12.2s0 3.6.1 4.9c.1 1.3.3 2.1.6 2.9.3.8.7 1.5 1.4 2.1.7.7 1.4 1.1 2.1 1.4.8.3 1.6.4 2.9.5 1.3.1 1.7.1 4.9.1s3.6 0 4.9-.1c1.3-.1 2.1-.3 2.9-.6.8-.3 1.5-.7 2.1-1.4.7-.7 1.1-1.4 1.4-2.1.3-.8.4-1.6.5-2.9.1-1.3.1-1.7.1-4.9s0-3.6-.1-4.9c-.1-1.3-.3-2.1-.6-2.9-.3-.8-.7-1.5-1.4-2.1-.7-.7-1.4-1.1-2.1-1.4-.8-.3-1.6-.4-2.9-.5C15.6 0 15.2 0 12 0zm0 5.8c-3.4 0-6.1 2.7-6.1 6.1s2.7 6.1 6.1 6.1 6.1-2.7 6.1-6.1-2.7-6.1-6.1-6.1zm0 10.2c-2.3 0-4.1-1.8-4.1-4.1s1.8-4.1 4.1-4.1 4.1 1.8 4.1 4.1-1.8 4.1-4.1 4.1zm6.4-11.5c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5z"/></svg>
                 </a>
               </div>
             </div>
-            <div className="mt-6 sm:mt-0 flex flex-wrap items-center justify-center gap-5 text-[11px] font-black tracking-wide text-emerald-800">
-              <button onClick={() => setView('home')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">হোম</button>
-              <button onClick={() => setView('shop')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">তাজা পণ্য</button>
-              <button onClick={() => setView('farmers')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">আমাদের বিশ্বস্ত কৃষক</button>
-              <button onClick={() => setView('our-story')} className="hover:text-emerald-600 transition-colors cursor-pointer select-none">আমাদের গল্প</button>
+            <div className="mt-6 sm:mt-0 flex flex-wrap items-center justify-center gap-5 text-[11px] font-black tracking-wide text-emerald-200">
+              <button onClick={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">হোম (Home)</button>
+              <button onClick={() => { setView('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">তাজা পণ্য (Fresh Products)</button>
+              <button onClick={() => { setView('weekly-combos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">কম্বো বাজেট (Weekly Budget)</button>
+              <button onClick={() => { setView('ready-to-cook'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">রেডি-টু-কুক (Ready to Cook)</button>
+              <button onClick={() => { setView('our-story'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">আমাদের গল্প (Our Story)</button>
+              <button 
+                onClick={() => {
+                  setView('shop');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setTimeout(() => {
+                    const searchInput = document.querySelector('input[type="text"]');
+                    if (searchInput) (searchInput as HTMLInputElement).focus();
+                  }, 250);
+                }} 
+                className="hover:text-amber-400 transition-colors cursor-pointer select-none"
+              >
+                খুঁজুন (Search)
+              </button>
               
               {/* LANGUAGE SWITCHER PLACED SOLELY IN THE FOOTER */}
               <button 
                 onClick={toggleLanguage}
-                className="rounded-xl bg-emerald-50 border border-emerald-150 px-3 py-1.5 text-[10px] font-black text-emerald-700 hover:bg-emerald-100 hover:border-emerald-250 flex items-center gap-1 cursor-pointer transition active:scale-95 select-none shrink-0"
+                className="rounded-xl bg-emerald-800 border border-emerald-700 px-3 py-1.5 text-[10px] font-black text-emerald-100 hover:bg-emerald-700 hover:border-emerald-600 flex items-center gap-1 cursor-pointer transition active:scale-95 select-none shrink-0"
                 title=" ভাষা পরিবর্তন করুন / Switch Language"
               >
                 🌐 <span className="font-sans font-extrabold">{language === 'en' ? 'বাংলা' : 'ENGLISH'}</span>
@@ -1399,6 +1425,12 @@ const AppContent: React.FC = () => {
       <ScrollingBanners onOpenSubscription={() => setIsSubscriptionOpen(true)} setView={setView} />
       <FloatingSocials />
       <RiktazAI setView={setView} setSelectedProductId={setSelectedProductId} />
+      <BottomNavigation
+        currentView={currentView}
+        setView={setView}
+        onOpenCart={handleOpenCartDrawer}
+        onOpenAuth={handleOpenAuthModal}
+      />
 
       {/* BILINGUAL OFFLINE MODE TOAST NOTIFICATION */}
       <AnimatePresence>

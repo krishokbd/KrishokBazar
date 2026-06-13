@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
-import { Product, Farmer, Review, getFormattedUnit } from '../types';
+import { Product, Farmer, Review, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
 import { 
   ArrowLeft, 
   Star, 
@@ -69,15 +69,18 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const product = products.find(p => p.id === productId);
 
   // Packaging selection states
-  const isWeightBased = product ? !['piece', 'pcs', 'pc', 'টি'].includes(product.unit?.toLowerCase().trim() || '') : false;
-  const [selectedPack, setSelectedPack] = useState<string>(isWeightBased ? '1kg' : '1pc');
+  const packOptions = React.useMemo(() => {
+    return product ? getProductPackOptions(product) : [];
+  }, [product]);
+
+  const [selectedPackId, setSelectedPackId] = useState<string>('');
 
   // Synchronize dynamic packaging selection on startup or item change
   useEffect(() => {
-    if (product) {
-      setSelectedPack(isWeightBased ? '1kg' : '1pc');
+    if (product && packOptions.length > 0) {
+      setSelectedPackId(packOptions[1]?.id || packOptions[0]?.id || '1');
     }
-  }, [productId, isWeightBased]);
+  }, [productId, packOptions]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -106,47 +109,13 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const baseOriginalPrice = product.price;
   const hasDiscount = !!product.discountPrice;
 
-  let packMultiplier = 1;
-  let packLabelBn = '';
-  let packLabelEn = '';
+  const activeOption = React.useMemo(() => {
+    return packOptions.find(o => o.id === selectedPackId) || packOptions[0];
+  }, [packOptions, selectedPackId]);
 
-  if (isWeightBased) {
-    if (selectedPack === '500g') {
-      packMultiplier = 0.5;
-      packLabelBn = '৫০০ গ্রাম';
-      packLabelEn = '500g';
-    } else if (selectedPack === '1kg') {
-      packMultiplier = 1;
-      packLabelBn = '১ কেজি';
-      packLabelEn = '1kg';
-    } else if (selectedPack === '2kg') {
-      packMultiplier = 2;
-      packLabelBn = '২ কেজি';
-      packLabelEn = '2kg';
-    } else {
-      packMultiplier = 1;
-      packLabelBn = '১ কেজি';
-      packLabelEn = '1kg';
-    }
-  } else { // piece-based
-    if (selectedPack === '1pc') {
-      packMultiplier = 1;
-      packLabelBn = '১ টি';
-      packLabelEn = '1 Pc';
-    } else if (selectedPack === '5pc') {
-      packMultiplier = 5;
-      packLabelBn = '৫ টি';
-      packLabelEn = '5 Pcs';
-    } else if (selectedPack === '10pc') {
-      packMultiplier = 10;
-      packLabelBn = '১০ টি';
-      packLabelEn = '10 Pcs';
-    } else {
-      packMultiplier = 1;
-      packLabelBn = '১ টি';
-      packLabelEn = '1 Pc';
-    }
-  }
+  const packMultiplier = activeOption?.multiplier || 1;
+  const packLabelBn = activeOption?.labelBn || product?.unit || 'পিস';
+  const packLabelEn = activeOption?.labelEn || product?.unit || 'piece';
 
   const displayPrice = Math.round(baseDisplayPrice * packMultiplier);
   const originalPrice = Math.round(baseOriginalPrice * packMultiplier);
@@ -432,60 +401,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <span>বিভাগ: {product.category}</span>
               </div>
 
-              {/* PRIMARY PRODUCT DISPLAY TITLE */}
-              <h1 className="mt-3 text-2xl sm:text-3xl font-black text-gray-950 leading-snug font-sans tracking-tight">
-                {product.title}
-              </h1>
-
-              {/* RATING SCORE & STOCK SUMMARY COMPACT ROW */}
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs border-b border-gray-100 pb-4">
-                <div className="flex items-center gap-1.5 text-amber-500 font-bold">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star 
-                        key={s} 
-                        className={`h-4.5 w-4.5 shrink-0 ${
-                          s <= Math.floor(product.rating) 
-                            ? 'fill-amber-550 text-amber-500' 
-                            : 'text-gray-200'
-                        }`} 
-                      />
-                    ))}
-                  </div>
-                  <span className="text-gray-800 font-extrabold font-mono ml-0.5">{product.rating} / ৫.০</span>
-                  <span className="text-gray-400 font-bold font-sans">({productReviews.length} রিভিউ সমূহ)</span>
-                </div>
-
-                <span className="text-gray-200">|</span>
-
-                {/* 📊 SMART INVENTORY & HARVEST CERTIFICATE BAR */}
+                  {/* 📊 SMART INVENTORY & HARVEST CERTIFICATE BAR */}
                 <div className="flex-1 w-full mt-2 pt-2 border-t border-gray-150">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-black text-gray-500 uppercase tracking-wider flex items-center gap-1">
-                      📊 ইনভেন্টরি লেভেল (Stock Level):
-                    </span>
-                    <span className="text-[11px] font-mono font-bold text-gray-700">
-                      স্টক: <strong className="text-emerald-700 font-extrabold">{product.stock}</strong>/{Math.max(100, product.stock + 20)} {getFormattedUnit(product, language)}
-                    </span>
-                  </div>
-
-                  {/* Progress slide tracker */}
-                  <div className="relative w-full h-2.5 rounded-full bg-slate-150 overflow-hidden border border-slate-200">
-                    <div 
-                      style={{ width: `${product.stock <= 0 ? 0 : product.stock < 10 ? 15 : product.stock <= 30 ? 45 : 85}%` }}
-                      className={`absolute h-full transition-all duration-1000 rounded-full ${
-                        product.stock <= 0
-                          ? 'bg-gray-300'
-                          : product.stock < 10
-                            ? 'bg-gradient-to-r from-red-500 to-rose-600 animate-pulse'
-                            : product.stock <= 30
-                              ? 'bg-gradient-to-r from-amber-500 to-amber-600'
-                              : 'bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-500'
-                      }`}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2.5 mt-2 text-[10.5px]">
+                  <div className="flex items-center justify-between gap-2 flex-wrap text-[10.5px]">
                     <div>
                       {product.stock <= 0 ? (
                         <span className="inline-flex items-center gap-1 font-bold text-red-600">
@@ -513,137 +431,79 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
 
               {/* CORE PRICE MATRIX - EXTREMELY VISIBLE & BOLDER */}
-              <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50/60 p-5 shadow-xs">
-                <div className="flex flex-wrap items-baseline justify-between gap-2.5">
-                  <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
-                    <span className="text-3xl sm:text-4.5xl font-black text-emerald-800 font-mono tracking-tight leading-none">
+              <div className="mt-5 rounded-2xl border border-gray-200 bg-gray-50/60 p-4 sm:p-5 shadow-xs overflow-hidden w-full max-w-full">
+                <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 w-full">
+                  <div className="flex items-baseline flex-wrap gap-x-2.5 gap-y-1 min-w-0">
+                    <span className="text-2xl sm:text-4xl font-black text-emerald-850 font-sans tracking-tight">
                       ৳{displayPrice}
                     </span>
                     {hasDiscount && (
-                      <>
-                        <span className="text-base sm:text-lg text-gray-400 line-through font-mono font-medium">
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        <span className="text-sm sm:text-base text-gray-400 line-through font-mono font-medium">
                           ৳{originalPrice}
                         </span>
-                        <span className="inline-flex items-center gap-0.5 rounded-lg bg-red-50 border border-red-150 px-2 py-0.5 text-[10px] font-black text-red-700 tracking-wide font-sans">
+                        <span className="inline-flex items-center rounded-lg bg-red-50 border border-red-150 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black text-red-700 tracking-wide font-sans">
                           {discountPercent}% ডিসকাউন্ট ছাড়!
                         </span>
-                      </>
+                      </div>
                     )}
-                    <span className="text-xs text-gray-450 font-bold ml-1 font-sans">
-                      / প্রতি {language === 'bn' ? packLabelBn : packLabelEn}
+                    <span className="text-xs text-gray-500 font-bold font-sans">
+                      / {product.isReadyToCook ? (language === 'bn' ? 'প্যাকেট' : 'Packet') : (language === 'bn' ? `প্রতি ${packLabelBn}` : `per ${packLabelEn}`)}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-gray-400 uppercase font-mono block leading-none">মোট মূল্য ({qty} {language === 'bn' ? packLabelBn : packLabelEn})</span>
-                    <span className="text-2xl font-black text-emerald-800 font-sans block mt-0.5 font-mono">
+                  <div className="text-left sm:text-right shrink-0">
+                    <span className="text-[10px] text-gray-400 uppercase font-mono block leading-none">
+                      মোট মূল্য ({qty} {product.isReadyToCook ? (language === 'bn' ? 'প্যাকেট' : 'Packet') : (language === 'bn' ? packLabelBn : packLabelEn)})
+                    </span>
+                    <span className="text-xl sm:text-2xl font-black text-emerald-800 block mt-1 font-mono">
                       ৳{displayPrice * qty}
                     </span>
                   </div>
                 </div>
 
                 {/* Clickable Packaging card selector */}
-                <div className="mt-4 pt-3.5 border-t border-dashed border-gray-200">
-                  <span className="block text-xs font-black text-gray-700 mb-2.5 flex items-center gap-1 font-sans">
-                    📦 প্যাকেজিং ওজন ও পরিমাণ সিলেক্ট করুন (Select Packaging Option):
-                  </span>
-                  
-                  <div className="grid grid-cols-3 gap-2.5 font-sans">
-                    {isWeightBased ? (
-                      // WEIGHT BASED: 500g, 1kg, 2kg
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPack('500g')}
-                          className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
-                            selectedPack === '500g'
-                              ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
-                              : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-mono tracking-wide text-gray-450 font-bold">হাফ প্যাক</span>
-                          <span className="text-xs sm:text-sm mt-1">৫০০ গ্রাম</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 0.5)}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPack('1kg')}
-                          className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
-                            selectedPack === '1kg'
-                              ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
-                              : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-mono tracking-wide text-red-500 font-black animate-pulse">জনপ্রিয়</span>
-                          <span className="text-xs sm:text-sm mt-1">১ কেজি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 1)}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPack('2kg')}
-                          className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
-                            selectedPack === '2kg'
-                              ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
-                              : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-mono tracking-wide text-gray-450 font-bold">ফ্যামিলি প্যাক</span>
-                          <span className="text-xs sm:text-sm mt-1">২ কেজি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 2)}</span>
-                        </button>
-                      </>
-                    ) : (
-                      // PIECE BASED: 1 unit, 5 units, 10 units
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPack('1pc')}
-                          className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
-                            selectedPack === '1pc'
-                              ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
-                              : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-mono tracking-wide text-gray-450 font-bold">সিঙ্গেল প্যাক</span>
-                          <span className="text-xs sm:text-sm mt-1">১ টি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 1)}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPack('5pc')}
-                          className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
-                            selectedPack === '5pc'
-                              ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
-                              : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-mono tracking-wide text-red-500 font-black animate-pulse">হাফ ডজন</span>
-                          <span className="text-xs sm:text-sm mt-1">৫ টি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 5)}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPack('10pc')}
-                          className={`p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-center items-center text-center cursor-pointer ${
-                            selectedPack === '10pc'
-                              ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-sm font-black'
-                              : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
-                          }`}
-                        >
-                          <span className="text-[9px] uppercase font-mono tracking-wide text-gray-450 font-bold">ফ্যামিলি প্যাক</span>
-                          <span className="text-xs sm:text-sm mt-1">১০ টি</span>
-                          <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">৳{Math.round(baseDisplayPrice * 10)}</span>
-                        </button>
-                      </>
-                    )}
+                {packOptions.length > 0 && (
+                  <div className="mt-4 pt-3.5 border-t border-dashed border-gray-200">
+                    <span className="block text-xs font-black text-gray-700 mb-2.5 flex items-center gap-1 font-sans">
+                      📦 {product.isReadyToCook ? 'প্যাকেট সাইজ ও সংখ্যা সিলেক্ট করুন (Select Packet Option):' : 'প্যাকেজিং ওজন ও পরিমাণ সিলেক্ট করুন (Select Packaging Option):'}
+                    </span>
+                    
+                    <div className="grid grid-cols-3 gap-2 sm:gap-2.5 font-sans">
+                      {packOptions.map((opt, oIdx) => {
+                        // For Ready to Cook, change label display to packet quantities
+                        let customOptionLabelBn = language === 'bn' ? opt.labelBn : opt.labelEn;
+                        if (product.isReadyToCook) {
+                          if (oIdx === 0) customOptionLabelBn = language === 'bn' ? '১ প্যাকেট' : '1 Packet';
+                          else if (oIdx === 1) customOptionLabelBn = language === 'bn' ? '২ প্যাকেট (পপুলার)' : '2 Packets (Popular)';
+                          else customOptionLabelBn = language === 'bn' ? '৫ প্যাকেট (ফ্যামিলি)' : '5 Packets (Family)';
+                        }
+                        const isSelected = selectedPackId === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setSelectedPackId(opt.id)}
+                            className={`flex flex-col justify-center items-center text-center cursor-pointer p-2.5 rounded-xl border transition-all duration-150 ${
+                              isSelected
+                                ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-xs font-black'
+                                : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
+                            }`}
+                          >
+                            <span className="text-[9px] uppercase font-mono tracking-wide text-gray-400 font-bold">
+                              {oIdx === 0 ? 'মিনিমাম প্যাক' : oIdx === 1 ? 'স্ট্যান্ডার্ড প্যাক' : 'ফ্যামিলি প্যাক'}
+                            </span>
+                            <span className="text-xs sm:text-sm mt-1">{customOptionLabelBn}</span>
+                            <span className="text-[10.5px] mt-1 text-emerald-700 font-mono font-bold">
+                              ৳{Math.round(baseDisplayPrice * opt.multiplier)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="mt-3.5 flex items-center justify-between border-t border-dashed border-gray-200 pt-3">
                   <div className="flex items-center gap-1 font-sans">

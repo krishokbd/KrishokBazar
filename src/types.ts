@@ -332,8 +332,109 @@ export interface HarvestAlert {
   descriptionEn: string;
   productId?: string; // Optional linked product
   createdAt: string;
+}export interface WeeklyComboProduct {
+  id: string;
+  nameBn: string;
+  nameEn: string;
+  image: string;
+  link?: string;
+  weight: string;
+  date: string;
+  prices: number[]; // exactly 4 prices
+  priceLabels: string[]; // exactly 4 labels/units
 }
 
+export interface WeeklyComboOffer {
+  id: string;
+  titleBn: string;
+  titleEn: string;
+  products: WeeklyComboProduct[];
+}
+
+export const toBanglaDigits = (num: number | string): string => {
+  const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  return String(num).replace(/[0-9]/g, (w) => banglaDigits[+w]);
+};
+
+export interface PackOption {
+  id: string;
+  labelBn: string;
+  labelEn: string;
+  multiplier: number;
+}
+
+export function getProductPackOptions(product: { unit?: string }): PackOption[] {
+  const unit = (product.unit || 'kg').toLowerCase().trim();
+  
+  // 1. Piece-based categories
+  if (['piece', 'pcs', 'pc', 'টি', 'piece/পিস', 'পিস'].includes(unit)) {
+    return [
+      { id: '1pc', labelBn: '১ টি', labelEn: '1 Pc', multiplier: 1 },
+      { id: '5pcs', labelBn: '৫ টি', labelEn: '5 Pcs', multiplier: 5 },
+      { id: '10pcs', labelBn: '১০ টি', labelEn: '10 Pcs', multiplier: 10 }
+    ];
+  }
+
+  // 2. Dozen or Hali based
+  if (unit.includes('dozen') || unit.includes('ডজন') || unit.includes('হালি')) {
+    const isHali = unit.includes('হালি');
+    const labelBnSingle = isHali ? 'হালি' : 'ডজন';
+    const labelEnSingle = isHali ? 'Hali' : 'Dozen';
+    return [
+      { id: 'half', labelBn: `হাফ ${labelBnSingle}`, labelEn: `Half ${labelEnSingle}`, multiplier: 0.5 },
+      { id: '1', labelBn: `১ ${labelBnSingle}`, labelEn: `1 ${labelEnSingle}`, multiplier: 1 },
+      { id: '2', labelBn: `২ ${labelBnSingle}`, labelEn: `2 ${labelEnSingle}`, multiplier: 2 }
+    ];
+  }
+
+  // 3. Packet / Pack based
+  if (unit.includes('packet') || unit.includes('প্যাকেট') || unit.includes('pack') || unit.includes('প্যাক') || unit.includes('pkt')) {
+    return [
+      { id: '1pkt', labelBn: '১ প্যাকেট', labelEn: '1 Packet', multiplier: 1 },
+      { id: '2pkts', labelBn: '২ প্যাকেট', labelEn: '2 Packets', multiplier: 2 },
+      { id: '5pkts', labelBn: '৫ প্যাকেট', labelEn: '5 Packets', multiplier: 5 }
+    ];
+  }
+
+  // 4. Box based
+  if (unit.includes('box') || unit.includes('বক্স')) {
+    return [
+      { id: '1box', labelBn: '১ বক্স', labelEn: '1 Box', multiplier: 1 },
+      { id: '2box', labelBn: '২ বক্স', labelEn: '2 Boxes', multiplier: 2 },
+      { id: '5box', labelBn: '৫ বক্স', labelEn: '5 Boxes', multiplier: 5 }
+    ];
+  }
+
+  // 5. Bottle or Jar based
+  if (unit.includes('bottle') || unit.includes('বোতল') || unit.includes('jar') || unit.includes('বয়াম')) {
+    const isJar = unit.includes('jar') || unit.includes('বয়াম');
+    const labelBnCap = isJar ? 'বয়াম' : 'বোতল';
+    const labelEnCap = isJar ? 'Jar' : 'Bottle';
+    return [
+      { id: '1unit', labelBn: `১ ${labelBnCap}`, labelEn: `1 ${labelEnCap}`, multiplier: 1 },
+      { id: '2units', labelBn: `২ ${labelBnCap}`, labelEn: `2 ${labelEnCap}`, multiplier: 2 },
+      { id: '5units', labelBn: `৫ ${labelBnCap}`, labelEn: `5 ${labelEnCap}`, multiplier: 5 }
+    ];
+  }
+
+  // 6. Any other custom unit (e.g., "মণ", "সের", "লিটার", etc.)
+  if (unit !== 'kg' && unit !== 'gram' && unit !== 'g' && unit !== 'gm' && unit !== 'কেজি' && unit !== 'গ্রাম' && unit !== '') {
+    const cleanUnit = (product.unit || '').replace(/[0-9০-৯\s]/g, '').trim();
+    const actualUnit = cleanUnit || product.unit || 'প্যাক';
+    return [
+      { id: '1custom', labelBn: `১ ${actualUnit}`, labelEn: `1 ${actualUnit}`, multiplier: 1 },
+      { id: '2custom', labelBn: `২ ${actualUnit}`, labelEn: `2 ${actualUnit}`, multiplier: 2 },
+      { id: '5custom', labelBn: `৫ ${actualUnit}`, labelEn: `5 ${actualUnit}`, multiplier: 5 }
+    ];
+  }
+
+  // 7. Default Weight based
+  return [
+    { id: '500g', labelBn: '৫০০ গ্রাম', labelEn: '500g', multiplier: 0.5 },
+    { id: '1kg', labelBn: '১ কেজি', labelEn: '1kg', multiplier: 1 },
+    { id: '2kg', labelBn: '২ কেজি', labelEn: '2kg', multiplier: 2 }
+  ];
+}
 
 
 

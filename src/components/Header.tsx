@@ -53,10 +53,14 @@ export const Header: React.FC<HeaderProps> = ({
     };
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    const handleOpenMenu = () => setIsMainMenuOpen(true);
+    window.addEventListener('open-main-menu', handleOpenMenu);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('open-main-menu', handleOpenMenu);
     };
   }, []);
 
@@ -166,22 +170,22 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* SEARCH COMPONENT */}
-          <div className="hidden md:flex flex-1 max-w-sm relative">
+          <div className="flex flex-1 max-w-[110px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm relative">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-gray-400" />
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
               <input
                 type="text"
-                placeholder="সতেজ আলু, আম বা পদ্মার ইলিশ খুঁজুন..."
+                placeholder="খুঁজুন..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full rounded-2xl border border-gray-200/80 bg-gray-50/50 py-2 pl-10 pr-4 text-xs transition-all outline-none focus:border-emerald-500 focus:bg-white focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-xl border border-gray-200/80 bg-gray-50/50 py-2 pl-8 pr-3 text-[10px] sm:text-xs transition-all outline-none focus:border-emerald-500 focus:bg-white focus:ring-1 focus:ring-emerald-500"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-2.5 text-xs text-gray-400 hover:text-gray-600"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
@@ -202,15 +206,10 @@ export const Header: React.FC<HeaderProps> = ({
               {language === 'en' ? 'All Products' : 'সব পণ্য'}
             </button>
             <button 
-              onClick={() => {
-                setView('home');
-                setTimeout(() => {
-                  document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
-                }, 150);
-              }}
-              className="hover:text-emerald-700 transition-colors cursor-pointer select-none text-sans"
+              onClick={() => handleNavClick('weekly-combos')}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'weekly-combos' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
-              {language === 'en' ? 'Combo Basket' : 'কম্বো বাস্কেট'}
+              {language === 'en' ? 'Weekly Combos' : 'কম্বো বাস্কেট'}
             </button>
             <button 
               onClick={() => handleNavClick('ready-to-cook')}
@@ -250,7 +249,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* FORCE ALWAYS VISIBLE APP DOWNLOAD BUTTON WITH SMART DIRECT APK TRIGGER */}
             <button
               onClick={handleInstallApp}
-              className="relative p-2 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer shadow-3xs flex items-center justify-center animate-bounce-subtle"
+              className="relative hidden md:flex p-2 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer shadow-3xs items-center justify-center animate-bounce-subtle"
               style={{ animationDuration: '4s' }}
               title="কৃষক বাজার সরাসরি অ্যান্ড্রয়েড অ্যাপ ডাউনলোড করুন"
             >
@@ -261,7 +260,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* NOTIFICATION INTERACTIVE BELL & DROPDOWN */}
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => {
                   setNotificationsOpen(!notificationsOpen);
@@ -414,7 +413,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* RIKTAZ AI OFFICIAL TRIGGER WITH LOGO */}
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('toggle-riktaz-ai'))}
-              className="relative flex h-8.5 w-8.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white border border-emerald-500 overflow-visible transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-emerald-100/30"
+              className="relative hidden md:flex h-8.5 w-8.5 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white border border-emerald-500 overflow-visible transition-transform duration-300 hover:scale-110 active:scale-95 cursor-pointer ring-2 ring-emerald-100/30"
               title="রিকতাজ AI সহকারী (Riktaz AI)"
             >
               <img 
@@ -433,7 +432,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* SEARCH ICON FOR SCANNABLE MOBILE LAYOUT */}
             <button 
               onClick={() => handleNavClick('shop')}
-              className="p-1.5 text-gray-500 hover:text-emerald-600 md:hidden"
+              className="p-1.5 text-gray-500 hover:text-emerald-600 hidden"
             >
               <Search className="h-4.5 w-4.5" />
             </button>
@@ -441,7 +440,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* CART BUTTON WITH LIVE COUNT */}
             <button 
               onClick={onOpenCart}
-              className="relative rounded-2xl border border-gray-100 p-2 text-gray-650 bg-gray-50/50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all cursor-pointer"
+              className="relative hidden md:flex rounded-2xl border border-gray-100 p-2 text-gray-650 bg-gray-50/50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-all cursor-pointer"
             >
               <ShoppingCart className="h-4.5 w-4.5" />
               {cartItemsCount > 0 && (
@@ -451,101 +450,103 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* PROFILE SECTION */}
-            {currentUser ? (
-              <div className="relative">
-                <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-1.5 rounded-2xl border border-gray-150 p-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer"
-                >
-                  <div className="h-7 w-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center text-white shrink-0 overflow-hidden text-xs">
-                    {currentUser.role === 'Admin' ? (
-                      'AD'
-                    ) : currentUser.role === 'Farmer' ? (
-                      <img src={currentUser.phone && currentUser.phone.includes('019') ? FEMALE_AVATAR : MALE_AVATAR} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                    ) : (
-                      currentUser.name.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <span className="hidden sm:inline max-w-[90px] truncate text-xs text-gray-800 font-sans">
-                    {currentUser.name.split(' ')[0]}
-                  </span>
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-                </button>
+            {/* PROFILE/LOGIN SECTION (HIDDEN ON MOBILE, HANDLED BY THE BOTTOM NAV BAR) */}
+            <div className="hidden md:flex items-center gap-2">
+              {currentUser ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-1.5 rounded-2xl border border-gray-150 p-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer"
+                  >
+                    <div className="h-7 w-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center text-white shrink-0 overflow-hidden text-xs">
+                      {currentUser.role === 'Admin' ? (
+                        'AD'
+                      ) : currentUser.role === 'Farmer' ? (
+                        <img src={currentUser.phone && currentUser.phone.includes('019') ? FEMALE_AVATAR : MALE_AVATAR} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        currentUser.name.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <span className="hidden sm:inline max-w-[90px] truncate text-xs text-gray-800 font-sans">
+                      {currentUser.name.split(' ')[0]}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                  </button>
 
-                {/* DROPDOWN MENU */}
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-white p-2 shadow-2xl border border-gray-100 ring-1 ring-black/5 divide-y divide-gray-50 z-50 animate-in fade-in slide-in-from-top-1 text-xs">
-                    <div className="px-3 py-2.5 space-y-1">
-                      <div className="flex items-center gap-1">
-                        <p className="font-bold text-gray-800 max-w-[140px] truncate">{currentUser.name}</p>
+                  {/* DROPDOWN MENU */}
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-2xl bg-white p-2 shadow-2xl border border-gray-100 ring-1 ring-black/5 divide-y divide-gray-50 z-50 animate-in fade-in slide-in-from-top-1 text-xs">
+                      <div className="px-3 py-2.5 space-y-1">
+                        <div className="flex items-center gap-1">
+                          <p className="font-bold text-gray-800 max-w-[140px] truncate">{currentUser.name}</p>
+                          {currentUser.subscriptionStatus === 'silver' && (
+                            <span className="text-yellow-500 text-[10px]" title="প্রিমিয়াম গ্রাহক">👑</span>
+                          )}
+                        </div>
+                        <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
+                          {currentUser.role === 'Admin' ? '👤 পরিচালক' : currentUser.role === 'Farmer' ? '🌱 অংশীদার কৃষক' : '🛍️ সম্মানিত ক্রেতা'}
+                        </span>
                         {currentUser.subscriptionStatus === 'silver' && (
-                          <span className="text-yellow-500 text-[10px]" title="প্রিমিয়াম গ্রাহক">👑</span>
+                          <span className="block text-[9px] font-extrabold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 text-center uppercase">
+                            ✔ ভেরিফাইড প্রিমিয়াম
+                          </span>
                         )}
                       </div>
-                      <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-100">
-                        {currentUser.role === 'Admin' ? '👤 পরিচালক' : currentUser.role === 'Farmer' ? '🌱 অংশীদার কৃষক' : '🛍️ সম্মানিত ক্রেতা'}
-                      </span>
-                      {currentUser.subscriptionStatus === 'silver' && (
-                        <span className="block text-[9px] font-extrabold text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 text-center uppercase">
-                          ✔ ভেরিফাইড প্রিমিয়াম
-                        </span>
-                      )}
-                    </div>
 
-                    <div className="py-1">
-                      {currentUser.role === 'Admin' && (
-                        <button
-                          onClick={() => { setProfileDropdownOpen(false); handleNavClick('admin'); }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
-                        >
-                          <Landmark className="h-4 w-4" />
-                          পরিচালনা প্যানেল
-                        </button>
-                      )}
-                      
-                      {currentUser.role === 'Farmer' && (
-                        <button
-                          onClick={() => { setProfileDropdownOpen(false); handleNavClick('farmer-dashboard'); }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          কৃষক ড্যাশবোর্ড
-                        </button>
-                      )}
+                      <div className="py-1">
+                        {currentUser.role === 'Admin' && (
+                          <button
+                            onClick={() => { setProfileDropdownOpen(false); handleNavClick('admin'); }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
+                          >
+                            <Landmark className="h-4 w-4" />
+                            পরিচালনা প্যানেল
+                          </button>
+                        )}
+                        
+                        {currentUser.role === 'Farmer' && (
+                          <button
+                            onClick={() => { setProfileDropdownOpen(false); handleNavClick('farmer-dashboard'); }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            কৃষক ড্যাশবোর্ড
+                          </button>
+                        )}
 
-                      {currentUser.role === 'Customer' && (
-                        <button
-                          onClick={() => { setProfileDropdownOpen(false); handleNavClick('customer-dashboard'); }}
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
-                        >
-                          <UserCheck className="h-4 w-4" />
-                          আমার ড্যাশবোর্ড
-                        </button>
-                      )}
-                    </div>
+                        {currentUser.role === 'Customer' && (
+                          <button
+                            onClick={() => { setProfileDropdownOpen(false); handleNavClick('customer-dashboard'); }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors"
+                          >
+                            <UserCheck className="h-4 w-4" />
+                            আমার ড্যাশবোর্ড
+                          </button>
+                        )}
+                      </div>
 
-                    <div className="py-1">
-                      <button
-                        onClick={() => { setProfileDropdownOpen(false); logout(); handleNavClick('home'); }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-650 hover:bg-red-50 rounded-lg transition-colors font-semibold"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        লগআউট (Logout)
-                      </button>
+                      <div className="py-1">
+                        <button
+                          onClick={() => { setProfileDropdownOpen(false); logout(); handleNavClick('home'); }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-650 hover:bg-red-50 rounded-lg transition-colors font-semibold"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          লগআউট (Logout)
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={onOpenAuth}
-                className="flex items-center gap-1 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-green-700 hover:shadow-lg transition-all cursor-pointer text-sans"
-              >
-                <User className="h-3.5 w-3.5" />
-                লগইন (Login)
-              </button>
-            )}
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={onOpenAuth}
+                  className="flex items-center gap-1 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-green-700 hover:shadow-lg transition-all cursor-pointer text-sans"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  লগইন (Login)
+                </button>
+              )}
+            </div>
 
             {/* MAIN PERSISTENT CATEGORY DRAWER MENU BUTTON */}
             <button
@@ -604,6 +605,70 @@ export const Header: React.FC<HeaderProps> = ({
                     <p className="text-xs font-black text-gray-800 leading-normal mt-1.5">সরাসরি কৃষকের বাড়ি থেকে তাজা খাদ্য জোগান</p>
                   </div>
                 </div>
+              </div>
+
+              {/* MOBILE LOGIN & CUSTOMER REGISTRATION ENGAGEMENT CARD */}
+              <div className="bg-gradient-to-br from-indigo-900 to-indigo-950 rounded-2xl p-4.5 text-white shadow border border-indigo-800 space-y-3 shrink-0">
+                {currentUser ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-9 w-9 rounded-full bg-indigo-500/35 border border-indigo-400 flex items-center justify-center font-black text-xs shrink-0 font-sans uppercase">
+                        👤 {currentUser.name?.substring(0,2) || 'KB'}
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-indigo-300 font-extrabold uppercase leading-none">স্বাগতম (Welcome Back)</div>
+                        <strong className="text-xs font-black block mt-1 tracking-tight truncate max-w-[180px]">{currentUser.name}</strong>
+                      </div>
+                      <span className="ml-auto text-[9px] bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider scale-95 shrink-0">
+                        {currentUser.role === 'Admin' ? 'অ্যাডমিন' : (currentUser.role === 'Farmer' ? 'খামারি' : 'ক্রেতা')}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+                      <button
+                        onClick={() => {
+                          setIsMainMenuOpen(false);
+                          if (currentUser.role === 'Admin') handleNavClick('admin');
+                          else if (currentUser.role === 'Farmer') handleNavClick('farmer-dashboard');
+                          else handleNavClick('customer-dashboard');
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-1.5 px-2 text-[10px] font-black cursor-pointer text-center select-none"
+                      >
+                        📊 ড্যাশবোর্ড যান
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsMainMenuOpen(false);
+                          logout();
+                          handleNavClick('home');
+                        }}
+                        className="bg-white/10 hover:bg-white/18 text-white rounded-lg py-1.5 px-2 text-[10px] font-black cursor-pointer text-center select-none"
+                      >
+                        🚪 লগআউট করুন
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-xl">🛡️</span>
+                      <div>
+                        <strong className="text-xs font-black block leading-snug">আপনার অ্যাকাউন্ট লগইন বা ট্র্যাকিং করুন</strong>
+                        <p className="text-[9px] text-indigo-200 mt-1 leading-normal font-medium">অর্ডার স্ট্যাটাস দেখতে, ও কম্বো ডাটা পরিবর্তন নিশ্চিত করতে দয়া করে লগইন বা রেজিষ্ট্রেশন করুন।</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setIsMainMenuOpen(false);
+                        onOpenAuth();
+                      }}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-2 text-xs font-black cursor-pointer flex items-center justify-center gap-1 shadow hover:scale-[1.02] active:scale-98 transition-all"
+                    >
+                      👤 ক্রেতা লগইন ও রেজিস্ট্রেশন করুন (Login)
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -710,11 +775,7 @@ export const Header: React.FC<HeaderProps> = ({
                   <button
                     onClick={() => {
                       setIsMainMenuOpen(false);
-                      setView('home');
-                      setTimeout(() => {
-                        const cb = document.getElementById('combo-basket');
-                        if (cb) cb.scrollIntoView({ behavior: 'smooth' });
-                      }, 200);
+                      handleNavClick('weekly-combos');
                     }}
                     className="w-full flex items-center justify-between p-3.5 bg-white hover:bg-emerald-50 hover:border-emerald-300 border border-gray-150/60 rounded-2xl transition duration-150 cursor-pointer text-left hover:scale-[1.01] shadow-3xs"
                   >

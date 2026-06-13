@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Product, getFormattedUnit } from '../types';
+import { Product, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -19,36 +19,23 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, onEditProduct }) => {
   const { addToCart, currentUser, language, editProduct } = useApp();
 
-  const isWeightBased = !['piece', 'pcs', 'pc', 'টি', 'piece/পিস', 'পিস'].includes(product.unit?.toLowerCase().trim() || '');
-  const [selectedPack, setSelectedPack] = React.useState<string>(isWeightBased ? '1kg' : '1pc');
+  const packOptions = React.useMemo(() => getProductPackOptions(product), [product]);
+  const [selectedPackId, setSelectedPackId] = React.useState<string>(() => {
+    return packOptions[1]?.id || packOptions[0]?.id || '1';
+  });
 
-  let packMultiplier = 1;
-  let packLabelBn = '';
-  let packLabelEn = '';
+  // Keep state synchronized if product unit changes
+  React.useEffect(() => {
+    setSelectedPackId(packOptions[1]?.id || packOptions[0]?.id || '1');
+  }, [packOptions]);
 
-  if (isWeightBased) {
-    if (selectedPack === '500g') {
-      packMultiplier = 0.5;
-      packLabelBn = '৫০০ গ্রাম';
-      packLabelEn = '500g';
-    } else if (selectedPack === '1kg') {
-      packMultiplier = 1;
-      packLabelBn = '১ কেজি';
-      packLabelEn = '1kg';
-    } else if (selectedPack === '2kg') {
-      packMultiplier = 2;
-      packLabelBn = '২ কেজি';
-      packLabelEn = '2kg';
-    } else {
-      packMultiplier = 1;
-      packLabelBn = '১ কেজি';
-      packLabelEn = '1kg';
-    }
-  } else {
-    packMultiplier = 1;
-    packLabelBn = '১ টি';
-    packLabelEn = '1 Pc';
-  }
+  const activeOption = React.useMemo(() => {
+    return packOptions.find(o => o.id === selectedPackId) || packOptions[0];
+  }, [packOptions, selectedPackId]);
+
+  const packMultiplier = activeOption?.multiplier || 1;
+  const packLabelBn = activeOption?.labelBn || '';
+  const packLabelEn = activeOption?.labelEn || '';
 
   const displayPrice = Math.round((product.discountPrice || product.price) * packMultiplier);
   const originalPrice = Math.round(product.price * packMultiplier);
@@ -220,27 +207,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
           </span>
         </div>
 
-        {/* Stateful Weight Mini Cards Selection */}
-        {isWeightBased && (
+        {/* Stateful Pack Option Selection */}
+        {packOptions.length > 0 && (
           <div className="mt-2.5 mb-1.5 flex items-center gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
-            <span className="text-gray-400 font-bold shrink-0">ওজন:</span>
+            <span className="text-gray-400 font-bold shrink-0">
+              {language === 'bn' ? 'পরিমাণ:' : 'Size:'}
+            </span>
             <div className="flex gap-1 items-center flex-1">
-              {[
-                { id: '500g', label: '৫০০ গ্রাম', labelEn: '500g' },
-                { id: '1kg', label: '১ কেজি', labelEn: '1kg' },
-                { id: '2kg', label: '২ কেজি', labelEn: '2kg' }
-              ].map((opt) => (
+              {packOptions.map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setSelectedPack(opt.id)}
+                  onClick={() => setSelectedPackId(opt.id)}
                   className={`flex-1 rounded py-0.5 border text-center transition-all cursor-pointer font-extrabold text-[8px] sm:text-[9px] leading-tight ${
-                    selectedPack === opt.id
+                    selectedPackId === opt.id
                       ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-black'
                       : 'border-gray-200 bg-white text-gray-400 hover:bg-gray-50'
                   }`}
                 >
-                  {language === 'bn' ? opt.label : opt.labelEn}
+                  {language === 'bn' ? opt.labelBn : opt.labelEn}
                 </button>
               ))}
             </div>

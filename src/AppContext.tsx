@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert } from './types';
+import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert, WeeklyComboOffer, WeeklyComboProduct } from './types';
 import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
@@ -113,6 +113,8 @@ interface AppContextType {
   likePost: (postId: string) => void;
   commentPost: (postId: string, commentText: string, parentCommentId?: string) => void;
   deletePost: (postId: string) => void;
+  weeklyCombos: WeeklyComboOffer[];
+  saveWeeklyCombos: (newWeeklyCombos: WeeklyComboOffer[]) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -360,6 +362,264 @@ export const sanitizeFirestoreData = <T extends Record<string, any>>(obj: T): T 
   }
   return result;
 };
+
+const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
+  {
+    id: "co-1",
+    titleBn: "১। ফ্যামিলি ডেইলী সাশ্রয়ী বাস্কেট",
+    titleEn: "1. Weekly Daily Family Value Basket",
+    products: [
+      {
+        id: "co-1-p-1",
+        nameBn: "লাল কুঁড়ি বেগুন (Tender Eggplant)",
+        nameEn: "Fresh Red Tender Eggplant",
+        image: "https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=600",
+        link: "https://krishokbazar.com/eggplant",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [50, 95, 180, 430],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      },
+      {
+        id: "co-1-p-2",
+        nameBn: "দেশী গোল লাল আলু (Red Potato)",
+        nameEn: "Deshi Red Baked Potato",
+        image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600",
+        link: "https://krishokbazar.com/potato",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [30, 55, 105, 250],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      },
+      {
+        id: "co-1-p-3",
+        nameBn: "কচি লম্বা লাউ (Bottle Gourd)",
+        nameEn: "Organic Sweet Bottle Gourd",
+        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
+        link: "",
+        weight: "১ পিস",
+        date: "১২ জুন, ২০২৬",
+        prices: [45, 85, 160, 310],
+        priceLabels: ["১ পিস", "২ পিস", "৪ পিস", "৮ পিস"]
+      },
+      {
+        id: "co-1-p-4",
+        nameBn: "পাহাড়ি মিষ্টি পেঁপে (Papaya)",
+        nameEn: "Sweet Hill Papaya",
+        image: "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [60, 115, 220, 530],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      }
+    ]
+  },
+  {
+    id: "co-2",
+    titleBn: "২। পুষ্টি বুস্টার তাজা ফল বাস্কেট",
+    titleEn: "2. Vitamin Booster Fruit Basket",
+    products: [
+      {
+        id: "co-2-p-1",
+        nameBn: "সবুজ রসালো মাল্টা (Malta Juice)",
+        nameEn: "Juicy Mountain Green Malta",
+        image: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [120, 230, 440, 1050],
+        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
+      },
+      {
+        id: "co-2-p-2",
+        nameBn: "অর্গানিক সাগর কলা (Sagor Banana)",
+        nameEn: "Organic Yellow Sagor Banana",
+        image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600",
+        link: "",
+        weight: "১ ডজন",
+        date: "১২ জুন, ২০২৬",
+        prices: [45, 85, 165, 310],
+        priceLabels: ["৪ পিস", "১২ পিস (১ ডজন)", "২৪ পিস (২ ডজন)", "৩৬ পিস (৩ ডজন)"]
+      },
+      {
+        id: "co-2-p-3",
+        nameBn: "সতেজ বাজা পেয়ারা (Fresh Guava)",
+        nameEn: "Crunchy Sweet Farm Guava",
+        image: "https://images.unsplash.com/photo-1534444312678-7957cb1bb816?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [70, 135, 260, 620],
+        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
+      },
+      {
+        id: "co-2-p-4",
+        nameBn: "কাগজি লেবু তাজা (Lemons)",
+        nameEn: "Green Seedless Juicy Lemon",
+        image: "https://images.unsplash.com/photo-1590502596717-295b7fece67b?w=600",
+        link: "",
+        weight: "১২ পিস",
+        date: "১২ জুন, ২০২৬",
+        prices: [25, 48, 90, 175],
+        priceLabels: ["৪টি", "১২টি (১ ডজন)", "২৪টি (২ ডজন)", "৪০টি"]
+      }
+    ]
+  },
+  {
+    id: "co-3",
+    titleBn: "৩। কিচেন এসেনশিয়াল অর্গানিক বাস্কেট",
+    titleEn: "3. Kitchen Essentials Organic Basket",
+    products: [
+      {
+        id: "co-3-p-1",
+        nameBn: "সুন্দরবনের খাঁটি মধু (Pure Honey)",
+        nameEn: "Pure Unfiltered Sundarban Honey",
+        image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600",
+        link: "",
+        weight: "২৫০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [350, 680, 1320, 3100],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      },
+      {
+        id: "co-3-p-2",
+        nameBn: "ঘানি ভাঙা খাঁটি সরিষার তেল (Oil)",
+        nameEn: "Coldpressed Pure Mustard Oil",
+        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600",
+        link: "",
+        weight: "৫০০ মিলি",
+        date: "১২ জুন, ২০২৬",
+        prices: [130, 240, 470, 2200],
+        priceLabels: ["২৫০ মিলি", "৫০০ মিলি", "১ লিটার", "৫ লিটার"]
+      },
+      {
+        id: "co-3-p-3",
+        nameBn: "দেশি কাঁচা পাহাড়ি আদা (Ginger)",
+        nameEn: "Hill-grown Deshi Fresh Ginger",
+        image: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=600",
+        link: "",
+        weight: "২৫০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [45, 85, 160, 390],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      },
+      {
+        id: "co-3-p-4",
+        nameBn: "দেশি রসুনের ছড়া (Garlic Bulk)",
+        nameEn: "Organic Deshi Solid Garlic",
+        image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600",
+        link: "",
+        weight: "২৫০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [60, 115, 220, 530],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      }
+    ]
+  },
+  {
+    id: "co-4",
+    titleBn: "৪। সুস্থ জীবন হাই-প্রোটিন বাস্কেট",
+    titleEn: "4. Healthy High-Protein Basket",
+    products: [
+      {
+        id: "co-4-p-1",
+        nameBn: "দেশী মুরগির ডিম (Farm Eggs)",
+        nameEn: "Free Range Golden Eggs",
+        image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=600",
+        link: "",
+        weight: "১ ডজন",
+        date: "১২ জুন, ২০২৬",
+        prices: [65, 130, 255, 500],
+        priceLabels: ["৪টি", "১২টি (১ ডজন)", "২৪টি (২ ডজন)", "৪৮টি"]
+      },
+      {
+        id: "co-4-p-2",
+        nameBn: "হাওরের তাজা রুই মাছ (Rui Fish)",
+        nameEn: "Wild Hauor Catch Big Rui Fish",
+        image: "https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [380, 750, 1450, 3500],
+        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
+      },
+      {
+        id: "co-4-p-3",
+        nameBn: "ডেইরি খাঁটি গরুর তরল দুধ (Milk)",
+        nameEn: "Farm Fresh Raw Cow Milk",
+        image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600",
+        link: "",
+        weight: "১ লিটার",
+        date: "১২ জুন, ২০২৬",
+        prices: [90, 175, 340, 820],
+        priceLabels: ["১ লিটার", "২ লিটার", "৪ লিটার", "১০ লিটার"]
+      },
+      {
+        id: "co-4-p-4",
+        nameBn: "পাহাড়ি খাঁটি গরুর ঘি (Premium Ghee)",
+        nameEn: "Traditional Hand-churned Deshi Ghee",
+        image: "https://images.unsplash.com/photo-1589545625049-730d99300355?w=600",
+        link: "",
+        weight: "২৫০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [350, 680, 1320, 3200],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      }
+    ]
+  },
+  {
+    id: "co-5",
+    titleBn: "৫। এক্সক্লুসিভ সতেজ সালাদ ও ফাইবার প্রিমিয়াম বাস্কেট",
+    titleEn: "5. Exclusive Salad & Greens Premium Basket",
+    products: [
+      {
+        id: "co-5-p-1",
+        nameBn: "তাজা লাল চেরি টমেটো (Cherry Tomatoes)",
+        nameEn: "Fresh Red Cherry Tomatoes",
+        image: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600",
+        link: "",
+        weight: "৫০০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [70, 130, 250, 600],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      },
+      {
+        id: "co-5-p-2",
+        nameBn: "ক্ষেতের কচি তিতাহীন শসা (Premium Cucumber)",
+        nameEn: "Crisp Green Cucumbers",
+        image: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [40, 75, 140, 320],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      },
+      {
+        id: "co-5-p-3",
+        nameBn: "কাগজি সুগন্ধি লেবু (Green Lemons)",
+        nameEn: "Juicy Seedless Lemons",
+        image: "https://images.unsplash.com/photo-1590502596717-295b7fece67b?w=600",
+        link: "",
+        weight: "১২ পিস",
+        date: "১২ জুন, ২০২৬",
+        prices: [30, 50, 95, 180],
+        priceLabels: ["৪টি", "১২টি (১ ডজন)", "২৪টি (২ ডজন)", "৪০টি"]
+      },
+      {
+        id: "co-5-p-4",
+        nameBn: "পাহাড়ি মিষ্টি পেঁপে (Sweet Papaya)",
+        nameEn: "Organic Sweet Rich Papaya",
+        image: "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [55, 100, 190, 450],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      }
+    ]
+  }
+];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<'bn' | 'en'>(() => {
@@ -662,6 +922,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('kb_blogs');
     return saved ? JSON.parse(saved) : demoBlogs;
   });
+
+  const [weeklyCombos, setWeeklyCombos] = useState<WeeklyComboOffer[]>(() => {
+    const saved = localStorage.getItem('kb_weekly_combos');
+    return saved ? JSON.parse(saved) : DEFAULT_WEEKLY_COMBOS;
+  });
+
+  const saveWeeklyCombos = (newCombos: WeeklyComboOffer[]) => {
+    setWeeklyCombos(newCombos);
+    localStorage.setItem('kb_weekly_combos', JSON.stringify(newCombos));
+    triggerSync('weekly_combos');
+  };
 
   const [offers, setOffers] = useState<Offer[]>(() => {
     const saved = localStorage.getItem('kb_offers');
@@ -2527,7 +2798,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addPost,
       likePost,
       commentPost,
-      deletePost
+      deletePost,
+      weeklyCombos,
+      saveWeeklyCombos
     }}>
       {children}
     </AppContext.Provider>

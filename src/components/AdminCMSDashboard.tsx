@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
-import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings } from '../types';
+import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings, toBanglaDigits } from '../types';
 import { 
   Users, 
   Package, 
@@ -94,6 +94,8 @@ export const AdminCMSDashboard: React.FC = () => {
     farmers, 
     orders,
     reviews,
+    weeklyCombos,
+    saveWeeklyCombos,
     addProduct, 
     editProduct, 
     deleteProduct,
@@ -835,6 +837,16 @@ export const AdminCMSDashboard: React.FC = () => {
             📝 কৃষি ব্লগ CMS ({blogs?.length || 0})
           </button>
           <button
+            onClick={() => setAdminActiveTab('weekly-combos' as any)}
+            className={`px-4.5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminActiveTab === ('weekly-combos' as any)
+                ? 'bg-emerald-600 text-white shadow font-black'
+                : 'text-gray-600 hover:bg-gray-250/60 hover:text-gray-900 bg-white border border-gray-100'
+            }`}
+          >
+            🎁 সাপ্তাহিক কম্বো CMS ({weeklyCombos?.length || 0})
+          </button>
+          <button
             onClick={() => setAdminActiveTab('settings')}
             className={`px-4.5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
               adminActiveTab === 'settings'
@@ -998,15 +1010,20 @@ export const AdminCMSDashboard: React.FC = () => {
                         if (adminFarmerFilter === 'Inactive') return f.isActive === false;
                         return true;
                       })
-                      .map((f) => (
-                      <div key={f.id} className="border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white hover:bg-gray-50/50 transition-all font-sans">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-50 shrink-0 border border-gray-150">
-                            <img src={f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-xs font-bold text-gray-900">{f.name}</span>
+                      .map((f, idx) => {
+                        const serialNum = parseInt(f.id.replace('f', '')) || (idx + 1);
+                        return (
+                        <div key={f.id} className="border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white hover:bg-gray-50/50 transition-all font-sans">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-emerald-50 text-emerald-800 rounded-full shrink-0 flex items-center justify-center font-bold text-xs border border-emerald-100">
+                              {toBanglaDigits(serialNum)}
+                            </div>
+                            <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-50 shrink-0 border border-gray-150">
+                              <img src={f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-bold text-gray-900">{f.name}</span>
                               {f.verified && (
                                 <span className="inline-flex items-center gap-0.5 rounded bg-emerald-50 px-1 rounded text-[8px] font-black text-emerald-600 border border-emerald-100">
                                   ✔ ভেরিফাইড
@@ -1086,7 +1103,8 @@ export const AdminCMSDashboard: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1439,9 +1457,14 @@ export const AdminCMSDashboard: React.FC = () => {
                           onChange={(e) => setAdminProdFarmerId(e.target.value)}
                           className="w-full bg-white rounded-xl border border-gray-200 p-2 font-bold"
                         >
-                          {farmers.map(f => (
-                            <option key={f.id} value={f.id}>{f.name} ({f.district}) [ID: {f.id}]</option>
-                          ))}
+                          {farmers.map((f, idx) => {
+                            const serialNum = parseInt(f.id.replace('f', '')) || (idx + 1);
+                            return (
+                              <option key={f.id} value={f.id}>
+                                সিরিয়াল: {toBanglaDigits(serialNum)} - {f.name} ({f.district})
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                     </div>
@@ -1775,9 +1798,14 @@ export const AdminCMSDashboard: React.FC = () => {
                             onChange={(e) => setAdminProdFarmerId(e.target.value)}
                             className="w-full bg-white rounded-xl border border-gray-200 p-2.5 text-xs font-bold text-gray-800 focus:ring-2 focus:ring-indigo-100 outline-none cursor-pointer"
                           >
-                            {farmers.map(f => (
-                              <option key={f.id} value={f.id}>{f.name} ({f.district}) [ID: {f.id}]</option>
-                            ))}
+                            {farmers.map((f, idx) => {
+                              const serialNum = parseInt(f.id.replace('f', '')) || (idx + 1);
+                              return (
+                                <option key={f.id} value={f.id}>
+                                  সিরিয়াল: {toBanglaDigits(serialNum)} - {f.name} ({f.district})
+                                </option>
+                              );
+                            })}
                           </select>
                         </div>
                       </div>
@@ -3637,6 +3665,225 @@ export const AdminCMSDashboard: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: WEEKLY COMBOS CMS */}
+          {adminActiveTab === ('weekly-combos' as any) && (
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-8 font-sans">
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-gray-850 flex items-center gap-1.5">
+                  🎁 সাপ্তাহিক ধামাকা কম্বো ও বাস্কেট এডিটর (Weekly Combos CMS)
+                </h2>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  এখানে আপনি ৪টি কম্বো অফারের নাম, এবং প্রতিটির ৪টি পণ্যের দাম, ছবি, নাম ও লিংক কাস্টমাইজ করতে পারবেন।
+                </p>
+              </div>
+
+              <div className="space-y-10">
+                {weeklyCombos.map((combo, comboIdx) => {
+                  return (
+                    <div key={combo.id} className="border border-emerald-100 rounded-2xl p-5 bg-emerald-50/10 space-y-6">
+                      {/* Combo Header Edit */}
+                      <div className="border-b border-emerald-100 pb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-emerald-600/5 p-4 rounded-xl">
+                        <div className="flex-1 space-y-2">
+                          <label className="block text-xs font-black text-emerald-800 uppercase tracking-wider">
+                            কম্বো অফার {toBanglaDigits(comboIdx + 1)} এর শিরোনাম:
+                          </label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input 
+                              type="text"
+                              value={combo.titleBn}
+                              onChange={(e) => {
+                                const updated = [...weeklyCombos];
+                                updated[comboIdx].titleBn = e.target.value;
+                                saveWeeklyCombos(updated);
+                              }}
+                              className="w-full bg-white rounded-xl border border-gray-250 p-2.5 text-xs font-bold text-gray-800"
+                              placeholder="অফারের চমৎকার শিরোনাম (বাংলায়)"
+                            />
+                            <input 
+                              type="text"
+                              value={combo.titleEn}
+                              onChange={(e) => {
+                                const updated = [...weeklyCombos];
+                                updated[comboIdx].titleEn = e.target.value;
+                                saveWeeklyCombos(updated);
+                              }}
+                              className="w-full bg-white rounded-xl border border-gray-250 p-2.5 text-xs font-bold text-gray-800"
+                              placeholder="Offer Title (English)"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 4 Products in this combo */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {combo.products.map((prod, prodIdx) => {
+                          return (
+                            <div key={prod.id} className="border border-gray-205 rounded-xl p-4 bg-white space-y-4 shadow-3xs relative">
+                              <div className="flex items-center justify-between border-b pb-2">
+                                <span className="text-xs font-black text-gray-700 flex items-center gap-1">
+                                  <span>পণ্য {toBanglaDigits(prodIdx + 1)}:</span>
+                                  <span className="text-emerald-700">{prod.nameBn || 'নতুন পণ্য'}</span>
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-mono">ID: {prod.id}</span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-450 mb-0.5">পণ্যের নাম (বাংলায়):</label>
+                                  <input 
+                                    type="text"
+                                    value={prod.nameBn}
+                                    onChange={(e) => {
+                                      const updated = [...weeklyCombos];
+                                      updated[comboIdx].products[prodIdx].nameBn = e.target.value;
+                                      saveWeeklyCombos(updated);
+                                    }}
+                                    className="w-full bg-white rounded-lg border border-gray-200 p-2 text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-450 mb-0.5">পণ্যের নাম (English):</label>
+                                  <input 
+                                    type="text"
+                                    value={prod.nameEn}
+                                    onChange={(e) => {
+                                      const updated = [...weeklyCombos];
+                                      updated[comboIdx].products[prodIdx].nameEn = e.target.value;
+                                      saveWeeklyCombos(updated);
+                                    }}
+                                    className="w-full bg-white rounded-lg border border-gray-200 p-2 text-xs font-sans"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-450 mb-0.5">ওজন / পরিমাণ পরিমাপ:</label>
+                                  <input 
+                                    type="text"
+                                    value={prod.weight}
+                                    onChange={(e) => {
+                                      const updated = [...weeklyCombos];
+                                      updated[comboIdx].products[prodIdx].weight = e.target.value;
+                                      saveWeeklyCombos(updated);
+                                    }}
+                                    className="w-full bg-white rounded-lg border border-gray-200 p-2 text-xs"
+                                    placeholder="যেমন: ১ কেজি বা ১ পিস"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-450 mb-0.5">ফসল তোলার দিন / তারিখ:</label>
+                                  <input 
+                                    type="text"
+                                    value={prod.date}
+                                    onChange={(e) => {
+                                      const updated = [...weeklyCombos];
+                                      updated[comboIdx].products[prodIdx].date = e.target.value;
+                                      saveWeeklyCombos(updated);
+                                    }}
+                                    className="w-full bg-white rounded-lg border border-gray-200 p-2 text-xs"
+                                    placeholder="যেমন: ১২ জুন, ২০২৬"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-2.5">
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-450 mb-0.5">পণ্যের ছবির লাইভ লিংক URL:</label>
+                                  <input 
+                                    type="text"
+                                    value={prod.image}
+                                    onChange={(e) => {
+                                      const updated = [...weeklyCombos];
+                                      updated[comboIdx].products[prodIdx].image = e.target.value;
+                                      saveWeeklyCombos(updated);
+                                    }}
+                                    className="w-full bg-white rounded-lg border border-gray-200 p-2 text-xs font-mono"
+                                    placeholder="Unsplash বা গুগল ড্রাইভ ইমেজ লিংক"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[10px] font-bold text-gray-450 mb-0.5">পণ্যের বিস্তারিত ব্রাউজ লিংক (ঐচ্ছিক):</label>
+                                  <input 
+                                    type="text"
+                                    value={prod.link || ''}
+                                    onChange={(e) => {
+                                      const updated = [...weeklyCombos];
+                                      updated[comboIdx].products[prodIdx].link = e.target.value;
+                                      saveWeeklyCombos(updated);
+                                    }}
+                                    className="w-full bg-white rounded-lg border border-gray-200 p-2 text-xs font-mono"
+                                    placeholder="https://krishokbazar.com/product"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* 4 Custom Prices Block */}
+                              <div className="bg-slate-50 rounded-xl p-3 border border-gray-150 space-y-2">
+                                <span className="block text-[10px] font-black text-gray-600 uppercase tracking-widest text-center border-b pb-1">
+                                  💵 ৪টি অপショナル পরিমাণ ও মূল্য তালিকা (4 Prices)
+                                </span>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {[0, 1, 2, 3].map((valIdx) => (
+                                    <div key={valIdx} className="bg-white border rounded-lg p-2 space-y-1">
+                                      <span className="text-[8px] font-black text-emerald-800 block">ধাপ {toBanglaDigits(valIdx + 1)}:</span>
+                                      <div className="flex flex-col gap-1">
+                                        <input 
+                                          type="number"
+                                          value={prod.prices[valIdx]}
+                                          onChange={(e) => {
+                                            const updated = [...weeklyCombos];
+                                            updated[comboIdx].products[prodIdx].prices[valIdx] = Number(e.target.value);
+                                            saveWeeklyCombos(updated);
+                                          }}
+                                          className="w-full bg-slate-50 rounded p-1 text-[11px] font-mono focus:bg-white border text-center"
+                                          placeholder="মূল্য ৳"
+                                        />
+                                        <input 
+                                          type="text"
+                                          value={prod.priceLabels[valIdx]}
+                                          onChange={(e) => {
+                                            const updated = [...weeklyCombos];
+                                            updated[comboIdx].products[prodIdx].priceLabels[valIdx] = e.target.value;
+                                            saveWeeklyCombos(updated);
+                                          }}
+                                          className="w-full bg-slate-50 rounded p-1 text-[9px] font-sans focus:bg-white border text-center"
+                                          placeholder="লেবেল (যেমন: ১ কেজি)"
+                                        />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Informative Save Action Indicator */}
+              <div className="bg-emerald-50 border border-emerald-150 rounded-2xl p-4.5 flex items-center justify-between gap-3 text-emerald-950">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <span className="text-xs font-bold">সকল পরিবর্তন স্বয়ংক্রিয়ভাবে লোকালহোস্টে সেভ করা হয়েছে!</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert("সাপ্তাহিক ৪টি কম্বো এবং ১৬টি পণ্যের ডাটা সফলভাবে সেভ ও লাইভ সিঙ্ক করা হয়েছে!");
+                  }}
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow transition"
+                >
+                  ডাটা সেভ নিশ্চিত করুন
+                </button>
               </div>
             </div>
           )}
