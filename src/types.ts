@@ -52,6 +52,7 @@ export interface Product {
   harvestDate?: string;
   farmName?: string;
   unit?: string; // unit of measure e.g. kg, piece, 500g
+  unitType?: string; // custom unit type e.g. packet, dozen, kg
   isActive?: boolean;
   googleDriveFolderUrl?: string;
 }

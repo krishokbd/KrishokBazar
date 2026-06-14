@@ -89,7 +89,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
       );
       
       // WhatsApp auto routing
-      const adminWhatsApp = siteSettings?.paymentNagadNumber || "01987012893";
+      const adminWhatsApp = siteSettings?.whatsappContactNumber || "01931355398";
       const productListStr = order.products.map((p, idx) => {
         const unit = p.selectedUnit ? ` (${p.selectedUnit})` : "";
         return `${idx + 1}. *${p.title}*${unit} - ${p.quantity}টি x ৳${p.price} = ৳${p.price * p.quantity}`;

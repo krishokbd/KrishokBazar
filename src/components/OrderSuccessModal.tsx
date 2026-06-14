@@ -25,7 +25,7 @@ interface OrderSuccessModalProps {
 export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ orderId, onClose }) => {
   const { orders, siteSettings } = useApp();
   const order = orders.find(o => o.id === orderId);
-  const targetNumber = siteSettings?.paymentNagadNumber || '01987012893';
+  const targetNumber = siteSettings?.whatsappContactNumber || '01931355398';
 
   const [successChannels, setSuccessChannels] = useState<Record<string, boolean>>({
     whatsapp: false,
