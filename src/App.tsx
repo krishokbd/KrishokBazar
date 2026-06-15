@@ -34,6 +34,8 @@ import { VerifiedFarmersView } from './components/VerifiedFarmersView';
 import { BlogView } from './components/BlogView';
 import { ScrollingBanners } from './components/ScrollingBanners';
 import { WeeklyCombosView } from './components/WeeklyCombosView';
+import { WeeklyDiscountView } from './components/WeeklyDiscountView';
+import { ProductComparisonModal } from './components/ProductComparisonModal';
 import { BottomNavigation } from './components/BottomNavigation';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
@@ -158,7 +160,7 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   // Route state
-  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog' | 'admin-login' | 'weekly-combos'>('home');
+  const [currentView, setView] = useState<'home' | 'shop' | 'ready-to-cook' | 'farmers' | 'customer-dashboard' | 'farmer-dashboard' | 'admin' | 'product-details' | 'farmer-store' | 'our-story' | 'blog' | 'admin-login' | 'weekly-combos' | 'weekly-discount'>('home');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedFarmerStoreId, setSelectedFarmerStoreId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,6 +176,31 @@ const AppContent: React.FC = () => {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [activeFarmerProfile, setActiveFarmerProfile] = useState<Farmer | null>(null);
+
+  // Side-by-side product comparison states
+  const [comparedProductIds, setComparedProductIds] = useState<string[]>([]);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  useEffect(() => {
+    const handleCompareOpen = () => {
+      setIsCompareOpen(true);
+    };
+    window.addEventListener('open-compare-modal', handleCompareOpen);
+    return () => window.removeEventListener('open-compare-modal', handleCompareOpen);
+  }, []);
+
+  const handleToggleCompare = (productId: string) => {
+    setComparedProductIds((prev) => {
+      if (prev.includes(productId)) {
+        return prev.filter((id) => id !== productId);
+      }
+      if (prev.length >= 4) {
+        alert('আপনি সর্বোচ্চ ৪টি পণ্য একসাথে তুলনা করতে পারবেন!');
+        return prev;
+      }
+      return [...prev, productId];
+    });
+  };
 
   // Redirect on user role change
   useEffect(() => {
@@ -701,6 +728,8 @@ const AppContent: React.FC = () => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onEditProduct={setEditingProduct}
+            onToggleCompare={handleToggleCompare}
+            isCompared={comparedProductIds.includes(selectedProductId)}
           />
         )}
 
@@ -776,6 +805,23 @@ const AppContent: React.FC = () => {
           />
         )}
 
+        {/* STANDALONE WEEKLY DISCOUNTED PRODUCTS PAGE */}
+        {currentView === 'weekly-discount' && (
+          <WeeklyDiscountView 
+            onBackToHome={() => {
+              setView('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onSelectProduct={(id) => {
+              setSelectedProductId(id);
+              setView('product-details');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onToggleCompare={handleToggleCompare}
+            comparedProductIds={comparedProductIds}
+          />
+        )}
+
         {/* STANDALONE PUBLIC SOCIAL MEDIA FEED (FARMERS' SOCIAL YARD) */}
         {currentView === 'social-feed' && (
           <div className="bg-slate-50 min-h-screen py-6 font-sans">
@@ -809,22 +855,6 @@ const AppContent: React.FC = () => {
               onCallHelp={() => handleOpenAuthModal()}
             />
 
-            {/* Seasonal Harvest Bulletin Alerts Banner */}
-            <SeasonalHarvestBanner
-              onViewCrop={(alert) => {
-                setView('shop');
-                const searchPhrase = (language === 'en' ? alert.cropNameEn : alert.cropNameBn).split(' ')[0];
-                setSearchQuery(searchPhrase);
-              }}
-              onOpenAuthModal={() => handleOpenAuthModal()}
-            />
-
-            {/* Featured category system */}
-            <CategoriesGrid 
-              selectedCategory={selectedCategory} 
-              onSelectCategory={handleSelectCategory} 
-            />
-
             {/* SPOTLIGHTS & DISCOUNT OFFERS CARDS */}
             <section className="py-12 bg-gray-50">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -842,10 +872,10 @@ const AppContent: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Grid limit of 12 freshest active standard products (excluding combo baskets) */}
+                {/* Grid limit of 12 freshest active standard featured products (excluding combo baskets) */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {products
-                    .filter((p) => !p.id.startsWith('cb') && p.isActive !== false)
+                    .filter((p) => p.isFeatured === true && !p.id.startsWith('cb') && p.isActive !== false)
                     .slice(0, 12)
                     .map((p) => (
                       <ProductCard 
@@ -856,6 +886,8 @@ const AppContent: React.FC = () => {
                           setView('product-details');
                         }} 
                         onEditProduct={setEditingProduct}
+                        onToggleCompare={handleToggleCompare}
+                        isCompared={comparedProductIds.includes(p.id)}
                       />
                     ))}
                 </div>
@@ -876,7 +908,7 @@ const AppContent: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {products.filter(p => p.id.startsWith('cb')).map((basket) => {
+                  {products.filter(p => (p.id.startsWith('cb') || p.isWeeklyCombo === true) && p.isActive !== false).map((basket) => {
                     const originalPrice = basket.price;
                     const displayPrice = basket.discountPrice || basket.price;
                     const hasDiscount = !!basket.discountPrice;
@@ -1014,66 +1046,46 @@ const AppContent: React.FC = () => {
               </div>
             </section>
 
-            {/* FARMERS SOCIAL YARD FEED SECTION */}
-            <section id="farmers-yard" className="py-16 bg-gradient-to-b from-white via-emerald-50/20 to-gray-50 border-t border-gray-100">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-xl mx-auto mb-10">
-                  <span className="text-xs font-black tracking-widest text-emerald-600 uppercase">কৃষকের উঠান ও সামাজিক ফিড</span>
-                  <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-1.5 leading-snug">
-                    কৃষকের মাঠের চিত্র ও সরাসরি ভিডিও গ্যালারি
+            {/* CUSTOM ORDER SECTION FOR WHATSAPP ORDERS (REPLACES GENERAL SOCIAL/VIDEO SECTIONS) */}
+            <section id="custom-whatsapp-order" className="py-16 bg-gradient-to-b from-white to-slate-50 border-t border-gray-150-soft scroll-mt-20 flex flex-col items-center">
+              <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
+                <div className="max-w-xl mx-auto">
+                  <span className="text-xs font-black tracking-widest text-[#25D366] uppercase bg-green-50 border border-green-150 px-3.5 py-1 rounded-full">Custom & Bulk Orders</span>
+                  <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-3 leading-snug">
+                    কাস্টম ও বড় বাজারের জন্য সরাসরি হোয়াটসঅ্যাপ অর্ডার করুন
                   </h2>
-                  <p className="text-xs text-gray-400 mt-2 font-medium">
-                    কৃষকদের তোলা খামারের আসল ছবি, ইউটিউব ভিডিও এবং দৈনন্দিন কাজের পোস্ট। মন্তব্য করুন ও সরাসরি খামারিদের লাইক দিয়ে উৎসাহিত করুন!
+                  <p className="text-xs text-gray-500 mt-2 font-medium">
+                    পারিবারিক বড় অনুষ্ঠান, বিয়ে কিংবা যেকোনো নির্দিষ্ট পণ্যের কাস্টম ওজনের বাস্কেট মেলাতে নিচে আপনার চাহিদা লিখুন এবং সরাসরি হোয়াটসঅ্যাপ মেসেজ দিন।
                   </p>
                 </div>
 
-                <FarmerSocialFeed />
-              </div>
-            </section>
-
-            {/* VERIFIED FARMERS SECTION */}
-            <section className="py-12 bg-gray-50 border-t border-gray-100">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <span className="text-xs font-black tracking-widest text-emerald-600 uppercase">শতভাগ বিশ্বস্ত উৎপাদক</span>
-                    <h2 className="text-lg sm:text-2xl font-black text-gray-800 font-sans mt-0.5">ভেরিফাইড কৃষক ও উদ্যোক্তা</h2>
+                {/* Instant Draft messaging box */}
+                <div className="bg-white rounded-3xl border border-gray-150-soft p-6 sm:p-8 max-w-2xl mx-auto shadow-sm space-y-4">
+                  <div className="text-left space-y-2">
+                    <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest block">আপনার বার্তা খসড়া করুন (Type your requirements):</label>
+                    <textarea
+                      id="custom-whatsapp-msg-builder"
+                      rows={3}
+                      defaultValue="আসসালামু আলাইকুম, আমি আমার পরিবারের জন্য ৩ কেজি গরুর দুধ, ২ কেজি অর্গানিক দেশি আলু এবং ১ কেজি সতেজ টমেটো কাস্টম প্যাকেজে নিতে চাই।"
+                      placeholder="এখানে আপনার পণ্যের তালিকা ও পরিমাণ উল্লেখ করুন..."
+                      className="w-full text-xs font-medium border border-gray-200 focus:border-green-400 focus:ring-4 focus:ring-green-50 outline-none rounded-2xl p-4 transition text-gray-800 bg-slate-50/50"
+                    />
                   </div>
-                  <button onClick={() => setView('farmers')} className="text-xs text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1">
-                    সব কৃষক দেখুন <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {farmers.filter(f => f.verified).slice(0, 4).map((farmer) => (
-                    <div 
-                      key={farmer.id}
-                      onClick={() => {
-                        setSelectedFarmerStoreId(farmer.id);
-                        setView('farmer-store');
-                      }}
-                      className="group p-5 bg-white rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-xl transition-all text-center cursor-pointer relative"
-                    >
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 rounded-full overflow-hidden border-2 border-emerald-100">
-                        <img 
-                          src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
-                          alt={farmer.name} 
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute bottom-0 right-1 bg-emerald-600 text-white p-0.5 rounded-full scale-90 border border-white">✔</span>
-                      </div>
-                      <h3 className="text-xs sm:text-sm font-black text-gray-800 group-hover:text-emerald-700 leading-tight">
-                        {farmer.name}
-                      </h3>
-                      <p className="text-[10px] text-gray-400 font-medium font-sans mt-0.5">
-                        📍 {farmer.district} জেলা
-                      </p>
-                      
-                      <div className="mt-2.5 pt-2 border-t border-gray-50 flex items-center justify-center gap-1 text-[11px] font-bold text-gray-650">
-                        <span>সফল বিক্রি: <strong className="text-emerald-600">{farmer.salesCount || 0}টি</strong></span>
-                      </div>
-                    </div>
-                  ))}
+                  <button
+                    onClick={() => {
+                      const txtarea = document.getElementById('custom-whatsapp-msg-builder') as HTMLTextAreaElement;
+                      const userMsg = txtarea ? txtarea.value : '';
+                      const finalUrl = `https://wa.me/8801931355398?text=${encodeURIComponent(userMsg)}`;
+                      window.open(finalUrl, '_blank');
+                    }}
+                    className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white flex items-center justify-center gap-2.5 rounded-2xl py-4 text-xs font-sans font-black shadow-lg hover:shadow-xl transition-all active:scale-[0.98] duration-150 text-center cursor-pointer font-sans"
+                  >
+                    <svg className="h-5 w-5 text-white fill-current" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008 0c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm6.49-5.385c1.654.982 3.511 1.5 5.414 1.501 5.474 0 9.93-4.45 9.934-9.92.001-2.648-1.03-5.138-2.902-7.015C17.12 1.306 14.636.275 12.001.275 6.529.275 2.073 4.73 2.069 10.2c-.001 1.958.513 3.869 1.492 5.568l-.979 3.579 3.665-.961zm11.233-7.531c-.301-.15-.178-.225-.375-.525-.097-.15-.525-.75-.525-.75s-.19-.24-.45-.24c-.112 0-.256.04-.37.15-.36.35-.95.95-.95 2.31s.99 2.67 1.13 2.85c.14.18 1.96 2.99 4.75 4.19.67.29 1.19.46 1.59.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.33-.07-.12-.27-.19-.57-.34z" />
+                    </svg>
+                    কাস্টম হোয়াটসঅ্যাপ বার্তা পাঠান (Message Direct)
+                  </button>
                 </div>
               </div>
             </section>
@@ -1156,6 +1168,8 @@ const AppContent: React.FC = () => {
                         setView('product-details');
                       }} 
                       onEditProduct={setEditingProduct} 
+                      onToggleCompare={handleToggleCompare}
+                      isCompared={comparedProductIds.includes(p.id)}
                     />
                   ))
                 )}
@@ -1404,6 +1418,19 @@ const AppContent: React.FC = () => {
         product={editingProduct}
         isOpen={!!editingProduct}
         onClose={() => setEditingProduct(null)}
+      />
+
+      <ProductComparisonModal
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+        comparedIds={comparedProductIds}
+        onRemoveId={(id) => setComparedProductIds((prev) => prev.filter((x) => x !== id))}
+        onClearAll={() => setComparedProductIds([])}
+        onSelectProduct={(productId) => {
+          setSelectedProductId(productId);
+          setView('product-details');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
       <AuthModal 

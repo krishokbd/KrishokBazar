@@ -411,6 +411,7 @@ CATEGORIES.forEach((cat) => {
       images: pImages,
       isVerified: farmer.verified,
       isReadyToCook: cat.id === 'ready-to-cook',
+      isFeatured: globIdx % 3 === 0,
       harvestDate: harvestDate
     });
 

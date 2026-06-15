@@ -36,12 +36,111 @@ import {
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
+export function getProductImages(product: Product): string[] {
+  const list: string[] = [];
+  
+  if (product.images && product.images.length > 0) {
+    product.images.forEach(img => {
+      if (img && img.trim()) {
+        list.push(img.trim());
+      }
+    });
+  }
+  
+  if (product.googleDriveFolderUrl && product.googleDriveFolderUrl.trim()) {
+    list.push(product.googleDriveFolderUrl.trim());
+  }
+
+  const uniqueList = Array.from(new Set(list));
+  const cat = (product.category || 'organic').toLowerCase();
+  
+  const categoryFallbacks: Record<string, string[]> = {
+    vegetables: [
+      'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=800',
+      'https://images.unsplash.com/photo-1566385101042-1a010c159f81?w=800',
+      'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800',
+      'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800',
+      'https://images.unsplash.com/photo-1518843875459-f738682238a6?w=800'
+    ],
+    fruits: [
+      'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=800',
+      'https://images.unsplash.com/photo-1519996521430-02b798c1d881?w=800',
+      'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=800',
+      'https://images.unsplash.com/photo-1610832958506-ee5633619144?w=800',
+      'https://images.unsplash.com/photo-1511688878353-3a2f5be94cd7?w=800'
+    ],
+    rice: [
+      'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800',
+      'https://images.unsplash.com/photo-1574325131876-ae2b0805c52b?w=800',
+      'https://images.unsplash.com/photo-1536304997881-a372c179924b?w=800',
+      'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+      'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800'
+    ],
+    fish: [
+      'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=800',
+      'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800',
+      'https://images.unsplash.com/photo-1551248429-40975aa4de74?w=800',
+      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+      'https://images.unsplash.com/photo-1604313251413-4fd779a1fec9?w=800'
+    ],
+    meat: [
+      'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=800',
+      'https://images.unsplash.com/photo-1587593810167-a8597a8e2a8a?w=800',
+      'https://images.unsplash.com/photo-1544025162-d76694265947?w=800',
+      'https://images.unsplash.com/photo-1602489228247-320af6411f9d?w=800',
+      'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=800'
+    ],
+    organic: [
+      'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800',
+      'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=800',
+      'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=800',
+      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800',
+      'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=805'
+    ]
+  };
+
+  let fallbacks = categoryFallbacks.organic;
+  const normalizedCat = cat.replace(/\s+/g, '');
+  if (normalizedCat.includes('vege') || normalizedCat.includes('সবজি') || normalizedCat.includes('শাক')) {
+    fallbacks = categoryFallbacks.vegetables;
+  } else if (normalizedCat.includes('fruit') || normalizedCat.includes('ফল')) {
+    fallbacks = categoryFallbacks.fruits;
+  } else if (normalizedCat.includes('rice') || normalizedCat.includes('চাল') || normalizedCat.includes('ডাল') || normalizedCat.includes('শস্য') || normalizedCat.includes('grain')) {
+    fallbacks = categoryFallbacks.rice;
+  } else if (normalizedCat.includes('fish') || normalizedCat.includes('মাছ')) {
+    fallbacks = categoryFallbacks.fish;
+  } else if (normalizedCat.includes('meat') || normalizedCat.includes('মাংস') || normalizedCat.includes('চিকেন') || normalizedCat.includes('গরু') || normalizedCat.includes('খাসি')) {
+    fallbacks = categoryFallbacks.meat;
+  } else if (normalizedCat.includes('dairy') || normalizedCat.includes('দুধ') || normalizedCat.includes('ঘি') || normalizedCat.includes('ডিম') || normalizedCat.includes('মধু') || normalizedCat.includes('honey')) {
+    fallbacks = [
+      'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=800',
+      'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800',
+      'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=800',
+      'https://images.unsplash.com/photo-1486887396153-fa416525c108?w=800',
+      'https://images.unsplash.com/photo-1528750901443-e986c702604e?w=800'
+    ];
+  }
+
+  let iIdx = 0;
+  while (uniqueList.length < 5) {
+    const fallbackImg = fallbacks[iIdx % fallbacks.length];
+    if (!uniqueList.includes(fallbackImg)) {
+      uniqueList.push(fallbackImg);
+    }
+    iIdx++;
+  }
+
+  return uniqueList.slice(0, 5);
+}
+
 interface ProductDetailsPageProps {
   productId: string;
   onBack: () => void;
   onSelectFarmer: (farmerId: string) => void;
   onSelectProduct: (productId: string) => void;
   onEditProduct?: (product: Product) => void;
+  onToggleCompare?: (productId: string) => void;
+  isCompared?: boolean;
 }
 
 export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({ 
@@ -49,7 +148,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   onBack, 
   onSelectFarmer, 
   onSelectProduct,
-  onEditProduct
+  onEditProduct,
+  onToggleCompare,
+  isCompared
 }) => {
   const { products, farmers, reviews, addToCart, addReview, currentUser, language } = useApp();
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
@@ -149,12 +250,16 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const productImages = React.useMemo(() => {
+    return getProductImages(product);
+  }, [product]);
+
   const handleNextImage = () => {
-    setSelectedImgIdx(prev => (prev + 1) % product.images.length);
+    setSelectedImgIdx(prev => (prev + 1) % productImages.length);
   };
 
   const handlePrevImage = () => {
-    setSelectedImgIdx(prev => (prev - 1 + product.images.length) % product.images.length);
+    setSelectedImgIdx(prev => (prev - 1 + productImages.length) % productImages.length);
   };
 
   const handleReviewSubmission = (e: React.FormEvent) => {
@@ -242,12 +347,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           <div className="lg:col-span-6 flex flex-col justify-start">
             
             {/* LARGE VIEWPORT BOX WITH NAVIGATION CHEVRONS */}
-            <div className="relative overflow-hidden rounded-2xl border border-gray-150-soft bg-gray-50 aspect-square w-full flex items-center justify-center shadow-inner group">
+            <div className="relative overflow-hidden rounded-2xl border border-gray-150 bg-gray-50 aspect-square w-full flex items-center justify-center shadow-inner group">
               <img
                 src={
                   selectedImgIdx === 0 && product.googleDriveFolderUrl
                     ? convertGoogleDriveLink(product.googleDriveFolderUrl)
-                    : convertGoogleDriveLink(product.images[selectedImgIdx])
+                    : convertGoogleDriveLink(productImages[selectedImgIdx])
                 }
                 alt={`${product.title} - Main Preview image`}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
@@ -280,7 +385,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               )}
 
               {/* SLIDER NAVIGATION CHEVRONS */}
-              {product.images.length > 1 && (
+              {productImages.length > 1 && (
                 <>
                   <button 
                     onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
@@ -301,7 +406,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
               {/* DOTS PAGINATION WRAPPER */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/35 px-2.5 py-1 rounded-full text-white text-[9px] font-bold">
-                {product.images.map((_, i) => (
+                {productImages.map((_, i) => (
                   <span 
                     key={i} 
                     className={`block h-1.5 rounded-full transition-all duration-300 ${
@@ -314,14 +419,14 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
             {/* THUMBNAIL SELECTOR GALLERY WITH EXTREME CONTRAST & ACCESSIBLE TARGETS */}
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
-              <span className="text-[10px] text-gray-400 font-bold uppercase font-sans tracking-wide">ফটো গ্যালারি ({product.images.length}টি বাস্তব ছবি)</span>
+              <span className="text-[10px] text-gray-400 font-bold uppercase font-sans tracking-wide">ফটো গ্যালারি ({productImages.length}টি বাস্তব ছবি)</span>
               <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
                 <Info className="h-3 w-3 shrink-0" /> ছবি বড় করে দেখতে পরিবর্তন করুন
               </span>
             </div>
 
             <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none select-none">
-              {product.images.map((imgUrl, idx) => (
+              {productImages.map((imgUrl, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedImgIdx(idx)}
@@ -596,6 +701,23 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </svg>
                     WhatsApp-এ সরাসরি অর্ডার করুন
                   </a>
+                </div>
+              )}
+
+              {/* DIRECT SIDE-BY-SIDE COMPARE BUTTON */}
+              {onToggleCompare && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => onToggleCompare(product.id)}
+                    className={`w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-xs font-sans font-black shadow-sm transition-all active:scale-[0.97] duration-150 text-center cursor-pointer border ${
+                      isCompared
+                        ? 'bg-amber-500 hover:bg-amber-600 text-white border-amber-400 font-extrabold'
+                        : 'bg-white hover:bg-slate-50 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    <span>⚖️</span>
+                    {isCompared ? 'তুলনা তালিকা থেকে বাদ দিন (Remove from Comparison)' : 'তুলনা তালিকায় যোগ করুন (Add to Comparison)'}
+                  </button>
                 </div>
               )}
 

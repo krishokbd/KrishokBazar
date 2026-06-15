@@ -5,7 +5,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert, WeeklyComboOffer, WeeklyComboProduct } from './types';
-import { demoFarmers, demoProducts, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
+import { demoFarmers, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
+import { new45Products as demoProducts } from './newProducts';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
@@ -743,8 +744,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('kb_products');
     let base = saved ? JSON.parse(saved) : demoProducts;
     
-    // Force seeding 150+ products if the saved array size is suspiciously small (e.g. less than 140)
-    if (!base || base.length < 140) {
+    // Force seeding 45 premium products if the saved array size is suspiciously small (e.g. less than 35)
+    if (!base || base.length < 35) {
       base = demoProducts;
       localStorage.setItem('kb_products', JSON.stringify(demoProducts));
     }

@@ -47,6 +47,7 @@ export interface Product {
   isVerified: boolean;
   isReadyToCook: boolean;
   isFeatured?: boolean;
+  isWeeklyCombo?: boolean;
   approved?: boolean; // When farmer uploads, starts as false, requires Admin approval
   uploaderRole?: 'Admin' | 'Farmer';
   harvestDate?: string;

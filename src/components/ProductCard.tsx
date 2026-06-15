@@ -14,9 +14,17 @@ interface ProductCardProps {
   product: Product;
   onOpenQuickView: (product: Product) => void;
   onEditProduct?: (product: Product) => void;
+  onToggleCompare?: (productId: string) => void;
+  isCompared?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickView, onEditProduct }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onOpenQuickView,
+  onEditProduct,
+  onToggleCompare,
+  isCompared
+}) => {
   const { addToCart, currentUser, language, editProduct } = useApp();
 
   const packOptions = React.useMemo(() => getProductPackOptions(product), [product]);
@@ -170,6 +178,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenQuickVi
           <span className="absolute left-2 bottom-2 z-10 inline-flex items-center rounded bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white shadow">
             -{Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
           </span>
+        )}
+
+        {/* FLOATING COMPARE BUTTON */}
+        {onToggleCompare && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleCompare(product.id);
+            }}
+            className={`absolute right-2 bottom-2 z-15 px-2 py-1 rounded-sm border shadow-sm transition-all flex items-center justify-center gap-0.5 cursor-pointer hover:scale-105 active:scale-95 ${
+              isCompared 
+                ? 'bg-amber-500 border-amber-400 text-white font-extrabold' 
+                : 'bg-white/85 border-gray-200 text-gray-500 hover:bg-white hover:text-emerald-700'
+            }`}
+            title={language === 'bn' ? 'তুলনা তালিকায় যোগ করুন' : 'Add to comparison list'}
+          >
+            <span className="text-[10px]">⚖️</span>
+            <span className="text-[9px] font-bold leading-none">{isCompared ? (language === 'bn' ? 'যুক্ত' : 'Selected') : (language === 'bn' ? 'তুলনা' : 'Compare')}</span>
+          </button>
         )}
 
         {/* HOVER QUICK VIEW BUTTON */}

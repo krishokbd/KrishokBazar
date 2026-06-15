@@ -212,6 +212,12 @@ export const Header: React.FC<HeaderProps> = ({
               {language === 'en' ? 'Weekly Combos' : 'কম্বো বাস্কেট'}
             </button>
             <button 
+              onClick={() => handleNavClick('weekly-discount')}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'weekly-discount' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
+            >
+              {language === 'en' ? 'Weekly Discounts' : 'সাপ্তাহিক ছাড়'}
+            </button>
+            <button 
               onClick={() => handleNavClick('ready-to-cook')}
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'ready-to-cook' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
@@ -228,12 +234,6 @@ export const Header: React.FC<HeaderProps> = ({
               className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'blog' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
             >
               {language === 'en' ? 'Blog' : 'ব্লগ'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('social-feed')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'social-feed' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? "Farmers' Yard" : "কৃষকের উঠান ফিড"}
             </button>
           </nav>
 
@@ -672,9 +672,45 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="space-y-3">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider block px-1">আমাদের ডিরেক্টরি ও সেবা (১০টি আলাদা সেকশন)</span>
+                <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider block px-1">আমাদের ডিরেক্টরি ও সেবা (সকল পৃথক পেজ ও সেকশন)</span>
                 
                 <div className="grid grid-cols-1 gap-2.5">
+                  
+                  {/* Item 0a: Home */}
+                  <button
+                    onClick={() => {
+                      setIsMainMenuOpen(false);
+                      handleNavClick('home');
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 bg-white hover:bg-emerald-50 hover:border-emerald-300 border border-gray-150/60 rounded-2xl transition duration-150 cursor-pointer text-left hover:scale-[1.01] shadow-3xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🏠</span>
+                      <div>
+                        <strong className="text-xs font-black text-gray-850 block">হোম পৃষ্ঠা (Homepage)</strong>
+                        <p className="text-[10px] text-gray-400 font-bold mt-0.5">কৃষক বাজার প্রধান হোমপেজ</p>
+                      </div>
+                    </div>
+                    <span className="text-gray-300">❯</span>
+                  </button>
+
+                  {/* Item 0b: All Products */}
+                  <button
+                    onClick={() => {
+                      setIsMainMenuOpen(false);
+                      handleNavClick('shop');
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 bg-white hover:bg-emerald-50 hover:border-emerald-300 border border-gray-150/60 rounded-2xl transition duration-150 cursor-pointer text-left hover:scale-[1.01] shadow-3xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🛍️</span>
+                      <div>
+                        <strong className="text-xs font-black text-gray-850 block">সব পণ্য (Store / All Products)</strong>
+                        <p className="text-[10px] text-gray-400 font-bold mt-0.5">সবজি, শস্য ও তাজা ফল ফ্রেশ কালেকশন</p>
+                      </div>
+                    </div>
+                    <span className="text-gray-300">❯</span>
+                  </button>
                   
                   {/* Item 1: Blog Section */}
                   <button
@@ -831,6 +867,42 @@ export const Header: React.FC<HeaderProps> = ({
                       </div>
                     </div>
                     <span className="text-gray-300">❯</span>
+                  </button>
+
+                  {/* Item 9: Weekly Discount Page */}
+                  <button
+                    onClick={() => {
+                      setIsMainMenuOpen(false);
+                      setView('weekly-discount');
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 bg-white hover:bg-emerald-50 hover:border-emerald-300 border border-gray-150/60 rounded-2xl transition duration-150 cursor-pointer text-left hover:scale-[1.01] shadow-3xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">🏷️</span>
+                      <div>
+                        <strong className="text-xs font-black text-gray-850 block">সাপ্তাহিক বিশেষ ছাড় ও অফার (Weekly Discounts)</strong>
+                        <p className="text-[10px] text-gray-400 font-bold mt-0.5">সরাসরি চাষী থেকে ছাড়কৃত শতভাগ খাঁটি ধামাকা অফার</p>
+                      </div>
+                    </div>
+                    <span className="text-gray-300">❯</span>
+                  </button>
+
+                  {/* Item 10: Comparison Hub */}
+                  <button
+                    onClick={() => {
+                      setIsMainMenuOpen(false);
+                      window.dispatchEvent(new CustomEvent('open-compare-modal'));
+                    }}
+                    className="w-full flex items-center justify-between p-3.5 bg-amber-50 hover:bg-amber-100/50 hover:border-amber-300 border border-amber-200 rounded-2xl transition duration-150 cursor-pointer text-left hover:scale-[1.01] shadow-3xs"
+                  >
+                    <div className="flex items-center gap-3 font-semibold">
+                      <span className="text-lg">⚖️</span>
+                      <div>
+                        <strong className="text-xs font-black text-amber-900 block font-sans">পণ্য তুলনা হাব (Side-by-Side Compare)</strong>
+                        <p className="text-[10px] text-amber-700 font-bold mt-0.5 font-sans">নির্বাচিত ফসলের দাম, চাষী ও গুণাগুণ তুলনা</p>
+                      </div>
+                    </div>
+                    <span className="text-amber-500">❯</span>
                   </button>
 
                 </div>

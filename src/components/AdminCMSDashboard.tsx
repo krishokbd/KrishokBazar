@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
+import { getProductImages } from './ProductDetailsPage';
 import { getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
 import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings, toBanglaDigits } from '../types';
 import { 
@@ -418,6 +419,7 @@ export const AdminCMSDashboard: React.FC = () => {
   const [adminProdFarmerId, setAdminProdFarmerId] = useState('');
   const [adminProdIsFeatured, setAdminProdIsFeatured] = useState(false);
   const [adminProdIsVerified, setAdminProdIsVerified] = useState(true);
+  const [adminProdIsWeeklyCombo, setAdminProdIsWeeklyCombo] = useState(false);
   const [adminProdHarvestDate, setAdminProdHarvestDate] = useState('');
   const [adminProdGoogleDriveFolderUrl, setAdminProdGoogleDriveFolderUrl] = useState('');
 
@@ -1369,6 +1371,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     setAdminProdFarmerId(farmers[0]?.id || 'f1');
                     setAdminProdIsFeatured(false);
                     setAdminProdIsVerified(true);
+                    setAdminProdIsWeeklyCombo(false);
                     setAdminProdHarvestDate('May 30, 2026');
                     setAdminProdGoogleDriveFolderUrl('');
                   }}
@@ -1603,35 +1606,44 @@ export const AdminCMSDashboard: React.FC = () => {
                         />
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 pt-1">
-                        <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
-                          <span className="font-bold text-gray-500 mb-0.5">Spotlight Featured ⭐</span>
-                          <input 
-                            type="checkbox"
-                            checked={adminProdIsFeatured}
-                            onChange={(e) => setAdminProdIsFeatured(e.target.checked)}
-                            className="h-4 w-4 accent-emerald-600"
-                          />
-                        </label>
-                        <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
-                          <span className="font-bold text-gray-500 mb-0.5">ভেরিফাইড ব্যাজ 🛡️</span>
-                          <input 
-                            type="checkbox"
-                            checked={adminProdIsVerified}
-                            onChange={(e) => setAdminProdIsVerified(e.target.checked)}
-                            className="h-4 w-4 accent-emerald-600"
-                          />
-                        </label>
-                        <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
-                          <span className="font-bold text-gray-500 mb-0.5">রেডি টু কুক 🍳</span>
-                          <input 
-                            type="checkbox"
-                            checked={adminProdReadyToCook}
-                            onChange={(e) => setAdminProdReadyToCook(e.target.checked)}
-                            className="h-4 w-4 accent-indigo-600"
-                          />
-                        </label>
-                      </div>
+                       <div className="grid grid-cols-4 gap-2 pt-1 font-sans">
+                         <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
+                           <span className="font-bold text-gray-400 mb-0.5">Homepage Featured ⭐</span>
+                           <input 
+                             type="checkbox"
+                             checked={adminProdIsFeatured}
+                             onChange={(e) => setAdminProdIsFeatured(e.target.checked)}
+                             className="h-4 w-4 accent-emerald-600 rounded"
+                           />
+                         </label>
+                         <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
+                           <span className="font-bold text-gray-400 mb-0.5">ভেরিফাইড ব্যাজ 🛡️</span>
+                           <input 
+                             type="checkbox"
+                             checked={adminProdIsVerified}
+                             onChange={(e) => setAdminProdIsVerified(e.target.checked)}
+                             className="h-4 w-4 accent-emerald-600 rounded"
+                           />
+                         </label>
+                         <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
+                           <span className="font-bold text-gray-400 mb-0.5">রেডি টু কুক 🍳</span>
+                           <input 
+                             type="checkbox"
+                             checked={adminProdReadyToCook}
+                             onChange={(e) => setAdminProdReadyToCook(e.target.checked)}
+                             className="h-4 w-4 accent-indigo-600 rounded"
+                           />
+                         </label>
+                         <label className="border p-1.5 bg-white rounded-xl flex flex-col items-center justify-center cursor-pointer text-center text-[10px]">
+                           <span className="font-bold text-gray-400 mb-0.5">সাপ্তাহিক কম্বো 🧺</span>
+                           <input 
+                             type="checkbox"
+                             checked={adminProdIsWeeklyCombo}
+                             onChange={(e) => setAdminProdIsWeeklyCombo(e.target.checked)}
+                             className="h-4 w-4 accent-orange-600 rounded"
+                           />
+                         </label>
+                       </div>
                     </div>
                   </div>
 
@@ -1649,6 +1661,7 @@ export const AdminCMSDashboard: React.FC = () => {
                       onClick={() => {
                         if (!adminProdTitle) return;
                         const targetFarmer = farmers.find(f => f.id === adminProdFarmerId) || farmers[0];
+                        const filteredImages = adminProdImages.filter(img => img && img.trim() !== '');
                         const prodPayload = {
                           title: adminProdTitle,
                           price: Number(adminProdPrice),
@@ -1659,7 +1672,8 @@ export const AdminCMSDashboard: React.FC = () => {
                           isReadyToCook: adminProdReadyToCook,
                           isFeatured: adminProdIsFeatured,
                           isVerified: adminProdIsVerified,
-                          images: adminProdImages,
+                          isWeeklyCombo: adminProdIsWeeklyCombo,
+                          images: filteredImages.length > 0 ? filteredImages : ['https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=800'],
                           farmerId: adminProdFarmerId || targetFarmer.id,
                           farmerName: targetFarmer.name,
                           harvestDate: adminProdHarvestDate || undefined,
@@ -1922,35 +1936,44 @@ export const AdminCMSDashboard: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 pt-1 font-sans">
-                      <label className="border p-2 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
-                        <span className="font-bold text-gray-655">Spotlight Featured ⭐</span>
-                        <input 
-                          type="checkbox"
-                          checked={adminProdIsFeatured}
-                          onChange={(e) => setAdminProdIsFeatured(e.target.checked)}
-                          className="h-4 w-4 accent-indigo-600 rounded"
-                        />
-                      </label>
-                      <label className="border p-2 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
-                        <span className="font-bold text-gray-655">ভেরিফাইড ব্যাজ 🛡️</span>
-                        <input 
-                          type="checkbox"
-                          checked={adminProdIsVerified}
-                          onChange={(e) => setAdminProdIsVerified(e.target.checked)}
-                          className="h-4 w-4 accent-indigo-600 rounded"
-                        />
-                      </label>
-                      <label className="border p-2 bg-slate-50 hover:bg-slate-150 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
-                        <span className="font-bold text-gray-655">রেডি টু কুক 🍳</span>
-                        <input 
-                          type="checkbox"
-                          checked={adminProdReadyToCook}
-                          onChange={(e) => setAdminProdReadyToCook(e.target.checked)}
-                          className="h-4 w-4 accent-indigo-600 rounded"
-                        />
-                      </label>
-                    </div>
+                     <div className="grid grid-cols-4 gap-2 pt-1 font-sans">
+                       <label className="border p-2 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                         <span className="font-bold text-gray-500">Homepage ⭐</span>
+                         <input 
+                           type="checkbox"
+                           checked={adminProdIsFeatured}
+                           onChange={(e) => setAdminProdIsFeatured(e.target.checked)}
+                           className="h-4 w-4 accent-indigo-600 rounded"
+                         />
+                       </label>
+                       <label className="border p-2 bg-slate-50 hover:bg-slate-100 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                         <span className="font-bold text-gray-500">ভেরিফাইড 🛡️</span>
+                         <input 
+                           type="checkbox"
+                           checked={adminProdIsVerified}
+                           onChange={(e) => setAdminProdIsVerified(e.target.checked)}
+                           className="h-4 w-4 accent-indigo-600 rounded"
+                         />
+                       </label>
+                       <label className="border p-2 bg-slate-50 hover:bg-slate-150 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                         <span className="font-bold text-gray-500">রেডি কুক 🍳</span>
+                         <input 
+                           type="checkbox"
+                           checked={adminProdReadyToCook}
+                           onChange={(e) => setAdminProdReadyToCook(e.target.checked)}
+                           className="h-4 w-4 accent-indigo-600 rounded"
+                         />
+                       </label>
+                       <label className="border p-2 bg-slate-50 hover:bg-slate-150 rounded-xl flex items-center justify-between px-3 cursor-pointer text-[11px] font-medium transition select-none">
+                         <span className="font-bold text-gray-500">কম্বো 🧺</span>
+                         <input 
+                           type="checkbox"
+                           checked={adminProdIsWeeklyCombo}
+                           onChange={(e) => setAdminProdIsWeeklyCombo(e.target.checked)}
+                           className="h-4 w-4 accent-indigo-600 rounded"
+                         />
+                       </label>
+                     </div>
 
                     <div className="flex justify-end gap-2 border-t pt-4">
                       <button
@@ -1975,7 +1998,8 @@ export const AdminCMSDashboard: React.FC = () => {
                             isReadyToCook: adminProdReadyToCook,
                             isFeatured: adminProdIsFeatured,
                             isVerified: adminProdIsVerified,
-                            images: adminProdImages,
+                            isWeeklyCombo: adminProdIsWeeklyCombo,
+                            images: adminProdImages.filter(img => img && img.trim() !== ''),
                             farmerId: adminProdFarmerId || targetFarmer.id,
                             farmerName: targetFarmer.name,
                             harvestDate: adminProdHarvestDate || undefined,
@@ -2034,9 +2058,28 @@ export const AdminCMSDashboard: React.FC = () => {
                         return true;
                       })
                       .map((p) => (
-                      <tr key={p.id} className="hover:bg-gray-50/50 transition-all">
-                        <td className="px-4 py-2.5 flex items-center gap-2.5">
-                          <img src={p.images[0]} className="h-9 w-9 object-cover rounded-lg bg-gray-50 border shrink-0" referrerPolicy="no-referrer" />
+                      <tr key={p.id} className="hover:bg-gray-50/50 transition-all font-sans">
+                        <td className="px-4 py-2.5 flex items-start sm:items-center gap-3">
+                          {/* Mini inline gallery representing 4-5 product pictures */}
+                          <div className="flex gap-1 shrink-0 bg-slate-50 p-1 rounded-xl border border-gray-150 shadow-3xs self-center flex-wrap max-w-[120px] sm:max-w-none">
+                            {getProductImages(p).map((imgUrl, imgIdx) => (
+                              <div key={imgIdx} className="relative h-7 w-7 rounded-lg overflow-hidden border border-gray-200 bg-white group/adminthumb shadow-3xs shrink-0">
+                                <img
+                                  src={convertGoogleDriveLink(imgUrl)}
+                                  alt={`${p.title} - Preview ${imgIdx + 1}`}
+                                  className="h-full w-full object-cover transition-transform group-hover/adminthumb:scale-110"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=150';
+                                  }}
+                                />
+                                <span className="absolute bottom-0 right-0 bg-black/45 text-[6px] text-white px-0.5 font-bold rounded-tl scale-90">
+                                  {imgIdx + 1}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          
                           <div className="truncate max-w-[190px]">
                             <strong className="text-gray-800 font-bold text-[11px] block truncate">{p.title}</strong>
                             <span className="text-[10px] text-gray-400 block truncate font-medium">খামারি: {p.farmerName} • ID: {p.id}</span>
@@ -2081,7 +2124,7 @@ export const AdminCMSDashboard: React.FC = () => {
                         </td>
                         <td className="px-4 py-2.5 text-center">
                           <button
-                            onClick={() => editProduct(p.id, { isActive: p.isActive !== false })}
+                            onClick={() => editProduct(p.id, { isActive: p.isActive === false })}
                             className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                               p.isActive !== false ? 'bg-emerald-600' : 'bg-gray-200'
                             }`}
@@ -2124,6 +2167,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminProdFarmerId(p.farmerId);
                                 setAdminProdIsFeatured(!!p.isFeatured);
                                 setAdminProdIsVerified(p.isVerified);
+                                setAdminProdIsWeeklyCombo(!!p.isWeeklyCombo);
                                 setAdminProdHarvestDate(p.harvestDate || '');
                                 setAdminProdGoogleDriveFolderUrl(p.googleDriveFolderUrl || '');
                                 window.scrollTo({ top: 120, behavior: 'smooth' });

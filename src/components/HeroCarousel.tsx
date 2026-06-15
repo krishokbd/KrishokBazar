@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { ChevronLeft, ChevronRight, ShoppingBag, Users, PhoneCall } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingBag, Users, PhoneCall, Video } from 'lucide-react';
 
 interface HeroCarouselProps {
   onShopNow: () => void;
@@ -116,10 +116,11 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFar
                     href={banner.btn3Link || "https://wa.me/8801931355398"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 rounded-xl bg-green-500 hover:bg-green-600 px-4 py-3 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center text-white"
+                    className="flex items-center gap-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 px-4 py-3 text-xs sm:text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center text-white font-sans"
+                    title="Place order via video call"
                   >
-                    <PhoneCall className="h-4 w-4" />
-                    {banner.btn3TextBn || 'WhatsApp অর্ডার'}
+                    <Video className="h-4 w-4 text-white animate-pulse" />
+                    Customer order
                   </a>
                 </div>
               </div>
