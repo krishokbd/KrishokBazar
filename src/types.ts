@@ -438,5 +438,16 @@ export function getProductPackOptions(product: { unit?: string }): PackOption[] 
   ];
 }
 
+export interface DynamicPage {
+  slug: string;
+  titleBn: string;
+  titleEn: string;
+  descriptionBn: string;
+  descriptionEn: string;
+  bannerImage?: string;
+  productIds: string[];
+}
+
+
 
 

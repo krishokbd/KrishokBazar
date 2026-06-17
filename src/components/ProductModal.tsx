@@ -8,6 +8,7 @@ import { Product, Farmer, getFormattedUnit, getProductPackOptions, PackOption } 
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { X, Star, ShoppingCart, ShieldCheck, Phone, MapPin, Store, HelpCircle } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
+import { LazyImage } from './LazyImage';
 
 interface ProductModalProps {
   product: Product | null;
@@ -88,47 +89,61 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
         {/* LEFT COLUMN: MULTI-IMAGE GALLERY (aspect 4:3 or similar) */}
         <div className="md:w-1/2 p-6 flex flex-col bg-gray-50/50 justify-center">
-          <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white aspect-[4/3] w-full shadow-inner flex items-center justify-center">
-            <img
-              src={
-                selectedImgIdx === 0 && product.googleDriveFolderUrl
-                  ? convertGoogleDriveLink(product.googleDriveFolderUrl)
-                  : convertGoogleDriveLink(product.images[selectedImgIdx])
-              }
-              alt={`${product.title} - view`}
-              className="h-full w-full object-cover transition-all"
-              referrerPolicy="no-referrer"
-            />
-            {hasDiscount && (
-              <span className="absolute left-3 top-3 rounded-lg bg-red-500 px-2 py-0.5 text-xs font-bold text-white shadow">
-                ছাড় আইটেম
-              </span>
-            )}
-          </div>
+          {(() => {
+            const productImages = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
+            if (productImages.length === 0) {
+              productImages.push('https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500');
+            }
+            const safeImgIdx = selectedImgIdx < productImages.length ? selectedImgIdx : 0;
+            
+            return (
+              <>
+                <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white aspect-[4/3] w-full shadow-inner flex items-center justify-center">
+                  <LazyImage
+                    src={
+                      safeImgIdx === 0 && product.googleDriveFolderUrl
+                        ? convertGoogleDriveLink(product.googleDriveFolderUrl)
+                        : convertGoogleDriveLink(productImages[safeImgIdx])
+                    }
+                    alt={`${product.title} - view`}
+                    className="h-full w-full object-cover transition-all"
+                    referrerPolicy="no-referrer"
+                    onError={() => {}}
+                  />
+                  {hasDiscount && (
+                    <span className="absolute left-3 top-3 rounded-lg bg-red-500 px-2 py-0.5 text-xs font-bold text-white shadow">
+                      ছাড় আইটেম
+                    </span>
+                  )}
+                </div>
 
-          {/* Thumbnail switcher bar */}
-          <div className="mt-4 flex gap-2 overflow-x-auto py-1">
-            {product.images.map((imgUrl, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedImgIdx(idx)}
-                className={`relative aspect-[4/3] w-16 shrink-0 rounded-lg overflow-hidden border-2 bg-white shadow-sm transition-all cursor-pointer ${
-                  selectedImgIdx === idx ? 'border-emerald-600 scale-102 shadow-md' : 'border-gray-100'
-                }`}
-              >
-                <img
-                  src={
-                    idx === 0 && product.googleDriveFolderUrl
-                      ? convertGoogleDriveLink(product.googleDriveFolderUrl)
-                      : convertGoogleDriveLink(imgUrl)
-                  }
-                  alt="micro th"
-                  className="h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </button>
-            ))}
-          </div>
+                {/* Thumbnail switcher bar */}
+                <div className="mt-4 flex gap-2 overflow-x-auto py-1">
+                  {productImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImgIdx(idx)}
+                      className={`relative aspect-[4/3] w-16 shrink-0 rounded-lg overflow-hidden border-2 bg-white shadow-sm transition-all cursor-pointer ${
+                        safeImgIdx === idx ? 'border-emerald-600 scale-102 shadow-md' : 'border-gray-100'
+                      }`}
+                    >
+                      <LazyImage
+                        src={
+                          idx === 0 && product.googleDriveFolderUrl
+                            ? convertGoogleDriveLink(product.googleDriveFolderUrl)
+                            : convertGoogleDriveLink(imgUrl)
+                        }
+                        alt="micro th"
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={() => {}}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* RIGHT COLUMN: CORE INFORMATION */}

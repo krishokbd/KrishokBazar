@@ -96,7 +96,14 @@ for (let i = 0; i < 50; i++) {
     balance: 3200 + (i * 590),
     farmLogo: farmLogos[i % farmLogos.length],
     farmType: farmType,
-    videoPlaceholder: 'https://www.youtube.com/embed/S2gby6-gN3E',
+    videoPlaceholder: [
+      'https://youtube.com/shorts/iRHqWnxj-jU?feature=share',
+      'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share',
+      'https://youtube.com/shorts/4iph-cQWg3g?feature=share',
+      'https://youtube.com/shorts/ivdux5l52TY?feature=share',
+      'https://youtube.com/shorts/n6TW95vbqxo?feature=share',
+      'https://youtube.com/shorts/lXgJgxP9frU?feature=share'
+    ][i % 6],
     gallery: generalFarmerGalleries[i % generalFarmerGalleries.length],
     story: `আমার নাম ${maleNames[i]}। আমি ${dist} জেলায় সম্পূর্ণ প্রাকৃতিক উপায়ে কোনো বিষাক্ত বিষক্রিয়া বা কেমিক্যাল ছাড়া কৃষিকাজ করে আসছি। আমার ${farmType} খামারের প্রধান লক্ষ্য হলো সতেজ ও স্বাস্থ্যকর খাবার সরাসরি মানুষের রান্নাঘরে সরবরাহ করা। আমি চাই আমাদের পরবর্তী প্রজন্ম সম্পূর্ণ নিরোগভাবে বড় হোক।`
   });
@@ -125,7 +132,14 @@ for (let i = 0; i < 25; i++) {
     balance: 4500 + (i * 720),
     farmLogo: farmLogos[(i + 2) % farmLogos.length],
     farmType: farmType,
-    videoPlaceholder: 'https://www.youtube.com/embed/S2gby6-gN3E',
+    videoPlaceholder: [
+      'https://youtube.com/shorts/iRHqWnxj-jU?feature=share',
+      'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share',
+      'https://youtube.com/shorts/4iph-cQWg3g?feature=share',
+      'https://youtube.com/shorts/ivdux5l52TY?feature=share',
+      'https://youtube.com/shorts/n6TW95vbqxo?feature=share',
+      'https://youtube.com/shorts/lXgJgxP9frU?feature=share'
+    ][(i + 3) % 6],
     gallery: generalFarmerGalleries[(i + 1) % generalFarmerGalleries.length],
     story: `নারী খামারি হিসেবে নিজের পায়ে দাঁড়ানোর লক্ষ্যে আমি ${femaleNames[i]} অত্যন্ত নিষ্ঠার সাথে শুরু করেছি এই খামার। আমার ${farmType} থেকে প্রতিটি ডিম, সবুজ শাক বা খাঁটি মধু পরম যত্নে নিজস্ব তত্ত্বাবধানে প্যাকেজিং করে কৃষক বাজার প্ল্যাটফর্মে পাঠানো হয়।`
   });

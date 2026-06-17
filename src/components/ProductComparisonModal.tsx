@@ -7,6 +7,7 @@ import React from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Product, getFormattedUnit } from '../types';
 import { X, ShoppingCart, Trash2, ShieldCheck, Sparkles, Star, Store } from 'lucide-react';
+import { LazyImage } from './LazyImage';
 
 interface ProductComparisonModalProps {
   isOpen: boolean;
@@ -114,7 +115,7 @@ export const ProductComparisonModal: React.FC<ProductComparisonModalProps> = ({
                           
                           <div className="space-y-2 mt-4 cursor-pointer" onClick={() => { onClose(); onSelectProduct(p.id); }}>
                             <div className="aspect-square w-20 h-20 rounded-xl overflow-hidden border border-gray-150-soft mx-auto bg-gray-50 shadow-3xs">
-                              <img
+                              <LazyImage
                                 src={convertGoogleDriveLink(p.images[0])}
                                 alt={p.title}
                                 className="h-full w-full object-cover"

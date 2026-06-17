@@ -25,7 +25,9 @@ import {
   Phone,
   User,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Heart,
+  ShoppingCart
 } from 'lucide-react';
 
 const getStatusRank = (status: Order['status']): number => {
@@ -171,14 +173,28 @@ const OrderTrackerStepper: React.FC<{ order: Order }> = ({ order }) => {
   );
 };
 
-export const OrderHistory: React.FC = () => {
-  const { currentUser, orders: contextOrders, updateOrderStatus } = useApp();
+interface OrderHistoryProps {
+  setView?: (view: string) => void;
+}
+
+export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
+  const { 
+    currentUser, 
+    orders: contextOrders, 
+    updateOrderStatus,
+    products,
+    wishlist,
+    toggleWishlist,
+    language,
+    addToCart
+  } = useApp();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [dashboardTab, setDashboardTab] = useState<'orders' | 'wishlist'>('orders');
 
   const fetchOrders = async () => {
     if (!currentUser) return;
@@ -291,13 +307,13 @@ export const OrderHistory: React.FC = () => {
         );
       case 'Delivered':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-600 text-white shadow-sm font-sans">
             <CheckCircle2 className="w-3.5 h-3.5" /> সম্পন্ন ✔
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-gray-100 text-gray-700 border border-gray-200">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black bg-gray-100 text-gray-700 border border-gray-200 font-sans">
             {status}
           </span>
         );
@@ -322,11 +338,11 @@ export const OrderHistory: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-gray-100 gap-4 mb-6">
         <div>
           <h2 className="text-base sm:text-lg font-black text-gray-800 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-emerald-600" />
-            বিস্তারিত অর্ডার ইতিহাস ও বিবরণী
+            <ShoppingBag className="h-5 w-5 text-emerald-600" />
+            {language === 'bn' ? 'বিস্তারিত তথ্য ও বিবরণী' : 'Account details & records'}
           </h2>
           <p className="text-xs text-gray-400 mt-1 font-sans">
-            আপনার অ্যাকাউন্টের মাধ্যমে সম্পন্ন হওয়া সকল অর্ডারের তালিকা ও বিবরণ।
+            {language === 'bn' ? 'আপনার অ্যাকাউন্টের মাধ্যমে সম্পন্ন হওয়া সকল অর্ডার ও উইশলিস্ট তালিকা।' : 'History of all your placed orders and saved items.'}
           </p>
         </div>
         <button
@@ -334,7 +350,34 @@ export const OrderHistory: React.FC = () => {
           className="inline-flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold px-3.5 py-2.5 rounded-xl border border-gray-150 transition-colors cursor-pointer select-none self-start sm:self-center"
         >
           <RotateCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          রিফ্রেশ করুন
+          {language === 'bn' ? 'রিফ্রেশ করুন' : 'Refresh'}
+        </button>
+      </div>
+
+      {/* DASHBOARD TABS SWITCHER */}
+      <div className="flex gap-2.5 pb-2 mb-6 border-b border-gray-100 font-sans">
+        <button
+          onClick={() => setDashboardTab('orders')}
+          className={`px-4 py-2.5 text-xs font-black rounded-xl cursor-pointer transition-all flex items-center gap-1.5 ${
+            dashboardTab === 'orders'
+              ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+              : 'bg-gray-50 hover:bg-gray-100 text-gray-650 font-bold border border-gray-150'
+          }`}
+        >
+          <ShoppingBag className="w-3.5 h-3.5" />
+          {language === 'bn' ? `আমার অর্ডারসমূহ (${orders.length})` : `My Orders (${orders.length})`}
+        </button>
+
+        <button
+          onClick={() => setDashboardTab('wishlist')}
+          className={`px-4 py-2.5 text-xs font-black rounded-xl cursor-pointer transition-all flex items-center gap-1.5 ${
+            dashboardTab === 'wishlist'
+              ? 'bg-emerald-600 text-white shadow-xs font-extrabold'
+              : 'bg-gray-50 hover:bg-gray-100 text-gray-650 font-bold border border-gray-150'
+          }`}
+        >
+          <Heart className="w-3.5 h-3.5" />
+          {language === 'bn' ? `আমার উইশলিস্ট (${wishlist?.length || 0})` : `My Wishlist (${wishlist?.length || 0})`}
         </button>
       </div>
 
@@ -344,163 +387,268 @@ export const OrderHistory: React.FC = () => {
         </div>
       )}
 
-      {loading ? (
-        <div className="py-16 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-r-transparent align-[-0.125em]" />
-          <p className="text-xs text-gray-400 font-semibold mt-3">অর্ডার রেকর্ডসমূহ লোড হচ্ছে...</p>
-        </div>
-      ) : orders.length === 0 ? (
-        <div className="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-          <ShoppingBag className="mx-auto h-12 w-12 text-gray-300 stroke-1" />
-          <h3 className="mt-4 text-xs font-bold text-gray-700">কোনো অর্ডার পাওয়া যায়নি!</h3>
-          <p className="mt-1 text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
-            আপনি আমাদের ওয়েবসাইট থেকে এখনও কোনো অর্ডার প্লেস করেননি। আপনার পছন্দের তাজা ও পুষ্টিকর ফসল এখনই অর্ডার করুন।
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-10">
-          {/* REAL-TIME DYNAMIC VISUAL ORDER TRACKER BAR AREA */}
-          <div className="p-5 sm:p-6 bg-gradient-to-br from-emerald-50/30 via-white to-gray-50/40 rounded-3xl border border-emerald-100/60 shadow-xs relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -z-10" />
+      {dashboardTab === 'orders' ? (
+        loading ? (
+          <div className="py-16 text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-r-transparent align-[-0.125em]" />
+            <p className="text-xs text-gray-400 font-semibold mt-3">অর্ডার রেকর্ডসমূহ লোড হচ্ছে...</p>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+            <ShoppingBag className="mx-auto h-12 w-12 text-gray-300 stroke-1" />
+            <h3 className="mt-4 text-xs font-bold text-gray-700 font-sans">কোনো অর্ডার পাওয়া যায়নি!</h3>
+            <p className="mt-1 text-xs text-gray-400 max-w-sm mx-auto leading-relaxed font-sans">
+              আপনি আমাদের ওয়েবসাইট থেকে এখনও কোনো অর্ডার প্লেস করেননি। আপনার পছন্দের তাজা ও পুষ্টিকর ফসল এখনই অর্ডার করুন।
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-10">
+            {/* REAL-TIME DYNAMIC VISUAL ORDER TRACKER BAR AREA */}
+            <div className="p-5 sm:p-6 bg-gradient-to-br from-emerald-50/30 via-white to-gray-50/40 rounded-3xl border border-emerald-100/60 shadow-xs relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl -z-10" />
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4 mb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-2.5 w-2.5 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                </span>
-                <div>
-                  <h3 className="text-xs sm:text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
-                    রিয়েল-টাইম অর্ডার ট্র্যাকিং সিস্টেম
-                  </h3>
-                  <p className="text-[10px] sm:text-[11px] text-gray-400 font-semibold font-sans mt-0.5">আপনার সতেজ ফসলের নিরাপত্তা ও প্যাকেজিং স্ট্যাটাস লাইভ দেখুন</p>
-                </div>
-              </div>
-
-              {/* Order selector dropdown */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[10px] sm:text-xs font-bold text-gray-400">অর্ডার নির্বাচন করুন:</span>
-                <select
-                  value={trackingOrderId || ''}
-                  onChange={(e) => {
-                    setTrackingOrderId(e.target.value);
-                    setIsSimulating(false);
-                  }}
-                  className="rounded-xl border border-emerald-100 bg-white py-1.5 px-3 text-[11px] sm:text-xs font-black text-emerald-800 outline-none focus:border-emerald-600 shadow-xs cursor-pointer select-none"
-                >
-                  {orders.map(o => (
-                    <option key={o.id} value={o.id}>
-                      অর্ডার: {o.id} ({o.status === 'Delivered' ? 'সম্পন্ন' : 'চলমান'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {(() => {
-              const activeOrder = orders.find(o => o.id === trackingOrderId) || orders[0];
-              if (!activeOrder) return null;
-
-              return (
-                <div className="space-y-4">
-                  <OrderTrackerStepper order={activeOrder} />
-
-                  {/* Real-time sync tracker simulation panel */}
-                  <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] sm:text-xs font-mono font-black bg-emerald-100 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
-                        কুরিয়ার ট্র্যাকিং নং: {activeOrder.trackingNumber || 'TRK-981242-DH'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                      <button
-                        onClick={() => {
-                          const next = getNextStatus(activeOrder.status);
-                          if (next) {
-                            updateOrderStatus(activeOrder.id, next);
-                          } else {
-                            updateOrderStatus(activeOrder.id, 'Confirmed');
-                          }
-                        }}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-[11px] font-black px-4.5 py-2.5 rounded-2xl transition-all shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
-                        title="পরবর্তী ধাপে নিয়ে টেস্ট করতে ক্লিক করুন"
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                        ধাপ পরিবর্তন করুন (Simulate Status)
-                      </button>
-
-                      <button
-                        onClick={() => setIsSimulating(!isSimulating)}
-                        className={`font-sans text-[11px] font-black px-4.5 py-2.5 rounded-2xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                          isSimulating 
-                            ? 'bg-amber-500 text-white hover:bg-amber-600 border border-amber-400' 
-                            : 'bg-gray-100 hover:bg-gray-150 text-gray-700 border border-gray-200'
-                        }`}
-                      >
-                        <span className={`block w-2.5 h-2.5 rounded-full ${isSimulating ? 'bg-white animate-ping' : 'bg-gray-400'}`} />
-                        {isSimulating ? 'লাইভ সিমুলেশন চলছে...' : 'অটো-সিমুলেশন ট্রায়াল (Auto Sync)'}
-                      </button>
-                    </div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-2.5 w-2.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <div>
+                    <h3 className="text-xs sm:text-xs font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1 font-sans">
+                      রিয়েল-টাইম অর্ডার ট্র্যাকিং সিস্টেম
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-gray-400 font-semibold font-sans mt-0.5">আপনার সতেজ ফসলের নিরাপত্তা ও প্যাকেজিং স্ট্যাটাস লাইভ দেখুন</p>
                   </div>
                 </div>
-              );
-            })()}
-          </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-gray-150">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-150">
-                  <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">অর্ডার আইডি</th>
-                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">তারিখ ও সময়</th>
-                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">টাকার পরিমাণ</th>
-                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">পেমেন্ট পদ্ধতি</th>
-                  <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">বর্তমান অবস্থা</th>
-                  <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">বিস্তারিত</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors text-xs text-gray-700">
-                    <td className="px-5 py-4 text-center font-mono font-bold text-emerald-800">
-                      {order.id}
-                    </td>
-                    <td className="px-4 py-4 font-semibold text-gray-600">
-                      {new Date(order.createdAt).toLocaleString('bn-BD', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="px-4 py-4 font-bold text-gray-800">
-                      ৳{order.totalPrice} BDT
-                    </td>
-                    <td className="px-4 py-4 font-semibold">
-                      <span className="inline-flex items-center gap-1 text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg">
-                        <CreditCard className="h-3 w-3 text-emerald-600" />
-                        {order.paymentMethod}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      {getStatusBadge(order.status)}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 transition-colors cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        দেখুন
-                      </button>
-                    </td>
+                {/* Order selector dropdown */}
+                <div className="flex items-center gap-2 shrink-0 font-sans">
+                  <span className="text-[10px] sm:text-xs font-bold text-gray-400">অর্ডার নির্বাচন করুন:</span>
+                  <select
+                    value={trackingOrderId || ''}
+                    onChange={(e) => {
+                      setTrackingOrderId(e.target.value);
+                      setIsSimulating(false);
+                    }}
+                    className="rounded-xl border border-emerald-100 bg-white py-1.5 px-3 text-[11px] sm:text-xs font-black text-emerald-800 outline-none focus:border-emerald-600 shadow-xs cursor-pointer select-none"
+                  >
+                    {orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        অর্ডার: {o.id} ({o.status === 'Delivered' ? 'সম্পন্ন' : 'চলমান'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {(() => {
+                const activeOrder = orders.find(o => o.id === trackingOrderId) || orders[0];
+                if (!activeOrder) return null;
+
+                return (
+                  <div className="space-y-4">
+                    <OrderTrackerStepper order={activeOrder} />
+
+                    {/* Real-time sync tracker simulation panel */}
+                    <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-mono font-black bg-emerald-100 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
+                          কুরিয়ার ট্র্যাকিং নং: {activeOrder.trackingNumber || 'TRK-981242-DH'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <button
+                          onClick={() => {
+                            const next = getNextStatus(activeOrder.status);
+                            if (next) {
+                              updateOrderStatus(activeOrder.id, next);
+                            } else {
+                              updateOrderStatus(activeOrder.id, 'Confirmed');
+                            }
+                          }}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-[11px] font-black px-4.5 py-2.5 rounded-2xl transition-all shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
+                          title="পরবর্তী ধাপে নিয়ে টেস্ট করতে ক্লিক করুন"
+                        >
+                          <RotateCw className="w-3.5 h-3.5" />
+                          ধাপ পরিবর্তন করুন (Simulate Status)
+                        </button>
+
+                        <button
+                          onClick={() => setIsSimulating(!isSimulating)}
+                          className={`font-sans text-[11px] font-black px-4.5 py-2.5 rounded-2xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                            isSimulating 
+                              ? 'bg-amber-500 text-white hover:bg-amber-600 border border-amber-400' 
+                              : 'bg-gray-100 hover:bg-gray-150 text-gray-700 border border-gray-200'
+                          }`}
+                        >
+                          <span className={`block w-2.5 h-2.5 rounded-full ${isSimulating ? 'bg-white animate-ping' : 'bg-gray-400'}`} />
+                          {isSimulating ? 'লাইভ সিমুলেশন চলছে...' : 'অটো-সিমুলেশন ট্রায়াল (Auto Sync)'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-gray-150">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-150">
+                    <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">অর্ডার আইডি</th>
+                    <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">তারিখ ও সময়</th>
+                    <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">টাকার পরিমাণ</th>
+                    <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider">পেমেন্ট পদ্ধতি</th>
+                    <th className="px-4 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-center">বর্তমান অবস্থা</th>
+                    <th className="px-5 py-4 text-xs font-black text-gray-500 uppercase tracking-wider text-right">বিস্তারিত</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50/50 transition-colors text-xs text-gray-700">
+                      <td className="px-5 py-4 text-center font-mono font-bold text-emerald-800">
+                        {order.id}
+                      </td>
+                      <td className="px-4 py-4 font-semibold text-gray-650">
+                        {new Date(order.createdAt).toLocaleString('bn-BD', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-4 py-4 font-bold text-gray-800 font-sans">
+                        ৳{order.totalPrice} BDT
+                      </td>
+                      <td className="px-4 py-4 font-semibold">
+                        <span className="inline-flex items-center gap-1 text-gray-600 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-lg font-sans">
+                          <CreditCard className="h-3 w-3 text-emerald-600" />
+                          {order.paymentMethod}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        {getStatusBadge(order.status)}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 transition-colors cursor-pointer font-sans"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          {language === 'bn' ? 'দেখুন' : 'View'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        )
+      ) : (
+        /* MY WISHLIST TAB CONTAINER VIEW */
+        <div className="space-y-6">
+          {(() => {
+            const wishlistedProducts = products.filter(p => wishlist?.includes(p.id));
+            if (wishlistedProducts.length === 0) {
+              return (
+                <div className="py-16 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-6">
+                  <Heart className="mx-auto h-12 w-12 text-rose-300 stroke-1 animate-pulse" />
+                  <h3 className="mt-4 text-sm font-black text-gray-700 font-sans">
+                    {language === 'bn' ? 'আপনার উইশলিস্ট খালি!' : 'Your Wishlist is Empty!'}
+                  </h3>
+                  <p className="mt-2 text-xs text-gray-400 max-w-sm mx-auto leading-relaxed font-sans">
+                    {language === 'bn' 
+                      ? 'আপনার পছন্দের তাজা ও প্রিমিয়াম ফসল সংরক্ষণ করতে পণ্যের কার্ডে থাকা হার্ট (Heart) আইকনে ক্লিক করুন।'
+                      : 'Click the Heart icon on any product card to save your favorite fresh and premium farm items here.'}
+                  </p>
+                  {setView && (
+                    <button 
+                      onClick={() => { setView('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                      className="mt-6 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer select-none active:scale-95"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      {language === 'bn' ? 'পণ্য বাজারে যান' : 'Go to Fresh Market'}
+                    </button>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-1">
+                {wishlistedProducts.map(prod => {
+                  const isDiscounted = !!prod.discountPrice;
+                  const finalPrice = prod.discountPrice || prod.price;
+
+                  return (
+                    <div 
+                      key={prod.id} 
+                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-150 bg-white hover:shadow-lg hover:border-emerald-250 transition-all text-gray-800"
+                    >
+                      {/* Top-right heart button to remove directly */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist(prod.id);
+                        }}
+                        className="absolute right-2.5 top-2.5 z-10 p-1.5 rounded-full bg-white/90 shadow-xs hover:bg-white text-rose-500 hover:text-rose-600 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center border border-gray-100/40"
+                        title={language === 'bn' ? 'উইশলিস্ট থেকে বাদ দিন' : 'Remove from wishlist'}
+                      >
+                        <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" />
+                      </button>
+
+                      {/* Product Image */}
+                      <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
+                        <img 
+                          src={(prod.images && prod.images[0]) || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500'} 
+                          alt={prod.title} 
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                        {isDiscounted && (
+                          <span className="absolute left-2 top-2 z-10 rounded bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow-xs">
+                            {language === 'bn' ? 'ছাড়' : 'Offer'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Content Area */}
+                      <div className="flex flex-1 flex-col p-3 text-left">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-800 font-sans mb-1">{prod.category}</span>
+                        <h4 className="text-xs sm:text-sm font-black text-gray-800 line-clamp-1 mb-1" title={prod.title}>{prod.title}</h4>
+                        <p className="text-[10px] text-gray-500 font-semibold mb-2 font-sans">চাষী: {prod.farmerName}</p>
+
+                        <div className="flex items-baseline gap-1.5 mb-4 font-sans">
+                          <span className="text-sm font-bold text-emerald-800 font-sans">৳{finalPrice} / {prod.unit}</span>
+                          {isDiscounted && (
+                            <span className="text-[10px] text-gray-400 line-through">৳{prod.price}</span>
+                          )}
+                        </div>
+
+                        {/* Quick Actions (Add to Cart) */}
+                        <div className="mt-auto pt-2">
+                          <button
+                            onClick={() => {
+                              addToCart(prod, 1, finalPrice);
+                              const msg = language === 'bn' ? `"${prod.title}" সফলভাবে আপনার কার্টে যোগ করা হয়েছে!` : `"${prod.title}" has been successfully added to your cart!`;
+                              alert(msg);
+                            }}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-sans text-xs font-black py-2 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 shadow-xs"
+                          >
+                            <ShoppingCart className="w-3.5 h-3.5" />
+                            {language === 'bn' ? 'কার্টে যোগ করুন' : 'Add to Cart'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Product, Farmer, Review, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
+import { LazyImage } from './LazyImage';
 import { 
   ArrowLeft, 
   Star, 
@@ -36,7 +37,8 @@ import {
 } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 
-export function getProductImages(product: Product): string[] {
+export function getProductImages(product?: Product | null): string[] {
+  if (!product) return [];
   const list: string[] = [];
   
   if (product.images && product.images.length > 0) {
@@ -157,7 +159,31 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [qty, setQty] = useState(1);
   const [liked, setLiked] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'reviews' | 'delivery'>('details');
+  const [activeTab, setActiveTab ] = useState<'details' | 'reviews' | 'delivery'>('details');
+
+  // Touchgestures state for swipeable carousel
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEndX(null);
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 50;
+    if (distance > minSwipeDistance) {
+      handleNextImage();
+    } else if (distance < -minSwipeDistance) {
+      handlePrevImage();
+    }
+  };
 
   // Interactive review submission states
   const [ratingInput, setRatingInput] = useState(5);
@@ -175,6 +201,14 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   }, [product]);
 
   const [selectedPackId, setSelectedPackId] = useState<string>('');
+
+  const activeOption = React.useMemo(() => {
+    return packOptions.find(o => o.id === selectedPackId) || packOptions[0];
+  }, [packOptions, selectedPackId]);
+
+  const productImages = React.useMemo(() => {
+    return getProductImages(product);
+  }, [product]);
 
   // Synchronize dynamic packaging selection on startup or item change
   useEffect(() => {
@@ -209,10 +243,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const baseDisplayPrice = product.discountPrice || product.price;
   const baseOriginalPrice = product.price;
   const hasDiscount = !!product.discountPrice;
-
-  const activeOption = React.useMemo(() => {
-    return packOptions.find(o => o.id === selectedPackId) || packOptions[0];
-  }, [packOptions, selectedPackId]);
 
   const packMultiplier = activeOption?.multiplier || 1;
   const packLabelBn = activeOption?.labelBn || product?.unit || 'পিস';
@@ -249,10 +279,6 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     navigator.clipboard.writeText(window.location.href);
     setTimeout(() => setCopied(false), 2500);
   };
-
-  const productImages = React.useMemo(() => {
-    return getProductImages(product);
-  }, [product]);
 
   const handleNextImage = () => {
     setSelectedImgIdx(prev => (prev + 1) % productImages.length);
@@ -346,9 +372,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           {/* COLUMN 1: INTERACTIVE IMAGE GALLERY SLIDER (LG CLS: 6/12) */}
           <div className="lg:col-span-6 flex flex-col justify-start">
             
-            {/* LARGE VIEWPORT BOX WITH NAVIGATION CHEVRONS */}
-            <div className="relative overflow-hidden rounded-2xl border border-gray-150 bg-gray-50 aspect-square w-full flex items-center justify-center shadow-inner group">
-              <img
+            {/* LARGE VIEWPORT BOX WITH NAVIGATION CHEVRONS & TOUCH SWIPE */}
+            <div 
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              className="relative overflow-hidden rounded-2xl border border-gray-150 bg-gray-50 aspect-square w-full flex items-center justify-center shadow-inner group cursor-grab active:cursor-grabbing select-none touch-pan-y"
+              title="Swipe left or right to change images"
+            >
+              <LazyImage
                 src={
                   selectedImgIdx === 0 && product.googleDriveFolderUrl
                     ? convertGoogleDriveLink(product.googleDriveFolderUrl)
@@ -357,8 +389,15 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 alt={`${product.title} - Main Preview image`}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 referrerPolicy="no-referrer"
-                id="gallery-slider-photo"
+                onError={() => {}}
               />
+
+              {/* MOBILE SWIPE GESTURE HIGHLIGHT BADGE */}
+              {productImages.length > 1 && (
+                <span className="absolute right-3.5 bottom-3.5 rounded-lg bg-black/60 backdrop-blur-xs px-2.5 py-1 text-[8.5px] font-black text-white shadow-xs flex items-center gap-1 border border-white/10 sm:hidden select-none animate-pulse">
+                  ↔ সোয়াইপ করুন
+                </span>
+              )}
 
               {/* SAVINGS CHIP */}
               {hasDiscount && (
@@ -436,7 +475,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       : 'border-gray-200 hover:border-emerald-200'
                   }`}
                 >
-                  <img
+                  <LazyImage
                     src={
                       idx === 0 && product.googleDriveFolderUrl
                         ? convertGoogleDriveLink(product.googleDriveFolderUrl)
@@ -445,6 +484,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     alt={`${product.title} gallery thumbnail ${idx + 1}`}
                     className="h-full w-full object-cover"
                     referrerPolicy="no-referrer"
+                    onError={() => {}}
                   />
                   {selectedImgIdx === idx && (
                     <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
@@ -1177,8 +1217,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     className="group rounded-2xl border border-gray-150-soft p-2.5 bg-white hover:shadow-lg hover:border-emerald-250 transition-all cursor-pointer flex flex-col justify-between"
                   >
                     <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 shrink-0 shadow-inner">
-                      <img 
-                        src={p.images[0]} 
+                      <LazyImage 
+                        src={convertGoogleDriveLink(p.images[0])} 
                         alt={p.title} 
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
                         referrerPolicy="no-referrer" 
@@ -1236,8 +1276,8 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     className="group rounded-2xl border border-gray-150-soft p-2.5 bg-white hover:shadow-lg hover:border-emerald-250 transition-all cursor-pointer flex flex-col justify-between"
                   >
                     <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-50 shrink-0 shadow-inner">
-                      <img 
-                        src={p.images[0]} 
+                      <LazyImage 
+                        src={convertGoogleDriveLink(p.images[0])} 
                         alt={p.title} 
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
                         referrerPolicy="no-referrer" 

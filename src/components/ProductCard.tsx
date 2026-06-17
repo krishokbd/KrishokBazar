@@ -6,9 +6,10 @@
 import React from 'react';
 import { Product, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
-import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera } from 'lucide-react';
+import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera, Heart } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
+import { LazyImage } from './LazyImage';
 
 interface ProductCardProps {
   product: Product;
@@ -25,7 +26,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onToggleCompare,
   isCompared
 }) => {
-  const { addToCart, currentUser, language, editProduct } = useApp();
+  const { addToCart, currentUser, language, editProduct, wishlist, toggleWishlist } = useApp();
+  const isWishlisted = wishlist?.includes(product.id) || false;
 
   const packOptions = React.useMemo(() => getProductPackOptions(product), [product]);
   const [selectedPackId, setSelectedPackId] = React.useState<string>(() => {
@@ -62,6 +64,44 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${product.title}" পণ্যটি অর্ডার করতে চাই।\nকৃষক: ${product.farmerName}\nমূল্য: ৳${displayPrice}`);
   const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
+
+  // Resilient image loading with fallbacks for broken/webpage links
+  const getInitialSrc = () => {
+    // Only prioritize googleDriveFolderUrl as an image source if it is actually a direct, downloadable Google Drive file/image link.
+    const isRealDriveImage = product.googleDriveFolderUrl && (
+      product.googleDriveFolderUrl.includes('drive.google.com/file/') ||
+      product.googleDriveFolderUrl.includes('id=') ||
+      product.googleDriveFolderUrl.includes('drive.google.com/open') ||
+      product.googleDriveFolderUrl.includes('lh3.googleusercontent.com')
+    );
+
+    if (isRealDriveImage && product.googleDriveFolderUrl) {
+      return convertGoogleDriveLink(product.googleDriveFolderUrl);
+    }
+    const validUrls = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
+    return validUrls[0] || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+  };
+
+  const [currentSrc, setCurrentSrc] = React.useState(getInitialSrc());
+  const [attemptIndex, setAttemptIndex] = React.useState(-1); // Start at -1 to indicate we are trying initial source
+
+  React.useEffect(() => {
+    setCurrentSrc(getInitialSrc());
+    setAttemptIndex(-1);
+  }, [product]);
+
+  const handleImageError = () => {
+    const validUrls = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
+    
+    // Determine next index to attempt
+    const nextIdx = attemptIndex + 1;
+    if (nextIdx < validUrls.length) {
+      setAttemptIndex(nextIdx);
+      setCurrentSrc(convertGoogleDriveLink(validUrls[nextIdx]));
+    } else {
+      setCurrentSrc('https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500');
+    }
+  };
 
   return (
     <div 
@@ -143,20 +183,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* BADGES & COVERS CONTAINER */}
       <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-        <img
-          src={
-            product.googleDriveFolderUrl 
-              ? convertGoogleDriveLink(product.googleDriveFolderUrl) 
-              : (product.images && product.images.length > 0 && product.images[0] 
-                  ? convertGoogleDriveLink(product.images[0]) 
-                  : 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500')
-          }
+        <LazyImage
+          src={currentSrc}
           alt={product.title}
           className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108"
           referrerPolicy="no-referrer"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
-          }}
+          onError={handleImageError}
         />
 
         {/* VERIFIED BADGE */}
@@ -168,16 +200,50 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* READY TO COOK BADGE */}
         {product.isReadyToCook && (
-          <span className="absolute right-2 top-2 z-10 inline-flex items-center gap-1 rounded bg-indigo-600 px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow">
+          <span className="absolute right-11 top-2.5 z-10 inline-flex items-center gap-1 rounded bg-indigo-600 px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow">
             🍳 R2C
           </span>
         )}
+
+        {/* WISHLIST HEART TOGGLE BUTTON */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(product.id);
+          }}
+          className="absolute right-2 top-2 z-20 p-1.5 rounded-full bg-white/80 backdrop-blur-xs hover:bg-white text-gray-400 hover:text-rose-500 transition shadow-sm hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center select-none"
+          title={isWishlisted ? (language === 'bn' ? 'উইশলিস্ট থেকে বাদ দিন' : 'Remove from wishlist') : (language === 'bn' ? 'উইশলিস্টে যোগ করুন' : 'Add to wishlist')}
+        >
+          <Heart 
+            className={`h-3.5 w-3.5 transition-colors ${
+              isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-gray-400'
+            }`} 
+          />
+        </button>
 
         {/* DISCOUNT BADGE */}
         {hasDiscount && (
           <span className="absolute left-2 bottom-2 z-10 inline-flex items-center rounded bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white shadow">
             -{Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
           </span>
+        )}
+
+        {/* EXTERNAL WEB LINK BADGE */}
+        {product.googleDriveFolderUrl && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (product.googleDriveFolderUrl) {
+                window.open(product.googleDriveFolderUrl, '_blank');
+              }
+            }}
+            className="absolute right-2 bottom-2 z-10 inline-flex items-center gap-1 rounded bg-slate-900/85 hover:bg-slate-950 px-2 py-0.5 text-[8px] font-black tracking-wider text-white shadow-md border border-slate-700 transition cursor-pointer"
+            title={language === 'bn' ? 'সরাসরি পেজে ভিজিট করুন' : 'Visit original webpage'}
+          >
+            🌐 {product.googleDriveFolderUrl.includes('shopify.com') ? 'Shopify' : product.googleDriveFolderUrl.includes('drive.google.com') ? 'Drive' : 'Link'}
+          </button>
         )}
 
         {/* FLOATING COMPARE BUTTON */}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Globe, ChevronRight, Check } from 'lucide-react';
+import { KRISHOK_BAZAR_LOGO } from '../assets';
 
-const LOGO_URL = "https://cdn.shopify.com/s/files/1/0991/0717/6761/files/Gemini_Generated_Image_ce5s9yce5s9yce5s.png?v=1779307577";
+const LOGO_URL = KRISHOK_BAZAR_LOGO;
 
 interface AppEntryFlowProps {
   onComplete: (location: { division: string; district: string; upazila: string }, language: 'bn' | 'en') => void;

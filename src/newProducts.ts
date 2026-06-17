@@ -48,363 +48,431 @@ const categoryImages: Record<string, string[]> = {
 };
 
 // 45 Premium Products defining accurate local items of Bangladesh across the 6 supported categories
+// Total 45 Products
 const rawItemsList = [
-  // Category: vegetables (8 items)
+  // Vegetables (15 Items)
   {
     category: 'vegetables',
-    title: 'বগুড়ার বালু মাটির গোল লাল আলু (Red Potato)',
-    description: 'বগুড়ার বিখ্যাত সুস্বাদু বালু মাটির গোল লাল আলু। দীর্ঘ সময় সংরক্ষণযোগ্য ও তরকারির স্বাদ অতুলনীয় করে তোলে।',
-    price: 45,
-    unit: 'kg',
-    isDiscount: true,
+    title: 'মুলা শাক (Fresh Radish Greens)',
+    description: 'খাঁটি দেশী কচি ও সতেজ মুলা শাক। সরাসরি কৃষকদের বাগান থেকে সংগৃহীত পুষ্টিকর ও উপাদেয় সবুজ শাক।',
+    price: 15,
+    unit: 'bundle',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_7.jpg?v=1778788779',
     isFeatured: true
   },
   {
     category: 'vegetables',
-    title: 'যশোরের তাজা নরম তালের বেগুন (Tall Brinjal)',
-    description: 'যশোরের বিখ্যাত কচি ও নরম বীজহীন তাল বেগুন। বেগুন পোড়া ও ভাজিতে চমৎকার রসালো স্বাদ।',
-    price: 68,
-    unit: 'kg'
-  },
-  {
-    category: 'vegetables',
-    title: 'ফরিদপুরের কড়া ঝাঁঝালো পেঁয়াজ (Local Onion)',
-    description: 'ফরিদপুরের আসল দেশী লাল পেঁয়াজ। ঝাঁঝালো স্বাদের রান্নার অপরিহার্য সোনালী মশলাদার উপাদান।',
-    price: 85,
-    unit: 'kg',
-    isFeatured: true
-  },
-  {
-    category: 'vegetables',
-    title: 'রাজবাড়ীর বড় কোয়ার শুকনো দেশী রসুন (Organic Garlic)',
-    description: 'সম্পূর্ণ জৈব উপায়ে বুনো চরে উৎপাদিত বড় কোয়ার দেশী কড়া ঝাঁঝ রসুনের সেরা কোয়ালিটি।',
-    price: 140,
-    unit: 'kg'
-  },
-  {
-    category: 'vegetables',
-    title: 'নরসিংদীর কচি কাঁচা পেঁপে (Green Papaya)',
-    description: 'জৈব উপায়ে চাষ করা কচি ও সতেজ সবুজ পেঁপে। তরকারি ও সালাদের জন্য অত্যন্ত উপকারী ও সুস্বাদু।',
-    price: 40,
-    unit: 'kg',
+    title: 'পুঁই শাক (Fresh Malabar Spinach)',
+    description: 'ভিটামিন এ ও সি এবং আয়রন সমৃদ্ধ কচি তাজা ও পিচ্ছিল পুঁই শাকের বড় আঁটি। সম্পূর্ণ কেমিক্যাল মুক্ত।',
+    price: 25,
+    unit: 'bundle',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_6.jpg?v=1778788778',
     isDiscount: true
   },
   {
     category: 'vegetables',
-    title: 'কুমিল্লার তাজা তিতকুটে করলা (Bitter Gourd)',
-    description: 'ভিটামিন ও আয়রন সমৃদ্ধ সতেজ কচি করলা। রক্ত পরিষ্কার রাখতে সাহায্য করে এবং ভাজিতে অসাধারণ স্বাদ।',
-    price: 62,
-    unit: 'kg'
-  },
-  {
-    category: 'vegetables',
-    title: 'মেহেরপুরের কচি নরম ঢেঁড়শ (Fresh Okra)',
-    description: 'ক্ষেত থেকে সদ্য তোলা কচি পিচ্ছিল আঁশহীন কচি ঢেঁড়শ। সকালের গরম ভাতে ভাজির দারুণ স্বাদ।',
-    price: 50,
-    unit: 'kg'
-  },
-  {
-    category: 'vegetables',
-    title: 'সাভারের ধবধবে সাদা তাজা ফুলকপি (White Cauliflower)',
-    description: 'পোকামুক্ত সতেজ ও কড়া পাতাযুক্ত বড় সাইজের সাদা ধবধবে ফুলকপি। সরাসরি কৃষকের মাঠ থেকে সংগৃহীত।',
-    price: 45,
-    unit: 'piece',
+    title: 'লাল শাক (Premium Red Spinach)',
+    description: 'খাঁটি লাল টসটসে সুস্বাদু শিমূলতলার তাজা কচি লাল শাক। কম আঁশ এবং রান্নায় চমৎকার রক্তিম রং ছড়ায়।',
+    price: 15,
+    unit: 'bundle',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_5.jpg?v=1778788778',
     isFeatured: true
+  },
+  {
+    category: 'vegetables',
+    title: 'কচি বেগুন (Fresh Tender Brinjal)',
+    description: 'যশোরের নরম তাজা ও চকচকে বেগুন। কুচি বেগুন ভাজি অথবা তরকারির স্বাদ বাড়ানোর প্রথম পছন্দ।',
+    price: 60,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download.jpg?v=1778788778'
+  },
+  {
+    category: 'vegetables',
+    title: 'দেশি লাউ (Sweet Local Bottle Gourd)',
+    description: 'নরসিংদীর চর থেকে সংগৃহীত কচি ও মিষ্টি পানি লাউ। একদম কুচি ও নরম বীজহীন, দারুণ স্বাদ ও হজমে সহায়ক।',
+    price: 50,
+    unit: 'piece',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_2.jpg?v=1778788779',
+    isFeatured: true
+  },
+  {
+    category: 'vegetables',
+    title: 'তিতা করলা (Crisp Bitter Gourd)',
+    description: 'জৈব সার দিয়ে উৎপাদিত কচি ও কুড়মুড়ে তিতা করলা। রক্তের সুগার নিয়ন্ত্রণে এবং সুস্বাদু ভাজিতে অতুলনীয়।',
+    price: 70,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_1.jpg?v=1778788778',
+    isDiscount: true
+  },
+  {
+    category: 'vegetables',
+    title: 'মিষ্টি কুমড়া (Sweet Round Pumpkin)',
+    description: 'পাকা কড়া ও রসে ভরপুর মিষ্টি এবং কুসুম কালারের আস্ত মিষ্টি কুমড়া। চমৎকার পুষ্টিকর গোল মিষ্টি কুমড়া।',
+    price: 50,
+    unit: 'piece',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_17.jpg?v=1778788778'
+  },
+  {
+    category: 'vegetables',
+    title: 'দেশি আদা (Fresh Local Ginger)',
+    description: 'খড় দিয়ে ঢাকা উর্বর মাটিতে চাষ করা কড়া ঝাঁঝ এবং কাদার আবরণে থাকা সতেজ দেশি আদা। রান্নার সুঘ্রাণ বাড়াবে।',
+    price: 240,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_3.jpg?v=1778788779'
+  },
+  {
+    category: 'vegetables',
+    title: 'বগুড়ার বালু মাটির গোল লাল আলু (Bogra Red Potato)',
+    description: 'বগুড়ার বিখ্যাত বালু মাটির লালচে গোল ও কড়া মিষ্ট আলু। তরকারির জন্য দারুণ আলু।',
+    price: 45,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600'
+  },
+  {
+    category: 'vegetables',
+    title: 'সতেজ দেশী কাঁচামরিচ (Fresh Green Chili)',
+    description: 'কড়া ঝাঁঝ ও মনোহরী কচি গন্ধযুক্ত ছোট দস্তার কামড় দেওয়া তাজা সবুজ দেশী কাঁচামরিচ।',
+    price: 120,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=600'
+  },
+  {
+    category: 'vegetables',
+    title: 'তাজা মিষ্টি লাল চেরি টমেটো (Red Cherry Tomatoes)',
+    description: 'রসালো লাল মিষ্টি টসটসে কচি চেরি টমেটোর প্রিমিয়াম প্যাক। সালাদে দারুণ।',
+    price: 180,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=600'
+  },
+  {
+    category: 'vegetables',
+    title: 'শাহি তাজা ক্যাপসিকাম সবুজ (Green Capsicum)',
+    description: 'সবুজ ক্যাপসিকাম শাহি ক্রিস্পি চাইনিজ রেসিপির শ্রেষ্ঠ সংযুক্তি। অত্যন্ত কুড়মুড়ে।',
+    price: 260,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=600'
+  },
+  {
+    category: 'vegetables',
+    title: 'পাকা টমেটো কড়া প্রিমিয়াম (Fresh Ripe Tomatoes)',
+    description: 'গাছে পাকা উজ্জ্বল লাল মিষ্টি ও নরম রসালো আসল দেশী টমেটো প্যাক।',
+    price: 90,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?w=600'
+  },
+  {
+    category: 'vegetables',
+    title: 'নরসিংদীর কচি কাঁচা পেঁপে (Local Green Papaya)',
+    description: 'সবুজ নরম কচি পেঁপে। তরকারি এবং রান্নার সেরা সুস্বাদু হেলদি সবজি প্যাক।',
+    price: 35,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=600'
+  },
+  {
+    category: 'vegetables',
+    title: 'মেহেরপুরের নরম কচি ঢেঁড়শ (Tender Lady Finger)',
+    description: 'ক্ষেত থেকে সদ্য পেড়ে আনা কচি ও আশঁহীন ঢেঁড়শ প্যাক। ভাজিতে অসাধারণ।',
+    price: 55,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1596547609652-9cf5d8d76921?w=600&sig=tender-lady'
   },
 
-  // Category: fruits (7 items)
+  // Fruits (9 Items)
   {
     category: 'fruits',
-    title: 'রাজশাহীর বাঘা থেকে তাজা গোপালভোগ আম (Gopalbhog)',
-    description: 'রাজশাহীর বিখ্যাত বাঘা হর্টিকালচার বাগান থেকে সরাসরি কেমিক্যাল ছাড়া সংগৃহীত কড়া মিষ্টি ও সুঘ্রাণ গোপালভোগ আম।',
-    price: 150,
-    unit: 'kg',
-    isDiscount: true,
-    isFeatured: true
-  },
-  {
-    category: 'fruits',
-    title: 'নরসিংদীর সুস্বাদু তাজা সাগর কলা (Sagor Banana)',
-    description: 'নরসিংদীর বিখ্যাত মিষ্টি ও অত্যন্ত পুষ্টিকর তাজা ছড়া সাগর কলা। বাচ্চাদের আদর্শ সকালের নাস্তা।',
-    price: 90,
-    unit: 'dozen'
-  },
-  {
-    category: 'fruits',
-    title: 'কক্সবাজারের তাজা জম্পেশ আনারস (Sweet Pineapple)',
-    description: 'কক্সবাজার পাহাড়ের বিখ্যাত মধুর মতো মিষ্টি তাজা বড় আনারস। রসে টুইটুম্বুর আসল ফলের রাজকীয় স্বাদ।',
-    price: 65,
-    unit: 'piece',
-    isFeatured: true
-  },
-  {
-    category: 'fruits',
-    title: 'ক্ষেতের কচি মিষ্টি পেয়ারা (Sweet Organic Guava)',
-    description: 'ক্ষেত থেকে সদ্য পেড়ে আনা ডালিসহ তরতাজা সবুজ কুড়মুড়ে পেয়ারা। সম্পূর্ণ কেমিক্যাল মুক্ত।',
-    price: 70,
-    unit: 'kg'
-  },
-  {
-    category: 'fruits',
-    title: 'রংপুরের রসালো লাল আস্ত তরমুজ (Watermelon)',
-    description: 'গ্রীষ্মের গরমে তৃষ্ণা মেটাতে সেরা কড়া মিষ্টি ও লাল টসটসে কচি তাজা বড় তরমুজ।',
-    price: 180,
-    unit: 'piece',
-    isDiscount: true
-  },
-  {
-    category: 'fruits',
-    title: 'পাহাড়ী লাল টসটসে ড্রাগন ফল (Red Dragon Fruit)',
-    description: 'পাহাড়ী লাল কুসুমের পুষ্টিকর ও মিষ্টি ড্রাগন ফল। প্রচুর ফাইবার ও ভিটামিন সি সমৃদ্ধ।',
-    price: 280,
-    unit: 'kg'
-  },
-  {
-    category: 'fruits',
-    title: 'মাটিরাঙ্গার মিষ্টি মাল্টা ফল গ্রেড-এ (Malta Fruit)',
-    description: 'মাটিরাঙ্গার রাঙামাটি পাহাড়ের আসল মিষ্টি ও রসে ভরা রসালো কচি বড় সাইজের সবুজ মাল্টা।',
+    title: 'রসালো কমলা (Juicy Sweet Orange)',
+    description: 'ভিটামিন ও রসে ঠাসা কচি ও অত্যন্ত সুমিষ্টি কমলা লেবুর সেট। সর্দি- কাশি প্রতিরোধ করে।',
     price: 220,
     unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_18.jpg?v=1778788778',
     isFeatured: true
   },
+  {
+    category: 'fruits',
+    title: 'দেশি লিচু (Sweet Juicy Local Litchi)',
+    description: 'দিনাজপুরের বিখ্যাত রসালো ও টুকটুকে লাল মিষ্টি লিচুর আস্ত বড় গোছা। মধুমাস উপভোগের সেরা রসালো কামড়।',
+    price: 400,
+    unit: '100 pcs',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_4.jpg?v=1778788779',
+    isFeatured: true
+  },
+  {
+    category: 'fruits',
+    title: 'সবুজ পেয়ারা (Organic Crisp Guava)',
+    description: 'ক্ষেতের সদ্য তোলা ডালিসহ কচি সবুজ কুড়মুড়ে সুস্বাদু পেয়ারা। ডাইবেটিস রোগীদের জন্য আদর্শ।',
+    price: 80,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_10.jpg?v=1778790017',
+    isDiscount: true
+  },
+  {
+    category: 'fruits',
+    title: 'রাজশাহীর হর্টিকালচার গোপালভোগ আম (Gopalbhog Mango)',
+    description: 'বাঘা রাজশাহীর বিখ্যাত কেমিক্যাল মুক্ত আসল মধুর মতো মিষ্টি ও সুঘ্রাণ গোপালভোগ আম।',
+    price: 160,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1519098901909-b1553a1190af?w=600'
+  },
+  {
+    category: 'fruits',
+    title: 'কক্সবাজারের তাজা বড় পাহাড়ী আনারস (Honey Pineapple)',
+    description: 'কক্সবাজার পাহাড়ের বিখ্যাত অত্যন্ত মিষ্টি বড় তাজা রসালো পাহাড়ী আনারস।',
+    price: 75,
+    unit: 'piece',
+    primaryImage: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600'
+  },
+  {
+    category: 'fruits',
+    title: 'রসালো লাল ফুজি আপেল গ্রেড-এ (Red Fuji Apples)',
+    description: 'আমদানি করা কড়া কুড়মুড়ে মিষ্টি রসালো গোল লাল ফুজি আপেলের সেরা মান।',
+    price: 280,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=600'
+  },
+  {
+    category: 'fruits',
+    title: 'মিষ্টি তাজা সবুজ বাও কুল বরই (Green jujube)',
+    description: 'অত্যন্ত কচি রসে ভরপুর টক-মিষ্টি মিক্স বাও কুল এবং গোল তাজা দেশী বরই।',
+    price: 110,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600'
+  },
+  {
+    category: 'fruits',
+    title: 'পাহাড়ী লাল ড্রাগন ফল প্রিমিয়াম (Red Dragon Fruits)',
+    description: 'প্রচুর অ্যান্টিঅক্সিডেন্ট ও ফাইবার সমৃদ্ধ কুসুম লাল মিষ্টি তাজা পাহাড়ি ড্রাগন ফল।',
+    price: 350,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1490885578174-acda8905c2c6?w=600'
+  },
+  {
+    category: 'fruits',
+    title: 'নরসিংদীর দেশী তাজা সাগর কলা (Sagor Banana Bunch)',
+    description: 'সম্পূর্ণ পুষ্টিকর প্রাকৃতিকভাবে পাকানো নরসিংদীর বিখ্যাত সাগর কলা বাগান সেট।',
+    price: 90,
+    unit: 'dozen',
+    primaryImage: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&sig=banana'
+  },
 
-  // Category: fish (8 items)
+  // Fish (8 Items)
+  {
+    category: 'fish',
+    title: 'কালো মাগুর মাছ (Live Black Magur)',
+    description: 'সম্পূর্ণ প্রাকৃতিকভাবে বড় হওয়া দিঘি ও চলন বিলের জ্যান্ত পুষ্টিকর কালো মাগুর মাছ। রক্ত বৃদ্ধিতে অতুলনীয় উপযোগী।',
+    price: 750,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_20.jpg?v=1778788779',
+    isFeatured: true
+  },
+  {
+    category: 'fish',
+    title: 'দেশি শিং মাছ (Live Local Singi Fish)',
+    description: 'দেশী খাঁটি নদী ও নালা থেকে সংগৃহীত অত্যন্ত পুষ্টিকর ও ক্যালসিয়ামে ভরা জ্যান্ত দেশি শিং মাছ। রোগীদের পথ্য।',
+    price: 580,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_19.jpg?v=1778788778',
+    isDiscount: true
+  },
+  {
+    category: 'fish',
+    title: 'পদ্মার ইলিশ (Royal Padma River Hilsa)',
+    description: 'পদ্মা নদীর কড়া সুঘ্রাণের রূপালী ও তেল চকচকে ডিম ছাড়া ইলিশ। রান্নায় এর মিষ্টি তেল ও গন্ধ অতুলনীয়।',
+    price: 1450,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_8.jpg?v=1778788778',
+    isFeatured: true
+  },
   {
     category: 'fish',
     title: 'দিঘির তাজা জ্যান্ত বড় রুই মাছ (Giant Rui Fish)',
-    description: 'নিজেদের বড় দিঘি থেকে জ্যান্ত ধরা রুই মাছ। আঁশ ও পিঠের শক্ত চর্বিযুক্ত কড়া তাজা ও মিষ্টি স্বাদের।',
-    price: 390,
+    description: 'জলাশয় থেকে ধরা চকচকে তাজা বড় রুই মাছ। আঁশ ও মাংস অত্যন্ত সুস্বাদু।',
+    price: 380,
     unit: 'kg',
-    isDiscount: true,
-    isFeatured: true
+    primaryImage: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600'
   },
   {
     category: 'fish',
-    title: 'হাওরের ও বিলের চকচকে বড় কাতলা (Katla Fish)',
-    description: 'হাওরের গভীর পানির শ্যাওলা খেয়ে বড় হওয়া সুস্বাদু চর্বিযুক্ত তাজা বড় কাতলা মাছের মাথা ও পেট।',
+    title: 'বিল-হাওরের বড় চকচকে কাতলা মাছ (Katla Fish)',
+    description: 'হাওরের গভীর পানির কচি শ্যাওলা খেয়ে বড় হওয়া সতেজ চর্বিযুক্ত কাতলা মাছের পেট।',
     price: 420,
-    unit: 'kg'
-  },
-  {
-    category: 'fish',
-    title: 'খুলনার লোনা জলের তাজা বাগদা চিংড়ি (Bagda Prawn)',
-    description: 'খুলনার লোনা জলের প্রাকৃতিকভাবে পালিত বড় মাথাওয়ালা ও শক্ত খোলসের চকচকে বাগদা চিংড়ি।',
-    price: 880,
     unit: 'kg',
-    isFeatured: true
+    primaryImage: 'https://images.unsplash.com/photo-1534482421-64566f976cfa?w=600'
   },
   {
     category: 'fish',
-    title: 'পদ্মা নদীর বড় পুরুষ গলদা চিংড়ি (Golda Prawn)',
-    description: 'পদ্মা নদীর বড় আকারের নীল দাড়া যুক্ত সুস্বাদু পুরুষ গলদা চিংড়ি। রসালো মাংসে ভরপুর।',
-    price: 1150,
-    unit: 'kg'
-  },
-  {
-    category: 'fish',
-    title: 'হাওরের নদীর কালো জ্যান্ত শিং মাছ (Singi Fish)',
-    description: 'সম্পূর্ণ দেশী চলন বিল ও হাওরের গভীর কাদার পুষ্টিকর ও লৌহ সমৃদ্ধ জ্যান্ত কালো শিং মাছ।',
-    price: 660,
+    title: 'লোনা জলের তাজা বাগদা চিংড়ি (Bagda Prawns)',
+    description: 'লোনা পানির চকচকে ও মিষ্টি স্বাদের বড় বাগদা চিংড়ি সেট রান্নার জন্য রাজকীয়।',
+    price: 860,
     unit: 'kg',
-    isDiscount: true
+    primaryImage: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600'
   },
   {
     category: 'fish',
-    title: 'দেশী জ্যান্ত লোকাল মাগুর মাছ (Magur Fish)',
-    description: 'অপারেশন পরবর্তী বা বাচ্চাদের শারীরিক বিকাশে অত্যন্ত সহযোগী আসল নদী ও নালা থেকে সংগৃহীত মাগুর।',
-    price: 720,
-    unit: 'kg'
-  },
-  {
-    category: 'fish',
-    title: 'চলন বিলের জ্যান্ত কালো বড় শোল মাছ (Shol Fish)',
-    description: 'চলন বিলের শ্যাওলা ও ছোট মাছ খেয়ে বড় হওয়া ডাল ভুনা এবং কষা রান্নার অনন্য বড় কালো শোল।',
-    price: 590,
-    unit: 'kg'
-  },
-  {
-    category: 'fish',
-    title: 'মাওয়া ঘাটের তাজা রূপালী ইলিশ (Kora Padma Hilsa)',
-    description: 'পদ্মা নদীর মাওয়া ঘাট থেকে আনা ডিম ছাড়া অত্যন্ত সুস্বাদু তেল চকচকে কড়া সুঘ্রাণের বড় রূপালী ইলিশ।',
-    price: 1450,
+    title: 'চলন বিলের জ্যান্ত বড় শোল মাছ (Local Shol Fish)',
+    description: 'চলন বিলের আসল কালো বড় ও কড়া স্বাদের শোল মাছ। কষা ভূনায় সুস্বাদু।',
+    price: 520,
     unit: 'kg',
-    isFeatured: true
+    primaryImage: 'https://images.unsplash.com/photo-1553621042-f6e147245754?w=600'
+  },
+  {
+    category: 'fish',
+    title: 'পদ্মা নদীর নীল দাড়া গলদা চিংড়ি (Giant Golda Prawns)',
+    description: 'পদ্মা নদীর আড়ত থেকে আনা বড় কচি গলদা চিংড়ির ঝাঁক।',
+    price: 1100,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600'
   },
 
-  // Category: meat (8 items)
+  // Meat (6 Items)
   {
     category: 'meat',
-    title: 'বাড়ির উঠোনে চরা দেশী মুরগি আস্ত (Local Chicken)',
-    description: 'ফিড ও ক্ষতিকর কেমিক্যাল ছাড়া খাঁটি অর্গানিক বাড়ির উঠানে চড়ে বেড়ানো আসল মিষ্টি স্বাদের সুস্বাদু দেশী মুরগি।',
-    price: 460,
+    title: 'গরুর মাংস (Fresh Solid Beef)',
+    description: '১০০% লাইভ হালাল ও তাজা গরুর হাড়যুক্ত ও সলিড মাংস। কোনো কৃত্রিম হরমোন বা সীসাবিহীন চারণ পালন।',
+    price: 750,
     unit: 'kg',
-    isDiscount: true,
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_12.jpg?v=1778789927',
     isFeatured: true
   },
   {
     category: 'meat',
-    title: 'কচি ছাগলের নরম খাসির মাংস (Fresh Mutton)',
-    description: 'তরুণ কচি খাসির গন্ধহীন নরম সুস্বাদু ও পুষ্টিকর তাজা খাসির মাংস ১০০% লাইভ হালাল কাটিং গ্যারান্টি।',
-    price: 1080,
+    title: 'খাসির মাংস (Fresh Local Mutton)',
+    description: 'কচি ছাগলের গন্ধহীন ও চর্বিযুক্ত নরম সুস্বাদু ও পুষ্টিকর তাজা খাসির মাংসের বড় পিস।',
+    price: 1050,
     unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_22.jpg?v=1778789927',
     isFeatured: true
   },
   {
     category: 'meat',
-    title: 'হাড় চর্বিমুক্ত গরুর সলিড লাল মাংস (Solid Beef)',
-    description: 'অতিরিক্ত হাড়, পর্দা ও চর্বি ছাড়া ১০০% সলিড গরুর তাজা রক্তাভ লাল তাজা মাংসের বড় টুকরা।',
-    price: 865,
-    unit: 'kg'
-  },
-  {
-    category: 'meat',
-    title: 'ড্রেসড কোয়েল পাখির পুষ্টিকর মাংস (Quail Meat)',
-    description: 'অত্যন্ত পুষ্টিকর ও ওমেগা সমৃদ্ধ বাচ্চাদের প্রিয় কচি কোয়েল পাখির চামড়াহীন ড্রেসড মাংস।',
-    price: 85,
-    unit: 'piece'
-  },
-  {
-    category: 'meat',
-    title: 'শীতকালী বিলের চরা মোটা পাতিহাঁস (Dressed Duck)',
-    description: 'শীতকালে বিলে ধান ও প্রাকৃতিক ঝিনুক খেয়ে হৃষ্টপুষ্ট হওয়া কড়া নরম সুস্বাদু আস্ত পাতিহাঁস।',
-    price: 560,
-    unit: 'piece',
+    title: 'দেশি মুরগি (Grassfed Country Chicken)',
+    description: 'উঠোনে ছেড়ে লালন-পালন করা খাঁটি পুষ্টিকর ও আঁশহীন সতেজ দেশি মুরগি। রান্নায় মনকাড়া সুঘ্রাণ।',
+    price: 550,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_11.jpg?v=1778789927',
     isDiscount: true
   },
   {
     category: 'meat',
-    title: 'রক্তবর্ধক গরুর লাল তাজা কলিজা (Beef Liver)',
-    description: 'সকালে রুটি ও পরোটার সাথে রান্নার জন্য অত্যন্ত নরম লোহা ও ভিটামিন বি সমৃদ্ধ গরুর লাল কলিজা।',
-    price: 820,
-    unit: 'kg'
+    title: 'ফার্মের মুরগি (Broiler Chicken)',
+    description: 'নিয়ন্ত্রিত উন্নত খামারে পরিচ্ছন্ন উপায়ে পালিত বড় মাংসালো নরম ব্রয়লার বা ফার্মের মুরগি। সাশ্রয়ী দাম।',
+    price: 190,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_16.jpg?v=1778791062'
   },
   {
     category: 'meat',
-    title: 'রোস্টের জন্য উপযুক্ত সোনালী মুরগি (Sonali)',
-    description: '৮০০ গ্রাম থেকে ১ কেজি ওজনের সোনালী মুরগি, বিয়ে বাড়ির মনকাড়া রোস্ট তৈরির জন্য প্রথম গ্রেড।',
-    price: 285,
-    unit: 'piece'
-  },
-  {
-    category: 'meat',
-    title: 'ঐতিহ্যবাহী চর্বিযুক্ত বড় রাজহাঁস আস্ত (Goose)',
-    description: 'বড় আকারের অত্যন্ত তেলসমৃদ্ধ শীতের ঐতিহ্যবাহী রাজকীয় স্বাদের ধীর চারণ দেশী রাজহাঁস।',
-    price: 1650,
+    title: 'চরা বিলের পাতিহাঁসের বড় মাংস (Dressed Duck Meat)',
+    description: 'বিলের চরে ধান খাওয়া মোটা সুস্বাদু পাতিহাঁস। আস্ত পরিষ্কার ড্রেসড করা।',
+    price: 450,
     unit: 'piece',
-    isFeatured: true
+    primaryImage: 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=600'
+  },
+  {
+    category: 'meat',
+    title: 'পুষ্টিকর সতেজ গরুর কলিজা (Beef Liver)',
+    description: 'ভিটামিন বি ও আয়রন সমৃদ্ধ অত্যন্ত নরম গরুর লাল তাজা সতেজ মেটে/কলিজা প্যাক।',
+    price: 800,
+    unit: 'kg',
+    primaryImage: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600'
   },
 
-  // Category: eggs (7 items)
+  // Eggs & Dairy (9 Items)
   {
     category: 'eggs',
-    title: 'লাল কুসুমযুক্ত স্পেশাল বাতির ডিম (Double Yolk)',
-    description: 'প্রতিটি ডিমে জোড়া লাল কুসুম সমৃদ্ধ অত্যন্ত বিরল ও পুষ্টিগুণ সম্পন্ন খাঁটি কড়া লাল ডিমের প্যাক।',
-    price: 210,
-    unit: '10 pcs',
-    isDiscount: true,
-    isFeatured: true
-  },
-  {
-    category: 'eggs',
-    title: 'পাহাড়ী চারণ কড়া লাল বুনো ডিম (Mountain Eggs)',
-    description: 'পাহাড়ের খাঁচার বাইরে প্রাকৃতিক খাবার খাইয়ে চড়ানো মুরগির খাঁটি অর্গানিক লাল সুন্দর কুসুমের পুষ্টিকর সেরা ডিম।',
-    price: 165,
-    unit: 'dozen'
-  },
-  {
-    category: 'eggs',
-    title: 'সাভারের তাজা বিলের হাঁসের ডিম (Local Duck Eggs)',
-    description: 'সাভারের বড় বিলের হাঁসের তাজা লাল ডিম। বাচ্চাদের দৈহিক শক্তি বৃদ্ধি ও হাড় মজবুতের জন্য প্রধান উৎস।',
-    price: 170,
+    title: 'ডেইরি ও ডিম - ফার্মের ডিম (Farm Brown Eggs)',
+    description: 'পুষ্টিকর সতেজ লাল খোলসের খামারের বড় সাইজের ডিম। দৈনিক নাস্তার আদর্শ প্রোটিন বুস্টার।',
+    price: 145,
     unit: 'dozen',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_23.jpg?v=1778789927',
     isFeatured: true
   },
   {
     category: 'eggs',
-    title: 'দেশী রাজহাঁসের বিশাল কুসুমের সাদা ডিম (Goose Eggs)',
-    description: 'বিশাল আকারের ক্যালসিয়ামের খনি দেশী রাজহাঁসের ধবধবে সাদা ও খাঁটি চারণযোগ্য পুষ্টিকর ডিম।',
-    price: 80,
-    unit: '2 pcs'
-  },
-  {
-    category: 'eggs',
-    title: 'কচি কোয়েল ডিম ডাবল ট্রিপল প্যাক (Quail Eggs)',
-    description: 'পরিবারের বাড়ন্ত বাচ্চাদের নাশতার জন্য পুষ্টিকর ও ওমেগা-৩ বুস্টেড কচি কোয়েল পাখির ২৫টি সুস্বাদু ডিম।',
-    price: 120,
-    unit: '30 pcs',
-    isDiscount: true
-  },
-  {
-    category: 'eggs',
-    title: 'খাঁটি লাল খোলসের কড়া কুসুমের ডিম (Organic Eggs)',
-    description: 'খাঁটি উন্মুক্ত চারণযোগ্য মুরগির সতেজ হাই প্রোটিন লাল কুসুমের অত্যন্ত সুস্বাদু চকচকে ডিম।',
-    price: 160,
-    unit: 'dozen'
-  },
-  {
-    category: 'eggs',
-    title: 'ডায়েট কলার ওমেগা ফ্যাট ডিম (Premium Eggs)',
-    description: 'ফিটনেস ও বডি বিল্ডিংয়ের জন্য সুপারচার্জড ভিটামিন এ ও ডি যুক্ত ডেকোরেট খাঁটি উন্নত ডিম।',
+    title: 'দেশি ডিম (Pure Country Chicken Eggs)',
+    description: 'দেশী চড়ে বেড়ানো কুসুম লাল সুন্দর প্রিমিয়াম প্রোটিনের আধার দেশী মুরগির ডিম। অত্যন্ত উপাদেয়।',
     price: 190,
     unit: 'dozen',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/1545578418923.jpg?v=1778790838',
     isFeatured: true
+  },
+  {
+    category: 'eggs',
+    title: 'হাঁসের ডিম (Nutritious Duck Eggs)',
+    description: 'খাঁটি চরে খাওয়া বিলের হাঁসের বিশাল ও পুষ্টিকর লাল কুসুমের বড় ডিম। ক্যালসিয়াম ও ভিটামিনের সেরা আধার।',
+    price: 210,
+    unit: 'dozen',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/1545578418923.jpg?v=1778790838',
+    isFeatured: true
+  },
+  {
+    category: 'eggs',
+    title: 'গরুর দুধ (Premium Pure Cow Milk)',
+    description: 'খামারের গরুর ওলান থেকে সদ্য দোয়ানো ১০০% খাঁটি ঘন ও পুষ্টিকর সর পড়া হালকা ডেইরি গরুর তরল দুধ।',
+    price: 90,
+    unit: 'litre',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_13.jpg?v=1778789927',
+    isFeatured: true
+  },
+  {
+    category: 'eggs',
+    title: 'খাঁটি মাঠের তরল দুধ (Organic Grassfed Milk)',
+    description: 'প্রাকৃতিক ঘাস খাওয়া গরুর কচি সুস্বাদু বাটি ডেইরি ওলান দুধ। কোনো প্রকার পানি বা পাউডার মিক্সড নেই।',
+    price: 80,
+    unit: 'litre',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_13.jpg?v=1778789927'
+  },
+  {
+    category: 'eggs',
+    title: 'দেশি ঘি (Premium Hand-churned Ghee)',
+    description: 'সিরাজের মাঠের দুধের মাখন থেকে জ্বাল দেওয়া কাঠের চামচ ও পাতিলা চড়ানো কড়া সুঘ্রাণ গোল্ডেন দেশি ঘি।',
+    price: 1400,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_14.jpg?v=1778789927',
+    isDiscount: true
+  },
+  {
+    category: 'eggs',
+    title: 'তাজা মিষ্টি ও টক দই প্যাক (Traditional Sweet Curd)',
+    description: 'বগুড়ার ঐতিহ্যবাহী মাটির সরায় পাতা কড়া ঘন কষানো রসে ভরপুর সুমিষ্টি মিষ্টি ও ঠান্ডা টক দই।',
+    price: 240,
+    unit: 'kg',
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_24.jpg?v=1778789927'
+  },
+  {
+    category: 'eggs',
+    title: 'কোয়েল পাখির পুষ্টিকর ছোট ডিম (Omega-3 Quail Eggs)',
+    description: 'পরিবারের বাড়ন্ত শিশুদের শারীরিক বিকাশে ওমেগা সমৃদ্ধ কোয়েল পাখির অত্যন্ত পুষ্টিকর ছোট ডিমের ট্রিপল সেট।',
+    price: 110,
+    unit: '30 pcs',
+    primaryImage: 'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=600'
+  },
+  {
+    category: 'eggs',
+    title: 'খাঁটি রাজহাঁসের বিশাল কুসুমের আস্ত সাদা ডিম (Goose Eggs)',
+    description: 'বিশাল আকারের দেশী রাজহাঁসের ধবধবে সাদা ও খাঁটি চারণযোগ্য পুষ্টিকর ক্যালসিয়াম ডিম।',
+    price: 80,
+    unit: '2 pcs',
+    primaryImage: 'https://images.unsplash.com/photo-1506084868230-bb9d95c24759?w=600&sig=goose-eg'
   },
 
-  // Category: ready-to-cook (7 items)
+  // Ready To Cook (2 Items)
   {
     category: 'ready-to-cook',
-    title: 'সরাসরি ভাজির কুচানো আলুর প্যাক (Sliced Potato)',
-    description: 'পরিষ্কার পানিতে কয়েক দফ ধোয়া ও সমান মাপে কুচানো গোল আলু, সরাসরি মচমচে ভাজির জন্য প্রস্তুত।',
-    price: 36,
+    title: 'মিক্স সবজি প্যাক (Pre-cooked Mixed Vegetables)',
+    description: 'রান্নার জন্য একদম ধুয়ে কেটে সমান সাইজে রেডি করা পাঁচমিশেলি কচি টাটকা সবজির প্যাকেট। সময়ের সেরা সাশ্রয়।',
+    price: 60,
     unit: '500g',
-    isDiscount: true,
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_9.jpg?v=1778788777',
     isFeatured: true
   },
   {
     category: 'ready-to-cook',
-    title: 'খোসা ও বিচি ফেলে গোল স্লাইস লাউ (Cut Gourd)',
-    description: 'রান্নার জন্য একদম রেডি, খোসা ও মধ্য ভাগ ফেলে গোল বাটি কুচানো তাজা লাউ প্যাক। রান্না সহজতর করে।',
-    price: 46,
-    unit: '500g'
-  },
-  {
-    category: 'ready-to-cook',
-    title: 'ধোয়া ও কাটা দেশী মুরগির কারি সেট (Precut Chicken)',
-    description: 'সম্পূর্ণ ড্রেসড ও মাঝারি কারি সাইজ টুকরো করে লবণ দিয়ে ধুয়ে জিপলক ফুড গ্রেড ভ্যাকুয়াম প্যাকে ভরা দেশী মুরগি।',
-    price: 265,
+    title: 'কাটা পেঁয়াজ প্যাক (Clean Sliced Onion)',
+    description: 'ছুলা পরিষ্কার করে যান্ত্রিকভাবে সমান কুচি করে কাটা ঝাঁঝালো পেঁয়াজের প্যাক। সরাসরি কড়াইয়ে ব্যবহারের জন্য প্রস্তুত।',
+    price: 45,
     unit: '500g',
-    isDiscount: true,
-    isFeatured: true
-  },
-  {
-    category: 'ready-to-cook',
-    title: 'আঁশ ছাড়ানো ও কাটা রুই মাছের কারি স্লাইস (Clean Fish)',
-    description: 'মাথাসহ পিস করা ও সম্পূর্ণ পরিষ্কার পানিতে ধুয়ে রক্তহীন পরিচ্ছন্ন করা দিঘির রুই মাছের রান্নার প্যাক।',
-    price: 225,
-    unit: '500g'
-  },
-  {
-    category: 'ready-to-cook',
-    title: 'মিক্স চাইনিজ ভেজিটেবল স্লাইস বক্স (Chinese Veg)',
-    description: 'গাজর, পেঁপে, বরবটি ও বাঁধাকপির সমান চ্যাপ্টা কাটা স্লাইস যা নুডলস ও ফ্রাইড রাইসে সরাসরি কুকার দেওয়া যায়।',
-    price: 58,
-    unit: '500g',
-    isFeatured: true
-  },
-  {
-    category: 'ready-to-cook',
-    title: 'ছুলে কুচি করা তাজা লাল পেঁয়াজ বক্স (Peeled Onion)',
-    description: 'আঁশ ও উপরের শুকনো ছুলা পরিষ্কার করে নিখুঁত মাঝারি কুচি করা ঝাঁঝালো পেঁয়াজ যা ডাইরেক্ট তরকারিতে ছিটানো যায়।',
-    price: 62,
-    unit: '500g'
-  },
-  {
-    category: 'ready-to-cook',
-    title: 'হাত বাটায় সুগন্ধি রসুনের কড়া পেস্ট (Garlic Paste)',
-    description: 'ঐতিহ্যবাহী শিল-পাটা বাটায় পেষা কড়া সুগন্ধি তাজা রসুনের পেস্ট, কোনো কড়া কৃত্রিম প্রিজারভেটিভ বা রঙ ছাড়া।',
-    price: 92,
-    unit: '250g',
-    isFeatured: true
+    primaryImage: 'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/images_21.jpg?v=1778788778',
+    isDiscount: true
   }
 ];
 
@@ -413,15 +481,15 @@ export const new45Products: Product[] = rawItemsList.map((item, idx) => {
   const farmerIdx = idx % demoFarmers.length;
   const farmer = demoFarmers[farmerIdx];
 
-  // Pick appropriate image arrays and assign exactly 4-5 high-quality images per product
-  const catImgs = categoryImages[item.category] || categoryImages['vegetables'];
-  
-  // Decide whether this product gets 4 or 5 images (let's alternate to give variation)
-  const imageCount = (idx % 2 === 0) ? 5 : 4;
-  const pImages: string[] = [];
-  for (let s = 0; s < imageCount; s++) {
-    const baseImg = catImgs[s % catImgs.length];
-    // Attach a deterministic signature cache buster to generate stunning visual variations
+  const primary = item.primaryImage;
+  const secondaryCategory = item.category === 'ready-to-cook' ? 'ready-to-cook' : item.category;
+  const catImgs = categoryImages[secondaryCategory] || categoryImages['vegetables'];
+
+  // Construct exactly 5 images to ensure 4-5 image URLs per product
+  // 1st image is ALWAYS the exact, unmodified primary Shopify or Unsplash URL
+  const pImages: string[] = [primary];
+  for (let s = 1; s < 5; s++) {
+    const baseImg = catImgs[(idx + s) % catImgs.length];
     pImages.push(`${baseImg}&sig=${idx + 1}-${s}`);
   }
 
@@ -429,7 +497,7 @@ export const new45Products: Product[] = rawItemsList.map((item, idx) => {
   const discountPrice = item.isDiscount ? Math.round(price * 0.85) : undefined;
   
   // Deterministic ratings
-  const rating = parseFloat((4.3 + (idx % 8) * 0.1).toFixed(1));
+  const rating = parseFloat((4.4 + (idx % 7) * 0.1).toFixed(1));
   const daysAgo = 1 + (idx % 3);
   const harvestDate = `June ${15 - daysAgo}, 2026`;
 
@@ -444,7 +512,7 @@ export const new45Products: Product[] = rawItemsList.map((item, idx) => {
     farmerName: farmer.name,
     farmName: `${farmer.name} অর্গানিক এগ্রো`,
     rating: rating > 5.0 ? 5.0 : rating,
-    stock: 25 + ((idx * 7) % 85),
+    stock: 30 + ((idx * 8) % 75),
     images: pImages,
     isVerified: farmer.verified,
     isReadyToCook: item.category === 'ready-to-cook',

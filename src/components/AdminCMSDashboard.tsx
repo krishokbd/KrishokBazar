@@ -123,7 +123,10 @@ export const AdminCMSDashboard: React.FC = () => {
     editOffer,
     addOffer,
     deleteOffer,
-    login
+    login,
+    dynamicPages,
+    saveDynamicPages,
+    language
   } = useApp();
 
   // Admin explicit login states
@@ -156,7 +159,7 @@ export const AdminCMSDashboard: React.FC = () => {
   };
 
   // Admin CMS active tab
-  const [adminActiveTab, setAdminActiveTab] = useState<'farmers' | 'products' | 'categories' | 'banners' | 'reviews' | 'orders' | 'customers' | 'blogs' | 'settings'>('farmers');
+  const [adminActiveTab, setAdminActiveTab] = useState<'farmers' | 'products' | 'categories' | 'banners' | 'reviews' | 'orders' | 'customers' | 'blogs' | 'settings' | 'pages'>('farmers');
 
   const [analyticsLogs, setAnalyticsLogs] = useState<any[]>([]);
 
@@ -847,6 +850,16 @@ export const AdminCMSDashboard: React.FC = () => {
             }`}
           >
             🎁 সাপ্তাহিক কম্বো CMS ({weeklyCombos?.length || 0})
+          </button>
+          <button
+            onClick={() => setAdminActiveTab('pages')}
+            className={`px-4.5 py-2.5 rounded-xl font-bold text-xs shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              adminActiveTab === 'pages'
+                ? 'bg-emerald-600 text-white shadow font-black'
+                : 'text-gray-600 hover:bg-gray-250/60 hover:text-gray-900 bg-white border border-gray-100'
+            }`}
+          >
+            📄 পেজ ক্রিয়েটর CMS ({dynamicPages?.length || 0})
           </button>
           <button
             onClick={() => setAdminActiveTab('settings')}
@@ -2693,6 +2706,29 @@ export const AdminCMSDashboard: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Available Dynamic Pages helpers */}
+                      {dynamicPages && dynamicPages.length > 0 && (
+                        <div className="bg-slate-50 border border-slate-150 rounded-xl p-3 space-y-1 my-2">
+                          <span className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">
+                            {language === 'en' ? 'Quick Copy Custom Page Links for CTA Buttons:' : 'বাটনে বসানোর জন্য আপনার তৈরি কাস্টম পৃষ্ঠা সমূহের লিঙ্ক:'}
+                          </span>
+                          <div className="flex flex-wrap gap-1.5 pt-1">
+                            {dynamicPages.map(dp => (
+                              <button
+                                key={dp.slug}
+                                type="button"
+                                onClick={() => {
+                                  alert(`কপি করার জন্য স্ল্যাগ: "dynamic-${dp.slug}" - এটি আপনার বাটনের লিঙ্কে (CTA Button Link) ব্যবহার করুন।`);
+                                }}
+                                className="text-[9px] font-mono bg-white hover:bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 cursor-pointer shadow-2xs font-bold"
+                              >
+                                dynamic-{dp.slug}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="border-t border-gray-100 pt-2 space-y-2">
                         <span className="block font-bold text-emerald-800 text-[10px] uppercase font-mono">CTA  বাটন ১ (Primary Button)</span>
                         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -3928,6 +3964,131 @@ export const AdminCMSDashboard: React.FC = () => {
                 >
                   ডাটা সেভ নিশ্চিত করুন
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8.5: DYNAMIC PAGES CREATOR CMS */}
+          {adminActiveTab === 'pages' && (
+            <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gray-150 pb-4 gap-4">
+                <div>
+                  <h2 className="text-sm font-black text-gray-800 uppercase tracking-widest font-sans">
+                    📄 ডাইনামিক পেইজ ক্রিয়েটর (Dynamic Custom Page Builder)
+                  </h2>
+                  <p className="text-[11px] text-gray-400 mt-1 leading-normal font-sans">
+                    ক্রেতাদের জন্য যেকোনো কাস্টম বা রানিং কম্বো কালেকশন পেইজ তৈরি করুন। এগুলো সরাসরি মেন্যু এবং পেইজের ফুটারে যুক্ত হবে।
+                  </p>
+                </div>
+              </div>
+
+              {/* Page Creation Form */}
+              <div className="bg-gray-50 border border-gray-150 rounded-2xl p-6 space-y-4">
+                <h3 className="font-bold text-xs text-gray-800 uppercase tracking-wider font-sans">
+                  ➕ নতুন পেইজ তৈরি ফর্ম (Create New Page)
+                </h3>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const titleBn = fd.get('titleBn') as string;
+                  const titleEn = fd.get('titleEn') as string;
+                  const slug = (fd.get('slug') as string).replace(/\s+/g, '-').toLowerCase();
+                  const descriptionBn = fd.get('descriptionBn') as string;
+                  const descriptionEn = fd.get('descriptionEn') as string;
+
+                  if (!slug || !titleBn) {
+                    alert('পেইজের টাইটেল এবং ইউনিক স্ল্যাগ খালি রাখা যাবে না!');
+                    return;
+                  }
+
+                  if (dynamicPages.some(dp => dp.slug === slug)) {
+                    alert('এই স্ল্যাগ অলরেডি অন্য পেইজে ব্যবহৃত হয়েছে! দয়া করে অন্য স্ল্যাগ দিন।');
+                    return;
+                  }
+
+                  const newPage = {
+                    slug,
+                    titleBn,
+                    titleEn,
+                    descriptionBn,
+                    descriptionEn,
+                    productIds: []
+                  };
+
+                  saveDynamicPages([...dynamicPages, newPage]);
+                  e.currentTarget.reset();
+                  alert(`"${titleBn}" পেইজটি সফলভাবে তৈরি করা হয়েছে! এটি এখন মেন্যুতে লিস্টিং দেখাবে। পেইজে গিয়ে পণ্য আপলোড করতে পারবেন।`);
+                }} className="space-y-4 text-xs font-sans">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-gray-750 block">পেইজ টাইটেল (বাংলা)<span className="text-red-500">*</span></label>
+                      <input required name="titleBn" placeholder="যেমন: ১ সপ্তাহের কম্বো বালতি" className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-gray-750 block">পেইজ টাইটেল (ইংরেজি)<span className="text-red-500">*</span></label>
+                      <input required name="titleEn" placeholder="Weekly Super Saver Combos" className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-gray-750 block">ইউনিক URL স্ল্যাগ<span className="text-red-500">*</span></label>
+                      <input required name="slug" placeholder="যেমন: summer-combos" className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none font-mono" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-gray-750 block">বর্ণনা / সাব-হেডার (বাংলা)</label>
+                      <textarea name="descriptionBn" rows={2} placeholder="এই পেজের অর্গানিক আইটেম সমূহের উপকারিতা ও বাজেট অফার সম্পর্কে লিখুন..." className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-bold text-gray-750 block">বর্ণনা / সাব-হেডার (ইংরেজি)</label>
+                      <textarea name="descriptionEn" rows={2} placeholder="Provide details about the benefits and budget pricing of items..." className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 focus:outline-none" />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button type="submit" className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md transition-all active:scale-95 cursor-pointer">
+                      ➕ ডাইনামিক পেইজ তৈরি করুন (Build Dynamic Page)
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Custom Pages List */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-xs text-gray-800 uppercase tracking-wider font-sans">
+                  📋 বর্তমান কাস্টম পৃষ্ঠা সমূহ ({dynamicPages.length}টি)
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {dynamicPages.map(dp => (
+                    <div key={dp.slug} className="border border-gray-150 rounded-2xl p-4.5 bg-slate-50/30 font-sans text-xs flex flex-col justify-between hover:border-emerald-200 transition-colors">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
+                          <span className="font-black text-gray-800">{dp.titleBn} / {dp.titleEn}</span>
+                          <span className="text-[10px] font-mono bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-100">/dynamic/{dp.slug}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 font-medium line-clamp-2">{dp.descriptionBn || 'কোনো বর্ণনা দেওয়া হয়নি।'}</p>
+                      </div>
+
+                      <div className="pt-4 flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-semibold text-gray-500">
+                          📦 মোট সংরক্ষিত পণ্য: {dp.productIds.length}টি
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (confirm(`আপনি কি সত্যিই "${dp.titleBn}" পেইজটি ডিলিট করতে চান?`)) {
+                              saveDynamicPages(dynamicPages.filter(p => p.slug !== dp.slug));
+                              alert('পেইজটি ডিলেট করা হয়েছে!');
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-100 rounded-lg text-[10px] font-black cursor-pointer transition active:scale-95"
+                        >
+                          মুছে ফেলুন (Delete Page)
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

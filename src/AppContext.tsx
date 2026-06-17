@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert, WeeklyComboOffer, WeeklyComboProduct } from './types';
+import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert, WeeklyComboOffer, WeeklyComboProduct, DynamicPage } from './types';
 import { demoFarmers, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { new45Products as demoProducts } from './newProducts';
 import { HERO_CAROUSEL_BANNERS } from './assets';
@@ -116,6 +116,10 @@ interface AppContextType {
   deletePost: (postId: string) => void;
   weeklyCombos: WeeklyComboOffer[];
   saveWeeklyCombos: (newWeeklyCombos: WeeklyComboOffer[]) => void;
+  dynamicPages: DynamicPage[];
+  saveDynamicPages: (newPages: DynamicPage[]) => void;
+  wishlist: string[];
+  toggleWishlist: (productId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -323,19 +327,24 @@ export const sortProductsBySerial = (list: Product[]) => {
 export const convertGoogleDriveLink = (url: string): string => {
   if (!url) return '';
   const clean = url.trim();
-  // Match file ID from Google Drive share link
-  // e.g., https://drive.google.com/file/d/1vC3z6gVjG1bEqxV2Vf6cUXQ65p/view?usp=sharing
-  // or https://drive.google.com/open?id=1vC3z6gVjG1bEqxV2Vf6cUXQ65p
-  // or https://docs.google.com/file/d/1vC3z6gVjG1bEqxV2Vf6cUXQ65p/edit
+  
   let fileId = '';
   
-  const fileDMatch = clean.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  // 1. Matches /file/d/ID/view, /file/u/0/d/ID/view, /file/u/1/d/ID, etc.
+  const fileDMatch = clean.match(/\/file\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
   if (fileDMatch && fileDMatch[1]) {
     fileId = fileDMatch[1];
   } else {
-    const idParamMatch = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (idParamMatch && idParamMatch[1]) {
-      fileId = idParamMatch[1];
+    // 2. General fallback for any /d/ID pattern in drive path
+    const generalDMatch = clean.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (generalDMatch && generalDMatch[1]) {
+      fileId = generalDMatch[1];
+    } else {
+      // 3. Matches query parameter id=FILE_ID
+      const idParamMatch = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (idParamMatch && idParamMatch[1]) {
+        fileId = idParamMatch[1];
+      }
     }
   }
 
@@ -737,6 +746,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isVerified: true,
       isReadyToCook: true,
       harvestDate: 'June 12, 2026'
+    },
+    {
+      id: 'cb5',
+      title: 'মিনি সাধ্যের তাজা কাঁচাবাজার (Mini Vegetables Starter Box)',
+      description: 'বাজেট সচেতন ক্রেতাদের জন্য ট্রায়াল কাঁচাবাজার অফার! গোল আলু ১ কেজি, কচি বেগুন ৫০০ গ্রাম, দেশী পেঁয়াজ ৫০০ গ্রাম, রসুন ১০০ গ্রাম, কাঁচামরিচ ১০০ গ্রাম, ও লেবু ৪টি।',
+      price: 250,
+      discountPrice: 200,
+      category: 'ready-to-cook',
+      farmerId: 'f5',
+      farmerName: 'Fazle Rabbi',
+      farmName: 'Fazle Rabbi অর্গানিক এগ্রো',
+      rating: 4.7,
+      stock: 40,
+      images: [
+        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000'
+      ],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'June 12, 2026'
+    },
+    {
+      id: 'cb6',
+      title: 'খাঁটি সকালের নাস্তা কম্বো (Fresh Breakfast Mini Combo)',
+      description: '১ ডজন সতেজ হাঁসের ডিম এবং ১ লিটার খাঁটি গরুর দুধের স্বাস্থ্যকর ট্রায়াল বাস্কেট!',
+      price: 330,
+      discountPrice: 300,
+      category: 'ready-to-cook',
+      farmerId: 'f12',
+      farmerName: 'Ayesha Begum',
+      farmName: 'Ayesha Begum অর্গানিক এগ্রো',
+      rating: 4.8,
+      stock: 35,
+      images: [
+        'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/1545578418923.jpg?v=1778790838',
+        'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_13.jpg?v=1778789927'
+      ],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'June 12, 2026'
+    },
+    {
+      id: 'cb7',
+      title: 'দেশী সুগন্ধি মসলা ট্রায়াল প্যাক (Spice Starter Trial Pack)',
+      description: 'রান্নার প্রয়োজনীয় তাজা মসলার বাজেট অফার! লাল শুকনা মরিচ ১০০ গ্রাম, দেশী হলুদ গুঁড়া ১০০ গ্রাম, ধনে গুঁড়া ১০০ গ্রাম, ও জিরা ৫০ গ্রাম।',
+      price: 150,
+      discountPrice: 120,
+      category: 'ready-to-cook',
+      farmerId: 'f23',
+      farmerName: 'Sultana Razia',
+      farmName: 'Sultana Razia অর্গানিক এগ্রো',
+      rating: 4.9,
+      stock: 50,
+      images: [
+        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000'
+      ],
+      isVerified: true,
+      isReadyToCook: true,
+      harvestDate: 'June 12, 2026'
     }
   ];
 
@@ -744,8 +813,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('kb_products');
     let base = saved ? JSON.parse(saved) : demoProducts;
     
-    // Force seeding 45 premium products if the saved array size is suspiciously small (e.g. less than 35)
-    if (!base || base.length < 35) {
+    // Only seed the default products if there are none in localStorage
+    if (!base || base.length === 0) {
       base = demoProducts;
       localStorage.setItem('kb_products', JSON.stringify(demoProducts));
     }
@@ -767,7 +836,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       avatar: 'male',
       content: 'আসসালামু আলাইকুম! আমার জৈব খামারের একদম সতেজ ফুলকপি ও টমেটো গাছ থেকে তোলা হয়েছে আজকে সকালে। কোনো রাসায়নিক সার ব্যবহার করিনি। আলহামদুলিল্লাহ ফলন এবার বেশ ভালো হয়েছে। আমাদের খামারের একটি ছোট্ট রিয়েল ভিডিও নিচে যুক্ত করলাম, সবাই দেখে মতামত জানাবেন!',
       images: ['https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600'],
-      videos: ['https://www.youtube.com/watch?v=S2gby6-gN3E'],
+      videos: ['https://youtube.com/shorts/iRHqWnxj-jU?feature=share'],
       likes: 24,
       likedByUserIds: [],
       comments: [
@@ -793,7 +862,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       avatar: 'female',
       content: 'সম্মানিত ক্রেতাবৃন্দ, আমার সমন্বিত দুগ্ধ ও ডিম খামারে আজকে একদম ফ্রেশ হাঁসের ডিম সংগ্রহ করেছি। কোনো কৃত্রিম ফিড ছাড়াই এদের প্রাকৃতিক উপায়ে পালন করা হয়েছে। ফ্যামিলি বাজেট কম্বো বাস্কেটের সাথে আপনারা ডিমের অর্ডারও প্লেস করতে পারেন।',
       images: ['https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=600'],
-      videos: ['https://www.youtube.com/watch?v=gT8-7g-dOAw'],
+      videos: ['https://youtube.com/shorts/oLgAz7tiS-Y?feature=share'],
       likes: 18,
       likedByUserIds: [],
       comments: [
@@ -935,6 +1004,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     triggerSync('weekly_combos');
   };
 
+  const [dynamicPages, setDynamicPages] = useState<DynamicPage[]>(() => {
+    const saved = localStorage.getItem('kb_dynamic_pages');
+    if (saved) return JSON.parse(saved);
+    return [
+      {
+        slug: "weekly-mega-buckets",
+        titleBn: "সাপ্তাহিক ও ফ্যামিলি কম্বো বালতি (Weekly Buckets)",
+        titleEn: "Weekly Family Combo Buckets & Packages",
+        descriptionBn: "পরিবারের বাজেট ও পুষ্টির মেলবন্ধনে সাজানো আমাদের বিশেষ ক্যাটাগরি পেজ। সরাসরি কৃষকের মাঠের তাজা ফসল!",
+        descriptionEn: "Specially tailored combination buckets to balance family health and pocket budgets.",
+        bannerImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000",
+        productIds: ["cb1", "cb2", "cb3", "cb4"]
+      }
+    ];
+  });
+
+  const saveDynamicPages = (newPages: DynamicPage[]) => {
+    setDynamicPages(newPages);
+    localStorage.setItem('kb_dynamic_pages', JSON.stringify(newPages));
+    triggerSync('dynamic_pages');
+  };
+
   const [offers, setOffers] = useState<Offer[]>(() => {
     const saved = localStorage.getItem('kb_offers');
     return saved ? JSON.parse(saved) : DEFAULT_OFFERS;
@@ -1051,6 +1142,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [wishlist, setWishlist] = useState<string[]>(() => {
+    const saved = localStorage.getItem('kb_wishlist');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Synchronization side effects
   useEffect(() => {
     localStorage.setItem('kb_farmers', JSON.stringify(farmers));
@@ -1071,6 +1167,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('kb_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem('kb_wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
 
   useEffect(() => {
     localStorage.setItem('kb_withdrawals', JSON.stringify(withdrawalRequests));
@@ -1095,6 +1195,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('kb_membership_submissions', JSON.stringify(membershipSubmissions));
   }, [membershipSubmissions]);
+
+  useEffect(() => {
+    localStorage.setItem('kb_dynamic_pages', JSON.stringify(dynamicPages));
+  }, [dynamicPages]);
 
   useEffect(() => {
     if (currentUser) {
@@ -1658,6 +1762,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
+  // WISHLIST STATE MGMT
+  const toggleWishlist = (productId: string) => {
+    setWishlist(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+         return [...prev, productId];
+      }
+    });
+  };
+
   // CART STATE MGMT
   const addToCart = (product: Product, quantity: number, customPrice?: number, customUnit?: string) => {
     const itemPrice = customPrice !== undefined ? customPrice : (product.discountPrice || product.price);
@@ -2061,14 +2176,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const editProduct = (productId: string, productData: Partial<Product>) => {
+    // Filter out undefined keys so we do not overwrite existing local stage properties with undefined during spreading
+    const cleanData = { ...productData };
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key as keyof typeof cleanData] === undefined) {
+        delete cleanData[key as keyof typeof cleanData];
+      }
+    });
+
     if (isFirebaseConfigured && db) {
-      const sanitized = sanitizeFirestoreData(productData);
+      const sanitized = sanitizeFirestoreData(cleanData);
       updateDoc(doc(db, 'products', productId), sanitized).catch(err => {
         handleFirestoreError(err, OperationType.UPDATE, `products/${productId}`);
       });
     }
     setProducts(prev => {
-      const nextList = prev.map(p => p.id === productId ? { ...p, ...productData } as Product : p);
+      const nextList = prev.map(p => p.id === productId ? { ...p, ...cleanData } as Product : p);
       const updatedProduct = nextList.find(p => p.id === productId);
       if (updatedProduct) {
         supabaseService.syncProduct(updatedProduct).catch(err => {
@@ -2801,7 +2924,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       commentPost,
       deletePost,
       weeklyCombos,
-      saveWeeklyCombos
+      saveWeeklyCombos,
+      dynamicPages,
+      saveDynamicPages,
+      wishlist,
+      toggleWishlist
     }}>
       {children}
     </AppContext.Provider>

@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../AppContext';
 import { logAnalyticsEvent } from '../lib/analytics';
-import { X, CheckCircle, Shield, Gift, Zap, Video, MapPin, Truck, Sparkles, CreditCard } from 'lucide-react';
+import { X, Check, CheckCircle, Shield, Gift, Zap, Video, MapPin, Truck, Sparkles, CreditCard } from 'lucide-react';
 
 export const CUSTOMER_PLANS = [
   {
@@ -102,9 +102,19 @@ interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultRole?: 'customer' | 'farmer';
+  isAutoTriggered?: boolean;
+  autoTriggerPlanId?: string | null;
+  onDismissAutoTrigger?: () => void;
 }
 
-export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, onClose, defaultRole = 'customer' }) => {
+export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  defaultRole = 'customer',
+  isAutoTriggered = false,
+  autoTriggerPlanId = null,
+  onDismissAutoTrigger
+}) => {
   const { currentUser, language, submitMembershipRequest, siteSettings } = useApp();
   const [activeTab, setActiveTab ] = useState<'customer' | 'farmer'>(defaultRole);
 
@@ -125,7 +135,231 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
   const [showInvoice, setShowInvoice] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
 
+  const handleCompleteFullFlow = () => {
+    setSelectedPlan(null);
+    setShowInvoice(false);
+    onClose();
+  };
+
   if (!isOpen) return null;
+
+  // Render NON-FULLSCREEN short notification banner if auto-triggered
+  if (isAutoTriggered && autoTriggerPlanId) {
+    const targetPlan = [...CUSTOMER_PLANS, ...FARMER_PLANS].find(p => p.id === autoTriggerPlanId);
+    if (!targetPlan) return null;
+
+    const handleCompactSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!phoneNumber || !transactionId || !subscriberName || !subscriberAddress) {
+        alert(language === 'bn' ? 'সবগুলো ঘর সঠিকভাবে ফিলাপ করুন।' : 'Please fill all required inputs.');
+        return;
+      }
+      setIsProcessing(true);
+      const tempCode = `KB-SUB-${Math.floor(1000 + Math.random() * 9000)}`;
+      setGeneratedCode(tempCode);
+
+      try {
+        await fetch('/api/send-subscription-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscriberName,
+            subscriberPhone: phoneNumber,
+            subscriberAddress,
+            transactionId,
+            paymentMethod,
+            planName: targetPlan.name,
+            planPrice: targetPlan.price,
+            role: activeTab,
+            uniqueCode: tempCode,
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (err) {
+        console.warn("Could not dispatch subscription email:", err);
+      }
+
+      setIsProcessing(false);
+      setShowInvoice(true);
+    };
+
+    const handleSubscribeClickLocal = (plan: { id: string; name: string; price: number }) => {
+      setSelectedPlan(plan);
+      setPhoneNumber(currentUser?.phone || '');
+      setTransactionId('');
+      setSubscriberName(currentUser?.name || '');
+      setSubscriberAddress(currentUser?.address || '');
+      setShowInvoice(false);
+    };
+
+    const handleDismissLocal = () => {
+      setSelectedPlan(null);
+      setShowInvoice(false);
+      if (onDismissAutoTrigger) {
+        onDismissAutoTrigger();
+      } else {
+        onClose();
+      }
+    };
+
+    return (
+      <div className="fixed bottom-6 right-6 z-[9999] max-w-sm w-[340px] sm:w-[380px] bg-white rounded-3xl border border-emerald-500/30 shadow-2xl p-5 flex flex-col space-y-3.5 text-xs font-sans animate-bounce-in text-gray-850 text-left">
+        {/* Dismiss Cross Button */}
+        <button
+          onClick={handleDismissLocal}
+          className="absolute top-4 right-4 text-emerald-950/40 hover:text-emerald-950 bg-gray-50 hover:bg-gray-100 p-1.5 rounded-full transition cursor-pointer"
+          aria-label="Dismiss subscription promo"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Header Ribbon */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[7.5px] font-black tracking-widest uppercase bg-gradient-to-r from-amber-500 to-amber-600 text-white px-2 py-0.5 rounded-md shadow-xs">
+              ★ PREMIUM OFFER
+            </span>
+            <span className="text-[8.5px] text-gray-400 font-extrabold font-mono tracking-tighter">
+              {language === 'bn' ? 'শুধুমাত্র একবারের প্রচারণা' : 'Show Once'}
+            </span>
+          </div>
+
+          <h4 className="text-xs sm:text-sm font-black text-emerald-900 pr-5 tracking-tight font-sans">
+            {language === 'bn' ? 'বাজার খরচ ও খামার উন্নয়নে সাবস্ক্রিপশন!' : 'Upgrade Market Direct Services Today!'}
+          </h4>
+        </div>
+
+        {/* Selected Plan Premium Highlights */}
+        <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-3.5 space-y-2">
+          <div className="flex justify-between items-start gap-1 font-bold">
+            <span className="text-emerald-900 font-extrabold pr-1 truncate text-xs">{language === 'bn' ? targetPlan.name : targetPlan.nameEn}</span>
+            <span className="text-emerald-700 shrink-0 font-black text-xs">৳{targetPlan.price} / {language === 'bn' ? 'মাস' : 'mo'}</span>
+          </div>
+          <p className="text-[10px] text-gray-500 leading-relaxed font-sans font-medium">
+            {language === 'bn' ? targetPlan.desc : targetPlan.descEn}
+          </p>
+          <div className="pt-1.5 space-y-1 border-t border-emerald-100/50 mt-1">
+            {(language === 'bn' ? targetPlan.perks : targetPlan.perksEn).slice(0, 2).map((perk, pIdx) => (
+              <div key={pIdx} className="flex items-center gap-1.5 text-[9.5px] text-emerald-800 font-sans font-semibold">
+                <Check className="h-3 w-3 text-emerald-600 font-black shrink-0" />
+                <span>{perk}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Submitting Flow Box */}
+        {!selectedPlan ? (
+          <button
+            onClick={() => handleSubscribeClickLocal(targetPlan)}
+            className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow cursor-pointer transition text-center hover:scale-101 outline-none text-xs"
+          >
+            {language === 'bn' ? '৳ পেমেন্ট করে একটিভ করুন' : 'Activate Premium Plans'}
+          </button>
+        ) : (
+          <form onSubmit={handleCompactSubmit} className="space-y-2.5 border-t border-emerald-100 pt-3 text-[10.5px]">
+            {!showInvoice ? (
+              <>
+                <div className="flex items-center justify-between text-[10px] font-bold text-gray-600">
+                  <span>{language === 'bn' ? 'পেমেন্ট মাধ্যম নির্বাচন:' : 'Method:'}</span>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('bKash')}
+                      className={`px-2 py-0.5 rounded border text-[8.5px] font-black ${
+                        paymentMethod === 'bKash' ? 'bg-pink-600 text-white border-pink-500 shadow-sm' : 'bg-gray-50 text-gray-400 border-gray-150'
+                      }`}
+                    >
+                      bKash
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('Nagad')}
+                      className={`px-2 py-0.5 rounded border text-[8.5px] font-black ${
+                        paymentMethod === 'Nagad' ? 'bg-orange-600 text-white border-orange-500 shadow-sm' : 'bg-gray-50 text-gray-400 border-gray-150'
+                      }`}
+                    >
+                      Nagad
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <input
+                    type="text"
+                    required
+                    placeholder={language === 'bn' ? 'আপনার নাম' : 'Your Name'}
+                    value={subscriberName}
+                    onChange={(e) => setSubscriberName(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-[10px] outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder={language === 'bn' ? 'বিকাশ/নগদ মোবাইল নাম্বার' : 'Mobile Account Number'}
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-[10px] outline-none font-mono focus:border-emerald-500"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder={language === 'bn' ? 'ট্রানজেকশন আইডি (Transaction ID)' : 'Transaction ID'}
+                    value={transactionId}
+                    onChange={(e) => setTransactionId(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-[10px] outline-none font-mono focus:border-emerald-500"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder={language === 'bn' ? 'ফসল ডেলিভারির সম্পূর্ণ ঠিকানা' : 'Full Delivery Address'}
+                    value={subscriberAddress}
+                    onChange={(e) => setSubscriberAddress(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-[10px] outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="flex justify-between gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPlan(null)}
+                    className="flex-1 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-[10px] text-center hover:bg-gray-50 cursor-pointer"
+                  >
+                    {language === 'bn' ? 'ফিরে যান' : 'Back'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isProcessing}
+                    className="flex-1 py-1.5 bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-[10px] rounded-lg text-center cursor-pointer disabled:opacity-50 shadow-xs"
+                  >
+                    {isProcessing ? '🔄...' : (language === 'bn' ? 'সাবমিট করুন ✔' : 'Submit Now ✔')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2 bg-indigo-50 border border-indigo-100 p-3 rounded-2xl text-center text-[10px]">
+                <p className="text-emerald-700 font-extrabold">✓ {language === 'bn' ? 'অনুরোধ সফল হয়েছে!' : 'Request Received!'}</p>
+                <div className="font-mono bg-white p-1 rounded border text-[9px] font-extrabold flex justify-between px-2">
+                  <span>ID:</span>
+                  <span className="text-indigo-700">{generatedCode}</span>
+                </div>
+                <p className="text-gray-400 text-[8.5px] leading-tight">
+                  {language === 'bn' ? 'আপনার তথ্য এডমিন প্যানেলে পাঠানো হয়েছে। ভেরিফিকেশনের পর প্রিমিয়াম মেম্বারশিপ চালু হয়ে যাবে।' : 'Submitted to admin panel. Membership starts after validation.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCompleteFullFlow}
+                  className="w-full py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[9.5px] uppercase font-black cursor-pointer shadow-xs"
+                >
+                  ঠিক আছে (OK)
+                </button>
+              </div>
+            )}
+          </form>
+        )}
+      </div>
+    );
+  }
 
   const handleSubscribeClick = (plan: { id: string; name: string; price: number }) => {
     setSelectedPlan(plan);
@@ -190,12 +424,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ isOpen, on
 
     setIsProcessing(false);
     setShowInvoice(true);
-  };
-
-  const handleCompleteFullFlow = () => {
-    setSelectedPlan(null);
-    setShowInvoice(false);
-    onClose();
   };
 
   return (

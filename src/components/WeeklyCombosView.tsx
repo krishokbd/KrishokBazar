@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../AppContext';
 import { WeeklyComboOffer, WeeklyComboProduct, toBanglaDigits, Product } from '../types';
 import { ShoppingBag, ChevronRight, Check, AlertCircle, RefreshCw } from 'lucide-react';
+import { LazyImage } from './LazyImage';
 
 interface WeeklyCombosViewProps {
   onBackToHome: () => void;
@@ -153,13 +154,14 @@ export const WeeklyCombosView: React.FC<WeeklyCombosViewProps> = ({ onBackToHome
 
                     {/* Image Box */}
                     <div className="aspect-square w-full overflow-hidden bg-gray-50 border-b border-gray-100">
-                      <img 
+                      <LazyImage 
                         src={product.image || "https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500"} 
                         alt={product.nameBn} 
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-108"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+                          const target = e.target as HTMLImageElement;
+                          if (target) target.src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
                         }}
                       />
                     </div>

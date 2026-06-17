@@ -4,6 +4,8 @@ import { Product, Order } from '../types';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
+import { FarmerSalesChart } from './FarmerSalesChart';
+import { LazyImage } from './LazyImage';
 
 // Client-side image compression downscaling utility to enforce strict size bounds
 const compressImage = (file: File): Promise<Blob> => {
@@ -489,34 +491,7 @@ export const FarmerDashboard: React.FC = () => {
             )}
             
             {/* Sales Performance Graph info */}
-            <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm text-left">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                  <TrendingUp className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-black text-gray-800 uppercase tracking-wider">চলতি সপ্তাহের প্রতিবেদন</h3>
-                  <p className="text-[10px] text-gray-400 mt-0.5">সবজি ও ফসলের দৈনিক চাহিদা ও অগ্রগতি ট্র্যাক করুন</p>
-                </div>
-              </div>
-              
-              <div className="mt-4 grid grid-cols-1 gap-2 text-xs">
-                <div className="border border-emerald-100/50 rounded-2xl p-3 bg-emerald-50/20 text-emerald-905 flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-emerald-850">অর্ডার কনভার্সন রেট:</span>
-                    <span className="block text-[10px] text-gray-400 font-medium">ভেরিফিকেশনের পর অর্ডারের পরিমাণ বাড়ে গড়ে ৫০x গুণ</span>
-                  </div>
-                  <strong className="text-amber-600 font-mono">৯৮.২%</strong>
-                </div>
-                <div className="border border-gray-150 rounded-2xl p-3 bg-gray-50/50 flex items-center justify-between text-gray-700">
-                  <div>
-                    <span className="font-bold">মাঠ থেকে সরাসরি সরবরাহ:</span>
-                    <span className="block text-[10px] text-gray-400 font-medium">আপনার এলাকার মোট নিবন্ধিত ক্রেতা সংখ্যা</span>
-                  </div>
-                  <strong className="text-gray-800 font-mono">১,২৪০ জন</strong>
-                </div>
-              </div>
-            </div>
+            <FarmerSalesChart />
 
             {/* Quick Actions Router List */}
             <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm space-y-3.5 text-left">
@@ -968,13 +943,12 @@ export const FarmerDashboard: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3 overflow-hidden h-full">
-                        <img 
+                        <LazyImage 
                           src={p.images[0]} 
+                          alt={p.title}
                           className="h-16 w-16 object-cover rounded-xl bg-gray-50 shrink-0 border border-gray-100" 
                           referrerPolicy="no-referrer" 
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-1';
-                          }}
+                          onError={() => {}}
                         />
                         <div className="text-left py-1 text-xs justify-between flex flex-col h-full overflow-hidden">
                           <div>

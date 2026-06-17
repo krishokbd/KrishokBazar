@@ -8,18 +8,47 @@ interface ScrollingBannersProps {
 }
 
 export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscription, setView }) => {
-  const { language, offers, categories, setSelectedCategory } = useApp();
+  const { language, offers, categories, setSelectedCategory, currentUser } = useApp();
   const [activeBannerIdx, setActiveBannerIdx] = useState<number>(-1);
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
 
   useEffect(() => {
     if (!offers || offers.length === 0) return;
 
+    // Check if user is a premium subscriber. Subscribers do not see any ads!
+    const isSubscriber = currentUser?.subscriptionStatus && currentUser.subscriptionStatus !== 'none';
+    if (isSubscriber) {
+      return;
+    }
+
+    // Check first-time customer restriction
+    const isFirstTime = !localStorage.getItem('kb_has_visited_before');
+    if (isFirstTime) {
+      const shownCount = Number(sessionStorage.getItem('kb_first_time_ads_count') || '0');
+      if (shownCount >= 1) {
+        return; // First-time customers only see one ad!
+      }
+    }
+
     const timers: NodeJS.Timeout[] = [];
     let recurringInterval: NodeJS.Timeout;
 
     // Trigger banner display and reset dismissal state so it shows up
     const triggerBanner = (indexToTrigger?: number) => {
+      // Re-evaluate subscriber status and first time counts dynamically
+      const activeUser = currentUser;
+      const isSub = activeUser?.subscriptionStatus && activeUser.subscriptionStatus !== 'none';
+      if (isSub) return;
+
+      const isFirst = !localStorage.getItem('kb_has_visited_before');
+      if (isFirst) {
+        const shownCount = Number(sessionStorage.getItem('kb_first_time_ads_count') || '0');
+        if (shownCount >= 1) {
+          return; // Skip subsequent ads for first-time customers
+        }
+        sessionStorage.setItem('kb_first_time_ads_count', '1');
+      }
+
       setIsDismissed(false);
       setActiveBannerIdx((prev) => {
         if (indexToTrigger !== undefined) return indexToTrigger % offers.length;
@@ -27,6 +56,9 @@ export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscr
         return (prev + 1) % offers.length;
       });
     };
+
+    // Mark as visited now that they entered
+    localStorage.setItem('kb_has_visited_before', 'true');
 
     // 1. Ad after 1 minute (60,000 ms)
     const t1 = setTimeout(() => {
@@ -57,9 +89,10 @@ export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscr
         clearInterval(recurringInterval);
       }
     };
-  }, [offers]);
+  }, [offers, currentUser]);
 
-  if (activeBannerIdx === -1 || isDismissed || !offers || offers.length === 0) return null;
+  const isSubscriber = currentUser?.subscriptionStatus && currentUser.subscriptionStatus !== 'none';
+  if (isSubscriber || activeBannerIdx === -1 || isDismissed || !offers || offers.length === 0) return null;
 
   const currentBanner = offers[activeBannerIdx] || offers[0];
 
@@ -91,9 +124,10 @@ export const ScrollingBanners: React.FC<ScrollingBannersProps> = ({ onOpenSubscr
           </button>
           <button 
             onClick={handleClose}
-            className="rounded-full hover:bg-gray-100 p-1 text-gray-400 hover:text-gray-600 shrink-0 cursor-pointer"
+            className="rounded-full bg-red-50 hover:bg-red-100 p-1.5 text-red-500 hover:text-red-700 shrink-0 cursor-pointer border border-red-200 shadow-sm transition-all flex items-center justify-center ml-1.5"
+            title={language === 'bn' ? 'বিজ্ঞাপন বন্ধ করুন' : 'Close Ad'}
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 stroke-[2.5]" />
           </button>
         </div>
       </div>

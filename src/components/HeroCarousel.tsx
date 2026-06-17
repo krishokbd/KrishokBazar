@@ -11,10 +11,11 @@ interface HeroCarouselProps {
   onShopNow: () => void;
   onViewFarmers: () => void;
   onCallHelp: () => void;
+  setView?: (view: string) => void;
 }
 
-export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFarmers, onCallHelp }) => {
-  const { banners } = useApp();
+export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFarmers, onCallHelp, setView }) => {
+  const { banners, dynamicPages } = useApp();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -88,6 +89,15 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFar
                         document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
                       } else if (banner.btn1Link && banner.btn1Link.startsWith('http')) {
                         window.open(banner.btn1Link, '_blank');
+                      } else if (banner.btn1Link && setView) {
+                        const link = banner.btn1Link;
+                        if (link.startsWith('dynamic-')) {
+                          setView(link);
+                        } else if (dynamicPages && dynamicPages.some(dp => dp.slug === link)) {
+                          setView(`dynamic-${link}`);
+                        } else {
+                          setView(link);
+                        }
                       } else {
                         onShopNow();
                       }
@@ -103,6 +113,15 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onShopNow, onViewFar
                         window.open(banner.btn2Link, '_blank');
                       } else if (banner.btn2Link === 'shop') {
                         onShopNow();
+                      } else if (banner.btn2Link && setView) {
+                        const link = banner.btn2Link;
+                        if (link.startsWith('dynamic-')) {
+                          setView(link);
+                        } else if (dynamicPages && dynamicPages.some(dp => dp.slug === link)) {
+                          setView(`dynamic-${link}`);
+                        } else {
+                          setView(link);
+                        }
                       } else {
                         document.getElementById('combo-basket')?.scrollIntoView({ behavior: 'smooth' });
                       }
