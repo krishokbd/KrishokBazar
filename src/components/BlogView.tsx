@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../AppContext';
 import { BlogPost } from '../types';
-import { Edit2, Plus, Calendar, User, Tag, ArrowLeft, Eye, X, BookOpen, Trash } from 'lucide-react';
+import { cleanImageUrl } from '../utils';
+import { Edit2, Plus, Calendar, User, Tag, ArrowLeft, Eye, X, BookOpen, Trash, Sparkles, Loader2, Image as ImageIcon } from 'lucide-react';
 
 interface BlogViewProps {
   onBack: () => void;
@@ -24,6 +25,7 @@ export const BlogView: React.FC<BlogViewProps> = ({ onBack }) => {
   const [blogCategory, setBlogCategory] = useState('organic');
   const [blogImage, setBlogImage] = useState('');
   const [blogTags, setBlogTags] = useState('');
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const isAdmin = currentUser && currentUser.role === 'Admin';
 
@@ -92,6 +94,38 @@ export const BlogView: React.FC<BlogViewProps> = ({ onBack }) => {
     } else {
       addBlogPost(postData);
       setIsCreatingNew(false);
+    }
+  };
+
+  const handleGenerateBlogImage = async () => {
+    if (!blogTitle.trim()) {
+      alert(language === 'en' ? 'Please enter an article title first to generate a featured image.' : 'আর্টিকেলটির জন্য ছবি তৈরি করতে অনুগ্রহ করে প্রথমে একটি শিরোনাম লিখুন।');
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const response = await fetch('/api/generate-blog-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: blogTitle })
+      });
+      const data = await response.json();
+      if (data.image) {
+        setBlogImage(data.image);
+        if (data.warning) {
+          console.warn("Imagen API warning:", data.warning);
+        }
+      } else {
+        alert(language === 'en' ? 'Failed to generate image.' : 'ছবি তৈরি করতে ব্যর্থ হয়েছে।');
+      }
+    } catch (err) {
+      console.error("Error generating blog image:", err);
+      alert(language === 'en' ? 'An error occurred during image generation.' : 'ছবি তৈরির প্রক্রিয়ায় ত্রুটি ঘটেছে।');
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -401,14 +435,56 @@ export const BlogView: React.FC<BlogViewProps> = ({ onBack }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1 font-sans">কভার থাম্বনেইল ছবি লিংক (Image URL)</label>
-                <input
-                  type="text"
-                  placeholder="https://images.unsplash.com/photo-..."
-                  value={blogImage}
-                  onChange={(e) => setBlogImage(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 py-2.5 px-3.5 text-xs font-mono"
-                />
+                <label className="block text-xs font-bold text-gray-600 mb-1 font-sans">
+                  {language === 'en' ? 'Cover Featured Image' : 'কভার থাম্বনেইল ছবি লিংক (Featured Image)'}
+                </label>
+                
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    placeholder="https://images.unsplash.com/photo-..."
+                    value={blogImage}
+                    onChange={(e) => setBlogImage(cleanImageUrl(e.target.value))}
+                    className="flex-1 rounded-xl border border-gray-200 py-2.5 px-3.5 text-xs font-mono outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGenerateBlogImage}
+                    disabled={isGeneratingImage}
+                    className={`rounded-xl px-4 py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-sm min-w-[170px] select-none cursor-pointer ${
+                      isGeneratingImage
+                        ? 'bg-gray-150 text-gray-400 border border-gray-200 cursor-not-allowed'
+                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 active:scale-95'
+                    }`}
+                  >
+                    {isGeneratingImage ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                        {language === 'en' ? 'Generating...' : 'তৈরি হচ্ছে...'}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 text-emerald-600" />
+                        {language === 'en' ? 'AI Imagen' : 'এআই ইমেজেন ছবি'}
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                {/* Image Live preview */}
+                {blogImage && (
+                  <div className="mt-3 relative rounded-2xl border border-gray-100 overflow-hidden aspect-[16/9] w-full bg-gray-50 flex items-center justify-center">
+                    <img
+                      src={blogImage}
+                      alt="Featured cover preview"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md backdrop-blur-xs">
+                      {language === 'en' ? 'Live Preview' : 'লাইভ প্রিভিউ'}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

@@ -166,6 +166,67 @@ async function startServer() {
     }
   });
 
+  // API Route for Blog Post Dynamic Image Generation with Imagen
+  app.post("/api/generate-blog-image", async (req, res) => {
+    try {
+      const { title } = req.body;
+      if (!title) {
+        return res.status(400).json({ error: "Title is required" });
+      }
+
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        // Return a beautiful dynamic placeholder image based on the title keywords
+        const encodedTitle = encodeURIComponent(title);
+        const fallbackUrl = `https://picsum.photos/seed/${encodedTitle}/800/450`;
+        return res.status(200).json({ 
+          image: fallbackUrl,
+          warning: "GEMINI_API_KEY is not set. A dynamic placeholder image has been used."
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey: apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      // Enhance prompt for amazing agriculture visuals
+      const enhancedPrompt = `A high-quality editorial blog post featured header image. Aspect ratio is rectangular 16:9. No text, no fonts, no labels, no watermarks, no overlays. Beautiful composition, cinematic warm natural lighting. Subject: ${title}. High-end organic Bangladeshi farming and agricultural aesthetic with vibrant natural colors, ultra-photorealistic.`;
+
+      const apiResponse = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: enhancedPrompt,
+        config: {
+          numberOfImages: 1,
+          outputMimeType: 'image/jpeg',
+          aspectRatio: '16:9',
+        },
+      });
+
+      if (apiResponse && apiResponse.generatedImages && apiResponse.generatedImages.length > 0) {
+        const base64Bytes = apiResponse.generatedImages[0].image.imageBytes;
+        const imageUrl = `data:image/jpeg;base64,${base64Bytes}`;
+        return res.status(200).json({ image: imageUrl });
+      } else {
+        throw new Error("No images returned from Imagen API.");
+      }
+    } catch (e: any) {
+      console.error("Error generating blog image with Imagen:", e);
+      // Fallback to high-quality Picsum placeholder so it never crashes
+      const encodedTitle = encodeURIComponent(req.body.title || "nature");
+      const fallbackUrl = `https://picsum.photos/seed/${encodedTitle}/800/450`;
+      return res.status(200).json({ 
+        image: fallbackUrl,
+        error: e?.message || "Internal generation error",
+        warning: "Imagen generation failed. Used dynamic placeholder."
+      });
+    }
+  });
+
   // API Route for immediate order dispatches & email triggers
   app.post("/api/send-order-email", async (req, res) => {
     try {

@@ -7,6 +7,9 @@ import React, { useState, useEffect } from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Product, Farmer, Review, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
 import { LazyImage } from './LazyImage';
+import { isDefaultPresettedImage } from '../utils';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import { 
   ArrowLeft, 
   Star, 
@@ -54,6 +57,14 @@ export function getProductImages(product?: Product | null): string[] {
   }
 
   const uniqueList = Array.from(new Set(list));
+  
+  // Separate custom VS preset/seeded images. If there are custom images,
+  // we do NOT pad with default fallbacks, we ONLY show the actual pasted/uploaded ones.
+  const customList = uniqueList.filter(img => !isDefaultPresettedImage(img));
+  if (customList.length > 0) {
+    return customList.slice(0, 5);
+  }
+
   const cat = (product.category || 'organic').toLowerCase();
   
   const categoryFallbacks: Record<string, string[]> = {
@@ -154,7 +165,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   onToggleCompare,
   isCompared
 }) => {
-  const { products, farmers, reviews, addToCart, addReview, currentUser, language } = useApp();
+  const { products, farmers, reviews, addToCart, addReview, currentUser, language, editProduct } = useApp();
   const [selectedImgIdx, setSelectedImgIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [liked, setLiked] = useState(false);
@@ -194,6 +205,73 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [helpfulLikes, setHelpfulLikes] = useState<Record<string, boolean>>({});
 
   const product = products.find(p => p.id === productId);
+
+  // Listen to window-wide pasting events for Admins to easily paste new pictures/links directly on the product detail page
+  useEffect(() => {
+    if (currentUser?.role !== 'Admin') return;
+    if (!product) return;
+
+    const handleGlobalPaste = async (e: ClipboardEvent) => {
+      // Avoid intercepting if user is actively writing a comment
+      const activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.getAttribute('contenteditable') === 'true')) {
+        return;
+      }
+
+      const text = e.clipboardData?.getData('text');
+      if (text && (text.startsWith('http://') || text.startsWith('https://') || text.includes('drive.google.com'))) {
+        e.preventDefault();
+        const cleanedUrl = convertGoogleDriveLink(text.trim());
+        
+        // Remove old pre-seeded unsplash URLs and keep only the custom ones
+        const currentImages = (product.images || []).filter(img => img && !isDefaultPresettedImage(img));
+        
+        if (!currentImages.includes(cleanedUrl)) {
+          const updatedImages = [...currentImages, cleanedUrl].slice(0, 5);
+          editProduct(product.id, { images: updatedImages });
+          alert(`নতুন লিঙ্ক সফলভাবে পণ্য ফটো গ্যালারিতে সরাসরি পেস্ট করা হয়েছে! (${updatedImages.length}/5)`);
+          setSelectedImgIdx(updatedImages.length - 1);
+        }
+        return;
+      }
+
+      // Check for file pastes (e.g. copied screenshots)
+      const files = e.clipboardData?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+          e.preventDefault();
+          try {
+            let downloadUrl = '';
+            if (storage) {
+              const fileRef = ref(storage, `products/${Date.now()}_paste_${Math.random().toString(36).substring(2, 7)}_${file.name}`);
+              await uploadBytes(fileRef, file);
+              downloadUrl = await getDownloadURL(fileRef);
+            } else {
+              downloadUrl = await new Promise<string>((res) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result as string);
+                r.readAsDataURL(file);
+              });
+            }
+            const currentImages = (product.images || []).filter(img => img && !isDefaultPresettedImage(img));
+            const updatedImages = [...currentImages, downloadUrl].slice(0, 5);
+            editProduct(product.id, { images: updatedImages });
+            alert(`ডিভাইস ফটো কপি-পেস্ট সফলভাবে সম্পন্ন হয়েছে! (${updatedImages.length}/5)`);
+            setSelectedImgIdx(updatedImages.length - 1);
+          } catch (err) {
+            console.error("Direct paste file upload failed:", err);
+            alert("ডিভাইস ফটো সরাসরি পেস্টে সমস্যা হয়েছে।");
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => {
+      window.removeEventListener('paste', handleGlobalPaste);
+    };
+  }, [product, currentUser, editProduct]);
 
   // Packaging selection states
   const packOptions = React.useMemo(() => {

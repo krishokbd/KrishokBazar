@@ -115,8 +115,27 @@ export const AppEntryFlow: React.FC<AppEntryFlowProps> = ({ onComplete }) => {
   };
 
   // Handle language completion
-  const handleLanguageSubmit = () => {
+  const handleLanguageSubmit = async () => {
     localStorage.setItem('kb_entry_user_lang', lang);
+    
+    // Proactively request browser permissions (Notifications, Microphone) for deep PWA hardware integration
+    try {
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        await Notification.requestPermission();
+      }
+    } catch (e) {
+      console.warn("Could not auto-request Notifications permissions at startup:", e);
+    }
+    
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+      }
+    } catch (e) {
+      console.warn("Could not auto-request Microphone permissions at startup:", e);
+    }
+
     onComplete({ division, district, upazila }, lang);
   };
 

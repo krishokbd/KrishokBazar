@@ -954,7 +954,12 @@ const AppContent: React.FC = () => {
                 {/* Grid limit of 12 freshest active standard featured products (excluding combo baskets) */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {products
-                    .filter((p) => p.isFeatured === true && !p.id.startsWith('cb') && p.isActive !== false)
+                    .filter((p) => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false)
+                    .sort((a, b) => {
+                      if (a.isFeatured && !b.isFeatured) return -1;
+                      if (!a.isFeatured && b.isFeatured) return 1;
+                      return b.id.localeCompare(a.id);
+                    })
                     .slice(0, 12)
                     .map((p) => (
                       <ProductCard 
@@ -1072,7 +1077,7 @@ const AppContent: React.FC = () => {
                 {/* Filter and render chosen tab list */}
                 {(() => {
                   const filteredBaskets = products.filter(p => {
-                    if (!(p.id.startsWith('cb') || p.isWeeklyCombo === true) || p.isActive === false) return false;
+                    if (!(p.id.startsWith('cb') || p.isWeeklyCombo === true) || p.isActive === false || p.approved === false) return false;
                     const price = p.discountPrice || p.price;
                     if (activeComboSection === '500') {
                       return price > 350 && price <= 650;

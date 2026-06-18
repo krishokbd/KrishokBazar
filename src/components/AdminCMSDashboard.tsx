@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
+import { cleanImageUrl, isDefaultPresettedImage } from '../utils';
 import { getProductImages } from './ProductDetailsPage';
 import { getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
 import { Product, Farmer, Order, Review, Category, Banner, BlogPost, SiteSettings, toBanglaDigits } from '../types';
@@ -126,7 +127,8 @@ export const AdminCMSDashboard: React.FC = () => {
     login,
     dynamicPages,
     saveDynamicPages,
-    language
+    language,
+    syncVersion
   } = useApp();
 
   // Admin explicit login states
@@ -532,7 +534,7 @@ export const AdminCMSDashboard: React.FC = () => {
   }
 
   return (
-    <section className="py-8 bg-gray-50 min-h-screen">
+    <section key={syncVersion} className="py-8 bg-gray-50 min-h-screen">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* ADMIN HEADER */}
@@ -2176,7 +2178,8 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminProdDesc(p.description);
                                 setAdminProdStock(p.stock);
                                 setAdminProdReadyToCook(p.isReadyToCook);
-                                setAdminProdImages(p.images);
+                                const initialImages = (p.images || []).filter(img => img && !isDefaultPresettedImage(img));
+                                setAdminProdImages(initialImages);
                                 setAdminProdFarmerId(p.farmerId);
                                 setAdminProdIsFeatured(!!p.isFeatured);
                                 setAdminProdIsVerified(p.isVerified);
@@ -2636,7 +2639,7 @@ export const AdminCMSDashboard: React.FC = () => {
                         <input 
                           type="text"
                           value={bannerFormImage}
-                          onChange={(e) => setBannerFormImage(e.target.value)}
+                          onChange={(e) => setBannerFormImage(cleanImageUrl(e.target.value))}
                           placeholder="https://images.unsplash.com/photo-..."
                           className="w-full rounded-xl border border-gray-200 p-2 text-[10px] font-mono text-gray-500"
                         />
@@ -2903,7 +2906,7 @@ export const AdminCMSDashboard: React.FC = () => {
                           <input 
                             type="text"
                             value={offerFormImage}
-                            onChange={(e) => setOfferFormImage(e.target.value)}
+                            onChange={(e) => setOfferFormImage(cleanImageUrl(e.target.value))}
                             className="w-full rounded-xl border border-gray-200 p-2.5 text-[10.5px] font-mono text-gray-500 focus:ring-2 focus:ring-amber-100 outline-none transition"
                           />
                         </div>
@@ -3597,7 +3600,7 @@ export const AdminCMSDashboard: React.FC = () => {
                       className="w-full rounded-xl border border-gray-200 py-2.5 px-3 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 font-sans outline-none"
                       placeholder="Unsplash বা অনলাইন ইমেজ লিঙ্ক..."
                       value={blogFormImage}
-                      onChange={(e) => setBlogFormImage(e.target.value)}
+                      onChange={(e) => setBlogFormImage(cleanImageUrl(e.target.value))}
                     />
                   </div>
 

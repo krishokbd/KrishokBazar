@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
+import { isDefaultPresettedImage } from '../utils';
 import { X, Trash2, Save, Image, Check, Sparkles, ArrowRight, Upload } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
@@ -203,7 +204,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setDescription(product.description);
       setCategory(product.category);
       setStock(product.stock);
-      setUploadedImages(product.images || []);
+      const initialImages = (product.images || []).filter(img => img && !isDefaultPresettedImage(img));
+      setUploadedImages(initialImages);
       setIsReadyToCook(!!product.isReadyToCook);
       setIsFeatured(!!product.isFeatured);
       setUnit(product.unit || 'kg');

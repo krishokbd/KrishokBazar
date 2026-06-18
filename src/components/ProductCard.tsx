@@ -10,6 +10,7 @@ import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera, Hear
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
 import { LazyImage } from './LazyImage';
+import { motion } from 'motion/react';
 
 interface ProductCardProps {
   product: Product;
@@ -198,6 +199,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         )}
 
+        {/* LOW STOCK BADGE */}
+        {product.stock > 0 && product.stock < 5 && (
+          <span className={`absolute left-2 z-10 inline-flex items-center gap-1 rounded bg-red-600 text-white px-1.5 py-0.5 text-[8px] font-extrabold uppercase shadow-md animate-pulse border border-red-500 ${
+            product.isVerified ? 'top-8' : 'top-2'
+          }`}>
+            ⚠️ {language === 'bn' ? 'সীমিত স্টক' : 'Low Stock'}
+          </span>
+        )}
+
         {/* READY TO COOK BADGE */}
         {product.isReadyToCook && (
           <span className="absolute right-11 top-2.5 z-10 inline-flex items-center gap-1 rounded bg-indigo-600 px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow">
@@ -215,11 +225,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className="absolute right-2 top-2 z-20 p-1.5 rounded-full bg-white/80 backdrop-blur-xs hover:bg-white text-gray-400 hover:text-rose-500 transition shadow-sm hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center select-none"
           title={isWishlisted ? (language === 'bn' ? 'উইশলিস্ট থেকে বাদ দিন' : 'Remove from wishlist') : (language === 'bn' ? 'উইশলিস্টে যোগ করুন' : 'Add to wishlist')}
         >
-          <Heart 
-            className={`h-3.5 w-3.5 transition-colors ${
-              isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-gray-400'
-            }`} 
-          />
+          <motion.div
+            key={isWishlisted ? "wishlisted" : "not-wishlisted"}
+            initial={{ scale: 0.8 }}
+            animate={{ scale: [0.8, 1.35, 1.0] }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="flex items-center justify-center"
+          >
+            <Heart 
+              className={`h-3.5 w-3.5 transition-colors ${
+                isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-gray-400'
+              }`} 
+            />
+          </motion.div>
         </button>
 
         {/* DISCOUNT BADGE */}

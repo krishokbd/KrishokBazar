@@ -9,6 +9,7 @@ import { demoFarmers, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS 
 import { new45Products as demoProducts } from './newProducts';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
+import { cleanImageUrl } from './utils';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
 import { logAnalyticsEvent } from './lib/analytics';
 import { supabaseService } from './lib/supabaseService';
@@ -25,6 +26,9 @@ interface AppContextType {
   cart: OrderItem[];
   withdrawalRequests: WithdrawalRequest[];
   registeredCustomers: User[];
+  
+  syncVersion: number;
+  triggerLocalReRender: () => void;
   
   // CMS Fields
   categories: Category[];
@@ -978,6 +982,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : CATEGORIES;
   });
 
+  const [syncVersion, setSyncVersion] = useState(0);
+  const triggerLocalReRender = () => {
+    setSyncVersion(prev => prev + 1);
+  };
+
   const [banners, setBanners] = useState<Banner[]>(() => {
     const saved = localStorage.getItem('kb_banners_cms');
     return saved ? JSON.parse(saved) : HERO_CAROUSEL_BANNERS;
@@ -1021,9 +1030,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const saveDynamicPages = (newPages: DynamicPage[]) => {
+    if (isFirebaseConfigured && db) {
+      newPages.forEach(async (dp) => {
+        try {
+          const sanitized = sanitizeFirestoreData(dp);
+          await setDoc(doc(db, 'dynamic_pages', dp.slug), sanitized);
+        } catch (e) {
+          console.error("Firestore saveDynamicPages item fail:", e);
+        }
+      });
+      // Handle deletion of obsolete items
+      const currentSlugs = newPages.map(p => p.slug);
+      dynamicPages.forEach(async (dp) => {
+        if (!currentSlugs.includes(dp.slug)) {
+          try {
+            await deleteDoc(doc(db, 'dynamic_pages', dp.slug));
+          } catch (e) {}
+        }
+      });
+    }
     setDynamicPages(newPages);
     localStorage.setItem('kb_dynamic_pages', JSON.stringify(newPages));
     triggerSync('dynamic_pages');
+    triggerLocalReRender();
   };
 
   const [offers, setOffers] = useState<Offer[]>(() => {
@@ -1382,12 +1411,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 8. CAROUSEL BANNERS LIVE SYNC
     const unsubBanners = onSnapshot(collection(db, 'banners'), (snapshot) => {
-      const items: Banner[] = [];
+      const itemsWithIds: { id: string; banner: Banner }[] = [];
       snapshot.forEach(docSnap => {
-        items.push({ ...docSnap.data() } as Banner);
+        itemsWithIds.push({ id: docSnap.id, banner: docSnap.data() as Banner });
       });
-      if (items.length > 0) {
-        setBanners(items);
+      // Sort items by original indexes
+      itemsWithIds.sort((a, b) => {
+        const indexA = parseInt(a.id.replace('banner-', '')) || 0;
+        const indexB = parseInt(b.id.replace('banner-', '')) || 0;
+        return indexA - indexB;
+      });
+      const sortedBanners = itemsWithIds.map(item => item.banner);
+      if (sortedBanners.length > 0) {
+        setBanners(sortedBanners);
       } else {
         HERO_CAROUSEL_BANNERS.forEach(async (b, idx) => {
           try {
@@ -1457,6 +1493,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       handleFirestoreError(error, OperationType.LIST, 'harvest_alerts');
     });
 
+    // 12. SPECIAL OFFERS CLOUD SYNC
+    const unsubOffers = onSnapshot(collection(db, 'offers'), (snapshot) => {
+      const items: Offer[] = [];
+      snapshot.forEach(docSnap => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as Offer);
+      });
+      if (items.length > 0) {
+        setOffers(items);
+      } else {
+        DEFAULT_OFFERS.forEach(async (o) => {
+          try {
+            await setDoc(doc(db, 'offers', o.id), o);
+          } catch (e) {}
+        });
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'offers');
+    });
+
+    // 13. DYNAMIC PAGES CLOUD SYNC
+    const unsubDynamicPages = onSnapshot(collection(db, 'dynamic_pages'), (snapshot) => {
+      const items: DynamicPage[] = [];
+      snapshot.forEach(docSnap => {
+        items.push({ id: docSnap.id, ...docSnap.data() } as any as DynamicPage);
+      });
+      if (items.length > 0) {
+        setDynamicPages(items);
+      } else {
+        const DEFAULT_PAGES: DynamicPage[] = [
+          {
+            slug: "weekly-mega-buckets",
+            titleBn: "সাপ্তাহিক ও ফ্যামিলি কম্বো বালতি (Weekly Buckets)",
+            titleEn: "Weekly Family Combo Buckets & Packages",
+            descriptionBn: "পরিবারের বাজেট ও পুষ্টির মেলবন্ধনে সাজানো আমাদের বিশেষ ক্যাটাগরি পেজ। সরাসরি কৃষকের মাঠের তাজা ফসল!",
+            descriptionEn: "Specially tailored combination buckets to balance family health and pocket budgets.",
+            bannerImage: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000",
+            productIds: ["cb1", "cb2", "cb3", "cb4"]
+          }
+        ];
+        DEFAULT_PAGES.forEach(async (dp) => {
+          try {
+            await setDoc(doc(db, 'dynamic_pages', dp.slug), dp);
+          } catch (e) {}
+        });
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'dynamic_pages');
+    });
+
     return () => {
       unsubProducts();
       unsubFarmers();
@@ -1469,6 +1554,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubPosts();
       unsubSettings();
       unsubAlerts();
+      unsubOffers();
+      unsubDynamicPages();
     };
   }, [isFirebaseConfigured]);
 
@@ -2138,6 +2225,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       finalImages.push(finalImages[0]);
     }
 
+    finalImages = finalImages.map(img => cleanImageUrl(img));
+
     const newProduct: Product = {
       ...productData,
       id: newId,
@@ -2153,7 +2242,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleFirestoreError(err, OperationType.CREATE, `products/${newProduct.id}`);
       });
       if (farmer) {
-        updateDoc(doc(db, 'farmers', farmer.id), { productCount: (farmer.productCount || 0) + 1 }).catch(() => {});
+        setDoc(doc(db, 'farmers', farmer.id), { productCount: (farmer.productCount || 0) + 1 }, { merge: true }).catch(() => {});
       }
     }
 
@@ -2173,6 +2262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }));
     }
     triggerSync('products');
+    triggerLocalReRender();
   };
 
   const editProduct = (productId: string, productData: Partial<Product>) => {
@@ -2184,9 +2274,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     });
 
+    if (cleanData.images) {
+      cleanData.images = cleanData.images.map(img => cleanImageUrl(img));
+    }
+
     if (isFirebaseConfigured && db) {
       const sanitized = sanitizeFirestoreData(cleanData);
-      updateDoc(doc(db, 'products', productId), sanitized).catch(err => {
+      setDoc(doc(db, 'products', productId), sanitized, { merge: true }).catch(err => {
         handleFirestoreError(err, OperationType.UPDATE, `products/${productId}`);
       });
     }
@@ -2201,6 +2295,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return nextList;
     });
     triggerSync('products');
+    triggerLocalReRender();
   };
 
   const deleteProduct = (productId: string) => {
@@ -2212,7 +2307,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (p && p.farmerId) {
         const farm = farmers.find(f => f.id === p.farmerId);
         if (farm) {
-          updateDoc(doc(db, 'farmers', p.farmerId), { productCount: Math.max(0, (farm.productCount || 0) - 1) }).catch(() => {});
+          setDoc(doc(db, 'farmers', p.farmerId), { productCount: Math.max(0, (farm.productCount || 0) - 1) }, { merge: true }).catch(() => {});
         }
       }
     }
@@ -2272,16 +2367,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     triggerSync('categories');
   };
 
-  const saveBanners = (newBanners: Banner[]) => {
+  const saveBanners = async (newBanners: Banner[]) => {
+    const cleanedBanners = newBanners.map(b => ({
+      ...b,
+      image: cleanImageUrl(b.image)
+    }));
+
     if (isFirebaseConfigured && db) {
-      newBanners.forEach(async (b, idx) => {
-        try {
-          await setDoc(doc(db, 'banners', `banner-${idx}`), b);
-        } catch (e) {}
-      });
+      try {
+        const promises = cleanedBanners.map((b, idx) => 
+          setDoc(doc(db, 'banners', `banner-${idx}`), b)
+        );
+        await Promise.all(promises);
+        
+        // Delete obsolete banner documents in Firestore
+        const deletePromises = [];
+        for (let idx = cleanedBanners.length; idx < 20; idx++) {
+          deletePromises.push(deleteDoc(doc(db, 'banners', `banner-${idx}`)));
+        }
+        await Promise.all(deletePromises).catch(() => {});
+      } catch (e) {
+        console.error("Firestore error saving banners:", e);
+      }
     }
-    setBanners(newBanners);
+    localStorage.setItem('kb_banners_cms', JSON.stringify(cleanedBanners));
+    setBanners(cleanedBanners);
     triggerSync('banners');
+    triggerLocalReRender();
   };
 
   const saveSiteSettings = (settings: SiteSettings) => {
@@ -2298,8 +2410,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addBlogPost = (postData: Omit<BlogPost, 'id' | 'publishedAt'>) => {
+    const cleanedImage = cleanImageUrl(postData.image);
     const newPost: BlogPost = {
       ...postData,
+      image: cleanedImage,
       id: `blog-${Date.now()}`,
       publishedAt: new Date().toISOString()
     };
@@ -2309,16 +2423,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isFirebaseConfigured && db) {
       setDoc(doc(db, 'blogs', newPost.id), newPost).catch(() => {});
     }
+    triggerLocalReRender();
   };
 
   const editBlogPost = (postId: string, postData: Partial<BlogPost>) => {
-    const updated = blogs.map(b => b.id === postId ? { ...b, ...postData } as BlogPost : b);
+    const cleanPostData = { ...postData };
+    if (cleanPostData.image) {
+      cleanPostData.image = cleanImageUrl(cleanPostData.image);
+    }
+    const updated = blogs.map(b => b.id === postId ? { ...b, ...cleanPostData } as BlogPost : b);
     localStorage.setItem('kb_blogs', JSON.stringify(updated));
     setBlogs(updated);
     if (isFirebaseConfigured && db) {
-      const sanitized = sanitizeFirestoreData(postData);
+      const sanitized = sanitizeFirestoreData(cleanPostData);
       updateDoc(doc(db, 'blogs', postId), sanitized).catch(() => {});
     }
+    triggerLocalReRender();
   };
 
   const deleteBlogPost = (postId: string) => {
@@ -2630,20 +2750,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // OFFERS & SUBSCRIPTIONS METHODS
   const addOffer = (offerData: Omit<Offer, 'id'>) => {
+    const cleanedImage = cleanImageUrl(offerData.image);
     const newOffer: Offer = {
       ...offerData,
+      image: cleanedImage,
       id: `offer-${Date.now()}`,
       isCustom: true
     };
+    if (isFirebaseConfigured && db) {
+      const sanitized = sanitizeFirestoreData(newOffer);
+      setDoc(doc(db, 'offers', newOffer.id), sanitized).catch(err => {
+        handleFirestoreError(err, OperationType.CREATE, `offers/${newOffer.id}`);
+      });
+    }
     setOffers(prev => [...prev, newOffer]);
+    triggerLocalReRender();
   };
 
   const editOffer = (id: string, offerData: Partial<Offer>) => {
-    setOffers(prev => prev.map(o => o.id === id ? { ...o, ...offerData } : o));
+    const cleanOfferData = { ...offerData };
+    if (cleanOfferData.image) {
+      cleanOfferData.image = cleanImageUrl(cleanOfferData.image);
+    }
+    if (isFirebaseConfigured && db) {
+      const sanitized = sanitizeFirestoreData(cleanOfferData);
+      setDoc(doc(db, 'offers', id), sanitized, { merge: true }).catch(err => {
+        handleFirestoreError(err, OperationType.UPDATE, `offers/${id}`);
+      });
+    }
+    setOffers(prev => prev.map(o => o.id === id ? { ...o, ...cleanOfferData } : o));
+    triggerLocalReRender();
   };
 
   const deleteOffer = (id: string) => {
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, 'offers', id)).catch(err => {
+        handleFirestoreError(err, OperationType.DELETE, `offers/${id}`);
+      });
+    }
     setOffers(prev => prev.filter(o => o.id !== id));
+    triggerLocalReRender();
   };
 
   const submitMembershipRequest = (phone: string, txId: string, categorySlug?: string, amount?: number) => {
@@ -2867,6 +3013,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cart,
       withdrawalRequests,
       registeredCustomers,
+      syncVersion,
+      triggerLocalReRender,
       categories,
       banners,
       saveCategories,

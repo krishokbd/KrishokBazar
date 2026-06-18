@@ -65,6 +65,18 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const handleInstallApp = async () => {
+    // Request notification and microphone permission immediately during installation process to ensure full capability
+    try {
+      if ('Notification' in window) {
+        await Notification.requestPermission();
+      }
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+          stream.getTracks().forEach(t => t.stop());
+        }).catch(() => {});
+      }
+    } catch (e) {}
+
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -130,15 +142,15 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-40 bg-white/95 border-b border-gray-100 shadow-sm backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-2 sm:gap-4">
           
           {/* LOGO & MARKETS SUBTITLE SECTION */}
           <div 
             onClick={() => handleNavClick('home')}
-            className="flex items-center gap-2 cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer shrink-0"
           >
             {/* Circular brand logo */}
-            <div className="relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-emerald-50 border border-emerald-500 overflow-hidden shrink-0">
+            <div className="relative flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-emerald-50 border border-emerald-500 overflow-hidden shrink-0">
               <img 
                 src={KRISHOK_BAZAR_LOGO} 
                 alt="Krishok Bazar premium avatar logo" 
@@ -147,15 +159,15 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </div>
             <div className="flex flex-col select-none">
-              <div className="flex items-center gap-1.5 leading-none">
-                <span className="text-sm sm:text-base font-black tracking-tight text-emerald-800 font-sans">
+              <div className="flex items-center gap-1 leading-none">
+                <span className="text-xs sm:text-base font-black tracking-tight text-emerald-800 font-sans">
                   কৃষক বাজার
                 </span>
-                <span className="text-[10px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-full shadow-xs shrink-0 font-sans">
+                <span className="hidden xs:inline-block text-[10px] bg-amber-500 text-white font-extrabold px-1.5 py-0.5 rounded-full shadow-xs shrink-0 font-sans">
                   ক্রেতা বাজার
                 </span>
               </div>
-              <div className="text-[9px] sm:text-[10px] text-emerald-600 font-black flex items-center gap-1 mt-1 leading-none font-sans">
+              <div className="hidden xs:flex text-[9px] sm:text-[10px] text-emerald-600 font-black items-center gap-1 mt-1 leading-none font-sans">
                 <span>দালাল মুক্ত</span>
                 <span className="text-gray-300">•</span>
                 <span>ঢাকা সিটিতে ডেলিভারি</span>
@@ -170,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* SEARCH COMPONENT */}
-          <div className="flex flex-1 max-w-[110px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm relative">
+          <div className="flex flex-1 max-w-[85px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm relative">
             <div className="relative w-full">
               <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
               <input

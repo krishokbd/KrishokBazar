@@ -21,6 +21,92 @@ interface RiktazAIProps {
   setSelectedProductId?: (id: string | null) => void;
 }
 
+export const playNotificationSound = (type: 'sent' | 'received' | 'alert') => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    if (type === 'sent') {
+      // WhatsApp-like send/pop sound
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.08);
+      
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.12);
+      
+      // Vibrate briefly (PWA standard)
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(25);
+      }
+    } else if (type === 'received') {
+      // WhatsApp-like dual tone high chime (sweet bell ping)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      const gain2 = ctx.createGain();
+      
+      // Harmonics representing a beautiful pure chime
+      osc1.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+      osc1.frequency.setValueAtTime(880, ctx.currentTime + 0.07); // A5 (higher ping)
+      osc2.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.07); // C6 (sweet harmony)
+      
+      gain1.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      
+      gain2.gain.setValueAtTime(0.12, ctx.currentTime + 0.07);
+      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      
+      osc1.start();
+      osc1.stop(ctx.currentTime + 0.35);
+      osc2.start(ctx.currentTime + 0.07);
+      osc2.stop(ctx.currentTime + 0.35);
+      
+      // Double vibration (PWA standard WhatsApp-like)
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([40, 30, 45]);
+      }
+    } else {
+      // Alert/Warning tone
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(160, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(280, ctx.currentTime + 0.2);
+      
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.25);
+      
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(80);
+      }
+    }
+  } catch (err) {
+    console.warn("Web Audio API not supported or blocked by user gesture:", err);
+  }
+};
+
 async function findCachedFAQResponse(text: string): Promise<string | null> {
   const normalizedQuery = text.toLowerCase().trim();
   if (!normalizedQuery) return null;
@@ -137,6 +223,47 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
     globalVoiceActiveRef.current = globalVoiceActive;
   }, [globalVoiceActive]);
 
+  const isFirstRender = useRef(true);
+  const prevLength = useRef(messages.length);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      prevLength.current = messages.length;
+      return;
+    }
+
+    if (messages.length > prevLength.current) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg) {
+        if (lastMsg.sender === 'user') {
+          playNotificationSound('sent');
+        } else if (lastMsg.sender === 'assistant') {
+          playNotificationSound('received');
+          
+          // Trigger browser native Push Notification
+          if (typeof window !== 'undefined' && 'Notification' in window) {
+            if (Notification.permission === 'granted') {
+              try {
+                // Strip markdown from text for clean push notifications body
+                const cleanBody = lastMsg.text.replace(/[\*\_]/g, '');
+                new Notification('কৃষক বাজার (Riktaz AI)', {
+                  body: cleanBody.length > 100 ? cleanBody.substring(0, 97) + '...' : cleanBody,
+                  icon: '/icon-192.svg'
+                });
+              } catch (e) {
+                console.warn("Fired notification fallback error:", e);
+              }
+            } else if (Notification.permission === 'default') {
+              Notification.requestPermission();
+            }
+          }
+        }
+      }
+    }
+    prevLength.current = messages.length;
+  }, [messages]);
+
   // Handle Speech Recognition initiation
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -184,13 +311,7 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
 
       rec.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        if (event.error === 'not-allowed') {
-          setSpeechError('মাইক্রোফোন ব্যবহারের অনুমতি নেই।');
-        } else if (event.error === 'no-speech') {
-          // Silent or brief hint
-        } else {
-          setSpeechError(`ত্রুটি: ${event.error}`);
-        }
+        setSpeechError('ERROR_NO_AUDIO');
         setIsListening(false);
         // If in global voice mode, don't clear the recording field on momentary pause
         if (!globalVoiceActiveRef.current) {
@@ -237,7 +358,7 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
   const toggleListening = (field: 'chat' | 'prodTitle' | 'prodContext' | 'dietNote') => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setSpeechError('আপনার ব্রাউজারে স্পিচ রিকগনিশন সমর্থন করে না। ক্রোম বা সাফারি ব্যবহার করুন।');
+      setSpeechError('ERROR_NO_AUDIO');
       return;
     }
 
@@ -268,7 +389,7 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
   const toggleGlobalVoiceActive = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setSpeechError('আপনার ব্রাউজারে স্পিচ রিকগনিশন সমর্থন করে না। ক্রোম বা সাফারি ব্যবহার করুন।');
+      setSpeechError('ERROR_NO_AUDIO');
       return;
     }
 
@@ -301,7 +422,7 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
         }
       } catch (err: any) {
         console.error('Microphone permission or start failure:', err);
-        setSpeechError('মাইক্রোফোন ব্যবহারের অনুমতি পাওয়া যায়নি। অনুগ্রহ করে ব্রাউজার পারমিশন দিন।');
+        setSpeechError('ERROR_NO_AUDIO');
         setGlobalVoiceActive(false);
       }
     }
