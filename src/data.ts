@@ -71,79 +71,153 @@ const generalFarmerGalleries = [
   ]
 ];
 
-export const demoFarmers: Farmer[] = [];
-
-// Seed Male Farmers (IDs f1 to f50)
-for (let i = 0; i < 50; i++) {
-  const dist = DISTRICTS[i % DISTRICTS.length];
-  const rating = parseFloat((4.2 + (i % 9) * 0.1).toFixed(1));
-  const types = ['জৈব ফসল খামার (Organic Vegetable Farm)', 'শস্য এগ্রো ফার্ম (Grains Co.)', 'মৎস্য ও বিল খামার (Fish & Shol Co.)', 'পাহাড়ি ফল বাগিচা (Hill Fruits)'];
-  const farmType = types[i % types.length];
-  
-  demoFarmers.push({
-    id: `f${i + 1}`,
-    name: maleNames[i],
+export const demoFarmers: Farmer[] = [
+  {
+    id: 'f70',
+    name: 'সাইফুল ইসলাম',
     gender: 'male',
-    district: dist,
-    address: `গ্রাম: সোনালীতলা, ডাকঘর: কড়া বাজার, ${dist}, বাংলাদেশ`,
-    rating: rating > 5.0 ? 5.0 : rating,
-    verified: i < 45, // ~90% verified
-    productCount: 5 + (i % 6),
-    salesCount: 65 + (i * 14),
-    avatar: 'male', // renders fallback avatar or photo preset
-    phone: `01712345${String(100 + i).slice(1)}`,
+    district: 'Gazipur',
+    address: 'গ্রাম: দক্ষিণ খড়া চর, কাপাসিয়া, গাজীপুর, বাংলাদেশ',
+    rating: 4.8,
+    verified: true,
+    productCount: 4,
+    salesCount: 120,
+    avatar: 'https://drive.google.com/file/d/1MNAxsXgBPgWUgOdlTJNgtuUbyMgsa1LP/view?usp=sharing',
+    phone: '01983790476',
     status: 'Approved',
-    balance: 3200 + (i * 590),
-    farmLogo: farmLogos[i % farmLogos.length],
-    farmType: farmType,
-    videoPlaceholder: [
+    balance: 5000,
+    farmLogo: 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=150&auto=format&fit=crop&q=40',
+    farmType: 'অর্গানিক সবজি ও শস্য খামার',
+    videoPlaceholder: 'https://youtube.com/shorts/iRHqWnxj-jU?feature=share',
+    youtubeVideos: [
       'https://youtube.com/shorts/iRHqWnxj-jU?feature=share',
-      'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share',
+      'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share'
+    ],
+    gallery: [
+      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=500&auto=format&fit=crop&q=50'
+    ],
+    story: 'আমি সাইফুল ইসলাম, দক্ষিণ খড়া চরের একজন গর্বিত কৃষক। সম্পূর্ণ বিষমুক্ত ও প্রাকৃতিক উপায়ে আমি আমার ফসলের চাষাবাদ করে থাকি। সরাসরি কৃষক বাজার প্ল্যাটফর্মে আমার তাজা ফসল আপনাদের হাতে তুলে দিতে পেরে আমি অত্যন্ত আনন্দিত।'
+  },
+  {
+    id: 'f71',
+    name: 'মান্নান হোসেন',
+    gender: 'male',
+    district: 'Gazipur',
+    address: 'গ্রাম: দক্ষিণ খড়া চর, কাপাসিয়া, গাজীপুর, বাংলাদেশ',
+    rating: 4.9,
+    verified: true,
+    productCount: 5,
+    salesCount: 154,
+    avatar: 'https://drive.google.com/file/d/19088gWf6qduPvGC8v1eC1NpvqhuCoGzC/view?usp=sharing',
+    phone: '01773309831',
+    status: 'Approved',
+    balance: 6200,
+    farmLogo: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=150&auto=format&fit=crop&q=40',
+    farmType: 'খাঁটি বীজ ও শাকসবজি দুগ্ধ খামার',
+    videoPlaceholder: 'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share',
+    youtubeVideos: [
       'https://youtube.com/shorts/4iph-cQWg3g?feature=share',
-      'https://youtube.com/shorts/ivdux5l52TY?feature=share',
+      'https://youtube.com/shorts/ivdux5l52TY?feature=share'
+    ],
+    gallery: [
+      'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1589923188900-85dae523342b?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=500&auto=format&fit=crop&q=50'
+    ],
+    story: 'আমার নাম মান্নান হোসেন। দক্ষিণ খড়া চর এলাকায় আমি সুদীর্ঘ ১৭ বছর যাবত দুগ্ধ ও জৈব কৃষি চাষাবাদের সাথে জড়িত। আধুনিক কৃষি প্রযুক্তির চমৎকার সমন্বয়ে সম্পূর্ণ স্বাস্থ্যকর পদ্ধতিতে উৎপাদিত ফসল আমাদের খামার থেকে আপনাদের নিকট পৌঁছে দিই।'
+  },
+  {
+    id: 'f72',
+    name: 'সুরুজ মিয়া',
+    gender: 'male',
+    district: 'Gazipur',
+    address: 'গ্রাম: দক্ষিণ খড়া চর, কাপাসিয়া, গাজীপুর, বাংলাদেশ',
+    rating: 4.7,
+    verified: true,
+    productCount: 3,
+    salesCount: 98,
+    avatar: 'https://drive.google.com/file/d/1j_Rh0oDaxrMsrkSgig9BGe1ufm2Z2jK5/view?usp=sharing',
+    phone: '01898455623',
+    status: 'Approved',
+    balance: 4100,
+    farmLogo: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=150&auto=format&fit=crop&q=40',
+    farmType: 'উন্নত ফল ও সবজি খামার',
+    videoPlaceholder: 'https://youtube.com/shorts/4iph-cQWg3g?feature=share',
+    youtubeVideos: [
       'https://youtube.com/shorts/n6TW95vbqxo?feature=share',
       'https://youtube.com/shorts/lXgJgxP9frU?feature=share'
-    ][i % 6],
-    gallery: generalFarmerGalleries[i % generalFarmerGalleries.length],
-    story: `আমার নাম ${maleNames[i]}। আমি ${dist} জেলায় সম্পূর্ণ প্রাকৃতিক উপায়ে কোনো বিষাক্ত বিষক্রিয়া বা কেমিক্যাল ছাড়া কৃষিকাজ করে আসছি। আমার ${farmType} খামারের প্রধান লক্ষ্য হলো সতেজ ও স্বাস্থ্যকর খাবার সরাসরি মানুষের রান্নাঘরে সরবরাহ করা। আমি চাই আমাদের পরবর্তী প্রজন্ম সম্পূর্ণ নিরোগভাবে বড় হোক।`
-  });
-}
-
-// Seed Female Farmers (IDs f51 to f75)
-for (let i = 0; i < 25; i++) {
-  const dist = DISTRICTS[(i + 4) % DISTRICTS.length];
-  const rating = parseFloat((4.3 + (i % 8) * 0.1).toFixed(1));
-  const types = ['নারী সমন্বিত দুগ্ধ ও ডিম খামার (Poultry & Dairy)', 'জৈব মসলা ও মধু খামার (Honey & Spices)', 'হাল্কা সবজি ও শাকপাতা খামার (Green Crops)'];
-  const farmType = types[i % types.length];
-  
-  demoFarmers.push({
-    id: `f${51 + i}`,
-    name: femaleNames[i],
-    gender: 'female',
-    district: dist,
-    address: `গ্রাম: শান্তিনগর, পো: রূপগঞ্জ, ${dist}, বাংলাদেশ`,
-    rating: rating > 5.0 ? 5.0 : rating,
-    verified: i < 22, // ~90% verified
-    productCount: 6 + (i % 5),
-    salesCount: 80 + (i * 12),
-    avatar: 'female',
-    phone: `0193135${String(200 + i).slice(1)}`,
+    ],
+    gallery: [
+      'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=500&auto=format&fit=crop&q=50'
+    ],
+    story: 'আসসালামু আলাইকুম, আমি সুরুজ মিয়া। দক্ষিণ খড়া চরের উর্ভর মাটিতে আমি ফল ও বিষমুক্ত শাকসবজি চাষ করে আসছি। কৃষক বাজার প্ল্যাটফর্মের মাধ্যমে আপনাদেরকে আমাদের খামারের তরতাজা ফসল দিতে পেরে আমি অত্যন্ত ধন্য।'
+  },
+  {
+    id: 'f73',
+    name: 'ফিরোজ কবির',
+    gender: 'male',
+    district: 'Gazipur',
+    address: 'গ্রাম: দক্ষিণ খড়া চর, কাপাসিয়া, গাজীপুর, বাংলাদেশ',
+    rating: 4.9,
+    verified: true,
+    productCount: 6,
+    salesCount: 210,
+    avatar: 'https://drive.google.com/file/d/1MHmWiLIh1nYbKjWXjWdiTNPhQ9hNobNy/view?usp=sharing',
+    phone: '01383109858',
     status: 'Approved',
-    balance: 4500 + (i * 720),
-    farmLogo: farmLogos[(i + 2) % farmLogos.length],
-    farmType: farmType,
-    videoPlaceholder: [
+    balance: 8900,
+    farmLogo: 'https://images.unsplash.com/photo-1516253593875-bd7ba052fbc5?w=150&auto=format&fit=crop&q=40',
+    farmType: 'সমন্বিত মৎস্য ও তরকারি খামার',
+    videoPlaceholder: 'https://youtube.com/shorts/ivdux5l52TY?feature=share',
+    youtubeVideos: [
       'https://youtube.com/shorts/iRHqWnxj-jU?feature=share',
-      'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share',
+      'https://youtube.com/shorts/oLgAz7tiS-Y?feature=share'
+    ],
+    gallery: [
+      'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=500&auto=format&fit=crop&q=50'
+    ],
+    story: 'আমি ফিরোজ কবির। দক্ষিণ খড়া চরের মাটিতে সম্পূর্ণ অরগানিক ও বিশুদ্ধ উপায়ে সবজি ও মাছের চাষ করে আসছি। মধ্যস্বত্বভোগীদের অবসান ঘটিয়ে ন্যায্যমূল্যে সেরা সামগ্রী আপনাদের দোরগোড়ায় পৌঁছে দেওয়াই আমার অঙ্গীকার।'
+  },
+  {
+    id: 'f74',
+    name: 'ডাঃ মোতালেব',
+    gender: 'male',
+    district: 'Gazipur',
+    address: 'গ্রাম: দক্ষিণ খড়া চর, কাপাসিয়া, গাজীপুর, বাংলাদেশ',
+    rating: 5.0,
+    verified: true,
+    productCount: 7,
+    salesCount: 305,
+    avatar: 'https://drive.google.com/file/d/1AzCoUHkxFKYTjVJXJm3cvELpIBUPdsMb/view?usp=sharing',
+    phone: '01822821838',
+    status: 'Approved',
+    balance: 12500,
+    farmLogo: 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=150&auto=format&fit=crop&q=40',
+    farmType: 'সমন্বিত হর্টিকালচার ও ডেইরি ফার্ম',
+    videoPlaceholder: 'https://youtube.com/shorts/n6TW95vbqxo?feature=share',
+    youtubeVideos: [
       'https://youtube.com/shorts/4iph-cQWg3g?feature=share',
-      'https://youtube.com/shorts/ivdux5l52TY?feature=share',
-      'https://youtube.com/shorts/n6TW95vbqxo?feature=share',
-      'https://youtube.com/shorts/lXgJgxP9frU?feature=share'
-    ][(i + 3) % 6],
-    gallery: generalFarmerGalleries[(i + 1) % generalFarmerGalleries.length],
-    story: `নারী খামারি হিসেবে নিজের পায়ে দাঁড়ানোর লক্ষ্যে আমি ${femaleNames[i]} অত্যন্ত নিষ্ঠার সাথে শুরু করেছি এই খামার। আমার ${farmType} থেকে প্রতিটি ডিম, সবুজ শাক বা খাঁটি মধু পরম যত্নে নিজস্ব তত্ত্বাবধানে প্যাকেজিং করে কৃষক বাজার প্ল্যাটফর্মে পাঠানো হয়।`
-  });
-}
+      'https://youtube.com/shorts/ivdux5l52TY?feature=share'
+    ],
+    gallery: [
+      'https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1589923188900-85dae523342b?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=500&auto=format&fit=crop&q=50',
+      'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=500&auto=format&fit=crop&q=50'
+    ],
+    story: 'আমি ডাঃ মোতালেব। দক্ষিণ খড়া চর অঞ্চলে কৃষি ও পশুপালনের এক আদর্শ খামার গড়ে তুলেছি। বৈজ্ঞানিক পদ্ধতিতে রাসায়নিকমুক্ত খাদ্য উৎপাদন নিশ্চিত করাই আমার প্রধান ও একমাত্র উদ্দেশ্য।'
+  }
+];
 
 // 4 high-quality categories images
 const categoryImages: Record<string, string[]> = {

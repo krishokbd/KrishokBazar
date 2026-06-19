@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp, convertGoogleDriveLink } from '../AppContext';
+import { useApp } from '../AppContext';
 import { cleanImageUrl, isDefaultPresettedImage } from '../utils';
 import { getProductImages } from './ProductDetailsPage';
 import { getAnalyticsEvents, clearAnalyticsEvents } from '../lib/analytics';
@@ -117,6 +117,7 @@ export const AdminCMSDashboard: React.FC = () => {
     updateFarmer,
     deleteReview,
     resetDemoData,
+    initializeVerifiedFarmers,
     membershipSubmissions,
     approveMembershipRequest,
     rejectMembershipRequest,
@@ -139,6 +140,26 @@ export const AdminCMSDashboard: React.FC = () => {
   // Database re-seeding / reset state
   const [resettingDb, setResettingDb] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [seedingFarmers, setSeedingFarmers] = useState(false);
+  const [seedFarmersSuccess, setSeedFarmersSuccess] = useState(false);
+
+  const handleInitializeVerifiedFarmers = async () => {
+    if (!window.confirm("আপনি কি ৫ জন মূল অংশীদার কৃষকের প্রোফাইল ডাটাবেজে পুনরায় তৈরি/সংশোধন করতে চান? এটি করতে চাইলে ওকে চাপুন।")) {
+      return;
+    }
+    setSeedingFarmers(true);
+    setSeedFarmersSuccess(false);
+    try {
+      await initializeVerifiedFarmers();
+      setSeedFarmersSuccess(true);
+      setTimeout(() => setSeedFarmersSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("কৃষক প্রোফাইল ইনিশিয়ালাইজ করতে সমস্যা হয়েছে।");
+    } finally {
+      setSeedingFarmers(false);
+    }
+  };
 
   const handleResetTo150DemoProducts = async () => {
     if (!window.confirm("আপনি কি নিশ্চিতভাবে ডাটাবেজ রিসেট করতে চান? এটি পূর্বের সকল ডেমো ডাটা বদলে নতুন ১৬৫+ পণ্য এবং ৭৫+ ভেরিফাইড কৃষক যুক্ত করবে।")) {
@@ -883,6 +904,112 @@ export const AdminCMSDashboard: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                 
+                {/* Core 5 Partner Farmers section */}
+                <div className="bg-gradient-to-br from-emerald-50 to-blue-50/20 rounded-3xl border border-emerald-100 p-5 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-100/40 pb-3">
+                    <div>
+                      <h2 className="text-xs sm:text-sm font-black text-emerald-850 uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 animate-pulse" />
+                        প্রধান ৫ জন মাঠ পর্যায়ের অফিসিয়াল অংশীদার কৃষক
+                      </h2>
+                      <p className="text-[11px] text-gray-500 mt-0.5">এই মূল ও ভেরিফাইড কৃষক প্রোফাইলগুলো সংশোধন, আপডেট ও মোবাইল বা ছবির লিংক পরিবর্তন করুন।</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleInitializeVerifiedFarmers}
+                        disabled={seedingFarmers}
+                        className={`text-[10px] font-bold px-3 py-1.5 rounded-xl border transition-all duration-200 flex items-center gap-1 font-sans ${
+                          seedFarmersSuccess
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            : 'bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-emerald-350 active:scale-95 shadow-sm'
+                        }`}
+                      >
+                        {seedingFarmers ? (
+                          <span className="flex items-center gap-1 text-[9px]">
+                            <svg className="animate-spin h-3.5 w-3.5 text-emerald-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            ইনিশিয়ালাইজিং...
+                          </span>
+                        ) : seedFarmersSuccess ? (
+                          '✓ সফলভাবে ইনিশিয়ালাইজড'
+                        ) : (
+                          '✎ ৫ কৃষক প্রোফাইল ইনিশিয়ালাইজ'
+                        )}
+                      </button>
+                      <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-1.5 rounded-xl select-none">অফিসিয়াল প্রোফাইল</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    {['f70', 'f71', 'f72', 'f73', 'f74'].map((targetId) => {
+                      const f = farmers.find(farm => farm.id === targetId);
+                      if (!f) return null;
+                      return (
+                        <div 
+                          key={f.id} 
+                          onClick={() => {
+                            setAdminEditingFarmer(f);
+                            setAdminFarmerFormName(f.name);
+                            setAdminFarmerFormPhone(f.phone);
+                            setAdminFarmerFormDistrict(f.district);
+                            setAdminFarmerFormAddress(f.address);
+                            setAdminFarmerFormNid(f.nid || '');
+                            setAdminFarmerFormStatus(f.status);
+                            setAdminFarmerFormVerified(f.verified);
+                            setAdminFarmerFormRating(f.rating);
+                            setAdminFarmerFormBalance(f.balance);
+                            setAdminFarmerFormBio(f.bio || '');
+                            setAdminFarmerFormAvatar(f.avatar || '');
+                            setAdminFarmerFormPassword(f.password || 'Ajzakir@2020');
+                            setAdminFarmerFormLandSize(f.landSize || '');
+                            setAdminFarmerFormSalesAmount(f.salesAmount || 0);
+                            setAdminFarmerFormSalesCount(f.salesCount || 0);
+                          }}
+                          className={`group cursor-pointer p-3 rounded-2xl border transition-all duration-200 text-center flex flex-col justify-between h-full bg-white relative overflow-hidden select-none hover:shadow-md ${
+                            adminEditingFarmer?.id === f.id 
+                              ? 'border-blue-500 ring-2 ring-blue-100 shadow-sm' 
+                              : 'border-gray-150 hover:border-emerald-350 hover:scale-[1.02]'
+                          }`}
+                        >
+                          <div className="space-y-1.5">
+                            <div className="h-12 w-12 mx-auto rounded-full overflow-hidden border border-emerald-100 group-hover:border-emerald-300 transition-all flex items-center justify-center bg-gray-50 bg-cover shrink-0 relative">
+                              <img 
+                                src={cleanImageUrl((f.avatar && f.avatar.startsWith('http')) ? f.avatar : (f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR))} 
+                                className="h-full w-full object-cover" 
+                                referrerPolicy="no-referrer" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR;
+                                }}
+                              />
+                            </div>
+
+                            <div className="space-y-0.5">
+                              <h4 className="text-[11px] font-black text-gray-800 line-clamp-1 flex items-center justify-center gap-0.5">
+                                {f.name}
+                                <span className="text-emerald-500 text-[9px]" title="সার্টিফাইড ভেরিফাইড কৃষক">✔</span>
+                              </h4>
+                              <p className="text-[8.5px] text-gray-500 font-mono font-medium line-clamp-1">{f.phone}</p>
+                              <span className="text-[8px] text-amber-600 font-bold bg-amber-50 rounded px-1.5 py-0.5 inline-block border border-amber-100">{f.district}</span>
+                            </div>
+                          </div>
+
+                          <div className="mt-2 border-t border-dashed border-gray-100 pt-2 font-sans space-y-1">
+                            <p className="text-[8.5px] text-gray-400 line-clamp-1 text-left" title={f.address}>
+                              📍 {f.address.replace('গ্রাম: ', '').replace('দক্ষিণ খড়া চর, ', '')}
+                            </p>
+                            
+                            <button className="w-full py-0.5 text-[8.5px] font-bold text-blue-600 bg-blue-50/40 border border-blue-50 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 rounded-lg transition-all">
+                              সম্পাদনা ✎
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Pending Applications list */}
                 <div className="bg-white rounded-3xl border border-gray-100 p-6 shadow-sm">
                   <h2 className="text-xs sm:text-sm font-black text-amber-700 uppercase tracking-wider flex items-center gap-1.5 mb-4">
@@ -904,7 +1031,7 @@ export const AdminCMSDashboard: React.FC = () => {
                               <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full overflow-hidden bg-white shrink-0 border border-gray-150">
                                   <img 
-                                    src={f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} 
+                                    src={cleanImageUrl((f.avatar && f.avatar.startsWith('http')) ? f.avatar : (f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR))} 
                                     className="h-full w-full object-cover" 
                                     referrerPolicy="no-referrer" 
                                   />
@@ -1036,7 +1163,11 @@ export const AdminCMSDashboard: React.FC = () => {
                               {toBanglaDigits(serialNum)}
                             </div>
                             <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-50 shrink-0 border border-gray-150">
-                              <img src={f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                              <img 
+                                src={cleanImageUrl((f.avatar && f.avatar.startsWith('http')) ? f.avatar : (f.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR))} 
+                                className="h-full w-full object-cover" 
+                                referrerPolicy="no-referrer" 
+                              />
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5 flex-wrap">
@@ -1202,10 +1333,10 @@ export const AdminCMSDashboard: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <div className="h-9 w-9 rounded-full border border-gray-250 bg-white overflow-hidden shrink-0">
                               <img 
-                                src={(adminFarmerFormAvatar && (adminFarmerFormAvatar.startsWith('http') || adminFarmerFormAvatar.startsWith('data:'))) 
+                                src={cleanImageUrl((adminFarmerFormAvatar && (adminFarmerFormAvatar.startsWith('http') || adminFarmerFormAvatar.startsWith('data:'))) 
                                   ? adminFarmerFormAvatar 
                                   : (adminEditingFarmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR)
-                                } 
+                                )} 
                                 className="h-full w-full object-cover" 
                                 referrerPolicy="no-referrer"
                                 onError={(e) => {
@@ -1545,7 +1676,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                       type="text"
                                       value={currentImgUrl}
                                       onChange={(e) => {
-                                        const converted = convertGoogleDriveLink(e.target.value);
+                                        const converted = cleanImageUrl(e.target.value);
                                         const newImgs = [...adminProdImages];
                                         while (newImgs.length <= i) {
                                           newImgs.push('');
@@ -1884,7 +2015,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                       type="text"
                                       value={currentImgUrl}
                                       onChange={(e) => {
-                                        const converted = convertGoogleDriveLink(e.target.value);
+                                        const converted = cleanImageUrl(e.target.value);
                                         const newImgs = [...adminProdImages];
                                         while (newImgs.length <= i) {
                                           newImgs.push('');
@@ -2080,7 +2211,7 @@ export const AdminCMSDashboard: React.FC = () => {
                             {getProductImages(p).map((imgUrl, imgIdx) => (
                               <div key={imgIdx} className="relative h-7 w-7 rounded-lg overflow-hidden border border-gray-200 bg-white group/adminthumb shadow-3xs shrink-0">
                                 <img
-                                  src={convertGoogleDriveLink(imgUrl)}
+                                  src={cleanImageUrl(imgUrl)}
                                   alt={`${p.title} - Preview ${imgIdx + 1}`}
                                   className="h-full w-full object-cover transition-transform group-hover/adminthumb:scale-110"
                                   referrerPolicy="no-referrer"

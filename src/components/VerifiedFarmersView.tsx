@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../AppContext';
+import { cleanImageUrl } from '../utils';
 import { Farmer, User } from '../types';
 import { MapPin, Phone, UserCheck, ShieldAlert, Award, Search, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
@@ -23,7 +24,7 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
     currentUser.subscriptionStatus !== 'none';
 
   // Available districts
-  const districts = ['all', 'Rajshahi', 'Jessore', 'Rangpur', 'Bogra', 'Sylhet', 'Comilla', 'Dinajpur', 'Barisal'];
+  const districts = ['all', 'Rajshahi', 'Jessore', 'Rangpur', 'Bogra', 'Sylhet', 'Comilla', 'Dinajpur', 'Barisal', 'Gazipur'];
 
   const getDistrictNameBn = (d: string) => {
     switch(d) {
@@ -36,15 +37,32 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
       case 'Comilla': return 'কুমিল্লা';
       case 'Dinajpur': return 'দিনাজপুর';
       case 'Barisal': return 'বরিশাল';
+      case 'Gazipur': return 'গাজীপুর';
       default: return d;
     }
   };
 
+  const toBanglaDigits = (num: number | string): string => {
+    const banglaNumbers = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return num.toString().replace(/\d/g, (digit) => banglaNumbers[parseInt(digit)]);
+  };
+
   const filteredFarmers = farmers.filter(f => {
     const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (f.bio && f.bio.toLowerCase().includes(searchQuery.toLowerCase()));
+                          (f.bio && f.bio.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (f.address && f.address.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesDistrict = selectedDistrict === 'all' || f.district === selectedDistrict;
     return matchesSearch && matchesDistrict && f.verified && f.isActive !== false && f.status !== 'Blocked';
+  });
+
+  const sortedFarmers = [...filteredFarmers].sort((a, b) => {
+    const realIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
+    const idxA = realIds.indexOf(a.id);
+    const idxB = realIds.indexOf(b.id);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return 0;
   });
 
   return (
@@ -148,7 +166,7 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
         </div>
 
         {/* Farmer Grid List */}
-        {filteredFarmers.length === 0 ? (
+        {sortedFarmers.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-3xl border border-gray-150 shadow-sm flex flex-col items-center justify-center p-8 gap-3">
             <ShieldAlert className="h-12 w-12 text-emerald-600 animate-bounce" />
             <p className="text-sm font-black text-gray-800">
@@ -160,41 +178,67 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredFarmers.map((farmer) => {
+            {sortedFarmers.map((farmer) => {
               const MALE_AVATAR = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=150&auto=format&fit=crop&q=60';
               const FEMALE_AVATAR = 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=150&auto=format&fit=crop&q=60';
-              const avatarUrl = farmer.avatar && farmer.avatar.startsWith('http') 
+              const rawAvatar = farmer.avatar && farmer.avatar.startsWith('http') 
                 ? farmer.avatar 
                 : (farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR);
+              const avatarUrl = cleanImageUrl(rawAvatar);
+
+              const realIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
+              const realIdx = realIds.indexOf(farmer.id);
+              const displayName = realIdx !== -1 
+                ? `${language === 'en' ? realIdx + 1 : toBanglaDigits(realIdx + 1)}. ${farmer.name}` 
+                : farmer.name;
+              const isRealFive = realIdx !== -1;
 
               return (
                 <div 
                   key={farmer.id}
-                  className="rounded-2xl border border-gray-150/60 bg-white shadow-sm hover:shadow-lg transition-all hover:border-emerald-200 overflow-hidden flex flex-col pt-5"
+                  className={`rounded-2xl border bg-white shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col pt-5 ${
+                    isRealFive 
+                      ? 'border-emerald-300 ring-2 ring-emerald-50 bg-gradient-to-b from-emerald-50/10 to-white' 
+                      : 'border-gray-150/60 hover:border-emerald-200'
+                  }`}
                 >
                   <div className="flex px-5 gap-4 items-start pb-4">
                     {/* Picture Profile */}
-                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full overflow-hidden border-2 border-emerald-100">
+                    <div className={`relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-full overflow-hidden border-2 ${
+                      isRealFive ? 'border-emerald-300 shadow-md ring-4 ring-emerald-100' : 'border-emerald-100'
+                    }`}>
                       <img 
                         src={avatarUrl} 
                         alt={farmer.name} 
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"
                       />
-                      <span className="absolute bottom-1 right-1 bg-emerald-600 text-white p-0.5 rounded-full scale-75 border border-white">✔</span>
+                      <span className="absolute bottom-1 right-1 bg-emerald-600 text-white p-0.5 rounded-full scale-75 border border-white font-sans text-[10px]">✔</span>
                     </div>
 
                     <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <h3 className="text-sm sm:text-base font-black text-gray-900 hover:text-emerald-700 transition-colors cursor-pointer leading-tight">
-                          {farmer.name}
+                          {displayName}
                         </h3>
-                        <span className="inline-flex gap-0.5 px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
-                          {farmer.verified ? (language === 'en' ? 'Verified' : 'ভেরিফাইড') : (language === 'en' ? 'Pending' : 'অপেক্ষমান')}
-                        </span>
+                        {isRealFive && (
+                          <span className="inline-flex gap-0.5 px-2 py-0.5 text-[9px] font-black rounded-full bg-yellow-400 text-emerald-950 border border-yellow-300 uppercase shadow-xs">
+                            {language === 'en' ? 'Direct Partner' : 'প্রধান অংশীদার'}
+                          </span>
+                        )}
+                        {!isRealFive && (
+                          <span className="inline-flex gap-0.5 px-2 py-0.5 text-[9px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-100">
+                            {farmer.verified ? (language === 'en' ? 'Verified' : 'ভেরিফাইড') : (language === 'en' ? 'Pending' : 'অপেক্ষমান')}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[11px] text-gray-400 font-semibold font-sans">
+                      <p className="text-[11px] text-gray-400 font-extrabold font-sans flex items-center gap-1">
                         📍 {language === 'en' ? `${farmer.district} District` : `${getDistrictNameBn(farmer.district)} জেলা`}
+                        {isRealFive && (
+                          <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
+                            {language === 'en' ? 'Dakshin Khara Char' : 'দক্ষিণ খড়া চর'}
+                          </span>
+                        )}
                       </p>
                       
                       <div className="flex items-center gap-1.5 text-[10px] text-gray-400 pt-1 font-bold flex-wrap">

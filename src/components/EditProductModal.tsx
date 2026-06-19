@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { useApp, convertGoogleDriveLink } from '../AppContext';
-import { isDefaultPresettedImage } from '../utils';
+import { useApp } from '../AppContext';
+import { isDefaultPresettedImage, cleanImageUrl } from '../utils';
 import { X, Trash2, Save, Image, Check, Sparkles, ArrowRight, Upload } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
@@ -73,7 +73,7 @@ interface EditProductModalProps {
 }
 
 export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isOpen, onClose }) => {
-  const { editProduct, deleteProduct, categories } = useApp();
+  const { editProduct, deleteProduct, categories, farmers } = useApp();
 
   // Local Form States
   const [title, setTitle] = useState('');
@@ -89,6 +89,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [unit, setUnit] = useState('kg');
   const [harvestDate, setHarvestDate] = useState('');
   const [googleDriveFolderUrl, setGoogleDriveFolderUrl] = useState('');
+  const [farmerId, setFarmerId] = useState('');
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -211,6 +212,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setUnit(product.unit || 'kg');
       setHarvestDate(product.harvestDate || '');
       setGoogleDriveFolderUrl(product.googleDriveFolderUrl || '');
+      setFarmerId(product.farmerId || '');
       setConfirmDelete(false);
       setSuccessAnimation(false);
       setUploadError('');
@@ -275,6 +277,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       images: finalImgs,
       harvestDate: harvestDate || undefined,
       googleDriveFolderUrl: googleDriveFolderUrl || undefined,
+      farmerId: farmerId || undefined,
       approved: true,
       isActive: true,
     };
@@ -397,6 +400,28 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                   />
                 </div>
               )}
+            </div>
+
+            {/* Farmer Selection Select Dropdown */}
+            <div className="bg-emerald-50/30 border border-emerald-100 p-3.5 rounded-xl">
+              <label className="block text-xs font-black text-emerald-800 mb-1.5 font-sans flex items-center gap-1.5">
+                <span>👨‍🌾</span> উৎপাদনকারী অংশীদার খামারি (Associated Farmer Partner)
+              </label>
+              <select
+                value={farmerId}
+                onChange={(e) => setFarmerId(e.target.value)}
+                className="w-full rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-500 shadow-xs text-gray-700 font-extrabold"
+              >
+                <option value="">-- খামারি নির্বাচন করুন --</option>
+                {farmers.map((f, idx) => {
+                  const serialNum = parseInt(f.id.replace('f', '')) || (idx + 1);
+                  return (
+                    <option key={f.id} value={f.id}>
+                      {serialNum <= 100 ? `সিরিয়াল ${serialNum}:` : ''} {f.name} ({f.district === 'Gazipur' || f.address?.includes('দক্ষিণ খড়া চর') ? 'দক্ষিণ খড়া চর, গাজীপুর' : f.district}) • {f.phone}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
 
             {/* Category, Stock, Features Row */}
@@ -612,7 +637,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                             type="text"
                             value={currentImgUrl}
                             onChange={(e) => {
-                              const converted = convertGoogleDriveLink(e.target.value);
+                              const converted = cleanImageUrl(e.target.value);
                               const newImgs = [...uploadedImages];
                               while (newImgs.length <= i) {
                                 newImgs.push('');

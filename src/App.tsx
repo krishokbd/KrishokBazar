@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WifiOff, RefreshCw, X as CloseIcon } from 'lucide-react';
 import { AppProvider, useApp } from './AppContext';
+import { NotificationProvider } from './components/NotificationProvider';
 import { logAnalyticsEvent } from './lib/analytics';
 import { Header } from './components/Header';
 import { HeroCarousel } from './components/HeroCarousel';
@@ -29,6 +30,8 @@ import { FloatingSocials } from './components/FloatingSocials';
 import { FarmerSocialFeed } from './components/FarmerSocialFeed';
 import { AppEntryFlow } from './components/AppEntryFlow';
 import { SubscriptionModal } from './components/SubscriptionModal';
+import { SubscriptionPage } from './components/SubscriptionPage';
+import { BottomVideoSection, BottomFarmersSection } from './components/BottomHomeSections';
 import { useSubscriptionTimer } from './hooks/useSubscriptionTimer';
 import { VerifiedFarmersView } from './components/VerifiedFarmersView';
 import { BlogView } from './components/BlogView';
@@ -187,7 +190,7 @@ const AppContent: React.FC = () => {
     setIsSubscriptionAutoTriggered(false);
     setAutoTriggerSubscriptionPlanId(null);
     setSubscriptionDefaultRole(role);
-    setIsSubscriptionOpen(true);
+    setView('subscriptions');
   };
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -255,7 +258,7 @@ const AppContent: React.FC = () => {
     setSubscriptionDefaultRole(targetTabRole);
     setAutoTriggerSubscriptionPlanId(planId);
     setIsSubscriptionAutoTriggered(true);
-    setIsSubscriptionOpen(true);
+    setView('subscriptions');
     console.log(`Auto-triggering compact subscription notification for plan ${planId} targeting role: ${targetTabRole}`);
   }, isEligibleForSubscriptionTrigger);
 
@@ -752,6 +755,11 @@ const AppContent: React.FC = () => {
 
       {/* MAIN LAYOUTS WRAPPER */}
       <main className="flex-1 w-full max-w-full overflow-x-hidden min-w-0 pb-16 md:pb-0">
+
+        {/* DEDICATED SUBSCRIPTIONS PORTAL */}
+        {currentView === 'subscriptions' && (
+          <SubscriptionPage onBack={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+        )}
 
         {/* PRIVACY POLICY VIEW */}
         {currentView === 'privacy-policy' && (
@@ -1548,6 +1556,10 @@ const AppContent: React.FC = () => {
                 </div>
               </div>
             </section>
+            
+            {/* WHY USE THIS APP VIDEO SECTION & MEET OUR 5 REAL FARMERS AT THE BOTTOM */}
+            <BottomVideoSection />
+            <BottomFarmersSection />
           </div>
         )}
         </main>
@@ -1827,7 +1839,9 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </AppProvider>
   );
 }

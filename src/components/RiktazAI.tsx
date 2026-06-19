@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../AppContext';
+import { useNotification } from './NotificationProvider';
 import { ProductCard } from './ProductCard';
 import { 
   MessageSquare, Sparkles, X, Send, Bot, HelpCircle, 
@@ -145,6 +146,7 @@ async function findCachedFAQResponse(text: string): Promise<string | null> {
 
 export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductId }) => {
   const { currentUser, products } = useApp();
+  const { playPing } = useNotification();
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'suggest_title' | 'write_description' | 'suggest_price' | 'grocery_estimation' | 'healthy_suggestions'>('chat');
@@ -239,7 +241,7 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
         if (lastMsg.sender === 'user') {
           playNotificationSound('sent');
         } else if (lastMsg.sender === 'assistant') {
-          playNotificationSound('received');
+          playPing();
           
           // Trigger browser native Push Notification
           if (typeof window !== 'undefined' && 'Notification' in window) {

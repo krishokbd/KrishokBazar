@@ -94,6 +94,7 @@ interface AppContextType {
 
   // Seed / Reset databases
   resetDemoData: () => Promise<void>;
+  initializeVerifiedFarmers: () => Promise<void>;
   language: 'bn' | 'en';
   setLanguage: (lang: 'bn' | 'en') => void;
   toggleLanguage: () => void;
@@ -498,109 +499,7 @@ const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
       },
       {
         id: "co-3-p-2",
-        nameBn: "ঘানি ভাঙা খাঁটি সরিষার তেল (Oil)",
-        nameEn: "Coldpressed Pure Mustard Oil",
-        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600",
-        link: "",
-        weight: "৫০০ মিলি",
-        date: "১২ জুন, ২০২৬",
-        prices: [130, 240, 470, 2200],
-        priceLabels: ["২৫০ মিলি", "৫০০ মিলি", "১ লিটার", "৫ লিটার"]
-      },
-      {
-        id: "co-3-p-3",
-        nameBn: "দেশি কাঁচা পাহাড়ি আদা (Ginger)",
-        nameEn: "Hill-grown Deshi Fresh Ginger",
-        image: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=600",
-        link: "",
-        weight: "২৫০ গ্রাম",
-        date: "১২ জুন, ২০২৬",
-        prices: [45, 85, 160, 390],
-        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
-      },
-      {
-        id: "co-3-p-4",
-        nameBn: "দেশি রসুনের ছড়া (Garlic Bulk)",
-        nameEn: "Organic Deshi Solid Garlic",
-        image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600",
-        link: "",
-        weight: "২৫০ গ্রাম",
-        date: "১২ জুন, ২০২৬",
-        prices: [60, 115, 220, 530],
-        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
-      }
-    ]
-  },
-  {
-    id: "co-4",
-    titleBn: "৪। সুস্থ জীবন হাই-প্রোটিন বাস্কেট",
-    titleEn: "4. Healthy High-Protein Basket",
-    products: [
-      {
-        id: "co-4-p-1",
-        nameBn: "দেশী মুরগির ডিম (Farm Eggs)",
-        nameEn: "Free Range Golden Eggs",
-        image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=600",
-        link: "",
-        weight: "১ ডজন",
-        date: "১২ জুন, ২০২৬",
-        prices: [65, 130, 255, 500],
-        priceLabels: ["৪টি", "১২টি (১ ডজন)", "২৪টি (২ ডজন)", "৪৮টি"]
-      },
-      {
-        id: "co-4-p-2",
-        nameBn: "হাওরের তাজা রুই মাছ (Rui Fish)",
-        nameEn: "Wild Hauor Catch Big Rui Fish",
-        image: "https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?w=600",
-        link: "",
-        weight: "১ কেজি",
-        date: "১২ জুন, ২০২৬",
-        prices: [380, 750, 1450, 3500],
-        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
-      },
-      {
-        id: "co-4-p-3",
-        nameBn: "ডেইরি খাঁটি গরুর তরল দুধ (Milk)",
-        nameEn: "Farm Fresh Raw Cow Milk",
-        image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600",
-        link: "",
-        weight: "১ লিটার",
-        date: "১২ জুন, ২০২৬",
-        prices: [90, 175, 340, 820],
-        priceLabels: ["১ লিটার", "২ লিটার", "৪ লিটার", "১০ লিটার"]
-      },
-      {
-        id: "co-4-p-4",
-        nameBn: "পাহাড়ি খাঁটি গরুর ঘি (Premium Ghee)",
-        nameEn: "Traditional Hand-churned Deshi Ghee",
-        image: "https://images.unsplash.com/photo-1589545625049-730d99300355?w=600",
-        link: "",
-        weight: "২৫০ গ্রাম",
-        date: "১২ জুন, ২০২৬",
-        prices: [350, 680, 1320, 3200],
-        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
-      }
-    ]
-  },
-  {
-    id: "co-5",
-    titleBn: "৫। এক্সক্লুসিভ সতেজ সালাদ ও ফাইবার প্রিমিয়াম বাস্কেট",
-    titleEn: "5. Exclusive Salad & Greens Premium Basket",
-    products: [
-      {
-        id: "co-5-p-1",
-        nameBn: "তাজা লাল চেরি টমেটো (Cherry Tomatoes)",
-        nameEn: "Fresh Red Cherry Tomatoes",
-        image: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600",
-        link: "",
-        weight: "৫০০ গ্রাম",
-        date: "১২ জুন, ২০২৬",
-        prices: [70, 130, 250, 600],
-        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
-      },
-      {
-        id: "co-5-p-2",
-        nameBn: "ক্ষেতের কচি তিতাহীন শসা (Premium Cucumber)",
+        nameBn: "সতেজ শসা (Green Cucumber)",
         nameEn: "Crisp Green Cucumbers",
         image: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600",
         link: "",
@@ -610,7 +509,7 @@ const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
         priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
       },
       {
-        id: "co-5-p-3",
+        id: "co-3-p-3",
         nameBn: "কাগজি সুগন্ধি লেবু (Green Lemons)",
         nameEn: "Juicy Seedless Lemons",
         image: "https://images.unsplash.com/photo-1590502596717-295b7fece67b?w=600",
@@ -621,7 +520,7 @@ const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
         priceLabels: ["৪টি", "১২টি (১ ডজন)", "২৪টি (২ ডজন)", "৪০টি"]
       },
       {
-        id: "co-5-p-4",
+        id: "co-3-p-4",
         nameBn: "পাহাড়ি মিষ্টি পেঁপে (Sweet Papaya)",
         nameEn: "Organic Sweet Rich Papaya",
         image: "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=600",
@@ -1280,6 +1179,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       if (items.length > 0) {
         setFarmers(items);
+        // Make sure the 5 real farmers (f70 to f74) are fully up to date in Firestore
+        const targetIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
+        const realFive = demoFarmers.filter(f => targetIds.includes(f.id));
+        realFive.forEach(async (f) => {
+          const matched = items.find(item => item.id === f.id);
+          if (!matched) {
+            console.log(`Seeding real farmer in Firestore: ${f.id} (${f.name})`);
+            try {
+              await setDoc(doc(db, 'farmers', f.id), f);
+            } catch (err) {
+              console.warn(`Failed seeding for ${f.id}:`, err);
+            }
+          }
+        });
       } else {
         console.log("Firestore empty: seeding default verified farmers...");
         setFarmers(demoFarmers);
@@ -2748,6 +2661,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const initializeVerifiedFarmers = async () => {
+    console.log("Initializing/Seeding the 5 verified partner farmers in Firestore 'farmers' collection...");
+    const targetIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
+    const targetFarmers = demoFarmers.filter(f => targetIds.includes(f.id));
+    
+    // 1. Update local farmers state
+    setFarmers(prev => {
+      const updated = [...prev];
+      targetFarmers.forEach(tf => {
+        const index = updated.findIndex(f => f.id === tf.id);
+        if (index > -1) {
+          updated[index] = { ...updated[index], ...tf };
+        } else {
+          updated.push(tf);
+        }
+      });
+      return updated;
+    });
+
+    // 2. Clear from local storage or set
+    const savedFarmers = localStorage.getItem('kb_farmers');
+    if (savedFarmers) {
+      try {
+        const parsed: Farmer[] = JSON.parse(savedFarmers);
+        targetFarmers.forEach(tf => {
+          const index = parsed.findIndex(f => f.id === tf.id);
+          if (index > -1) {
+            parsed[index] = { ...parsed[index], ...tf };
+          } else {
+            parsed.push(tf);
+          }
+        });
+        localStorage.setItem('kb_farmers', JSON.stringify(parsed));
+      } catch (e) {
+        localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers));
+      }
+    } else {
+      localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers));
+    }
+
+    // 3. Write/Update to Cloud Firestore 'farmers' collection
+    if (isFirebaseConfigured && db) {
+      for (const f of targetFarmers) {
+        try {
+          await setDoc(doc(db, 'farmers', f.id), f);
+          console.log(`Successfully seeded/updated verified partner farmer: ${f.name} (ID: ${f.id})`);
+        } catch (err) {
+          console.error(`Failed to seed verified partner farmer ${f.id} to Firestore:`, err);
+        }
+      }
+    }
+  };
+
   // OFFERS & SUBSCRIPTIONS METHODS
   const addOffer = (offerData: Omit<Offer, 'id'>) => {
     const cleanedImage = cleanImageUrl(offerData.image);
@@ -3053,6 +3019,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteReview,
       getNidDetails,
       resetDemoData,
+      initializeVerifiedFarmers,
       language,
       setLanguage,
       toggleLanguage,
