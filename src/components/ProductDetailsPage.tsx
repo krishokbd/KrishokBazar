@@ -33,6 +33,7 @@ import {
   ShieldAlert,
   ThumbsDown,
   MessageSquare,
+  MessageCircle,
   Sparkles,
   RefreshCw,
   Gift,
@@ -203,6 +204,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
   // Helpfulness toggle mock state
   const [helpfulLikes, setHelpfulLikes] = useState<Record<string, boolean>>({});
+  const [chatModalOpen, setChatModalOpen] = useState(false);
 
   const product = products.find(p => p.id === productId);
 
@@ -330,6 +332,33 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const originalPrice = Math.round(baseOriginalPrice * packMultiplier);
   const discountAmt = originalPrice - displayPrice;
   const discountPercent = Math.round(((baseOriginalPrice - baseDisplayPrice) / baseOriginalPrice) * 100);
+
+  const getFarmerPhone = () => {
+    const rawPhone = farmer?.phone || '01931355398';
+    const clean = rawPhone.replace(/\D/g, '');
+    if (clean.startsWith('88')) {
+      return clean;
+    }
+    if (clean.startsWith('0')) {
+      return '88' + clean;
+    }
+    return '880' + clean;
+  };
+
+  const getWhatsappLink = () => {
+    const phoneNum = getFarmerPhone();
+    const text = language === 'bn'
+      ? `আসসালামু আলাইকুম ${farmer?.name || 'খামারি ভাই'}, আমি কৃষক বাজার প্ল্যাটফর্ম থেকে আপনার উৎপাদিত "${product.title}" ফসলটি সম্পর্কে বিস্তারিত জানতে আগ্রহী।\nআইডি: ${product.id}\nমূল্য: ৳${displayPrice}`
+      : `Assalamu Alaikum ${farmer?.name || 'Farmer'}, I am interested in your organic crop "${product.title}" listed on Krishok Bazar.\nProduct ID: ${product.id}\nPrice: ৳${displayPrice}`;
+    return `https://wa.me/${phoneNum}?text=${encodeURIComponent(text)}`;
+  };
+
+  const getMessengerLink = () => {
+    const text = language === 'bn'
+      ? `আসসালামু আলাইকুম, আমি খামারি ${farmer?.name || ''}-এর উৎপাদিত "${product.title}" ফসলটি সম্পর্কে বিস্তারিত কথা বলতে চাই।`
+      : `Hello, I would like to chat about "${product.title}" from farmer ${farmer?.name || ''}.`;
+    return `https://m.me/krishokbazar?text=${encodeURIComponent(text)}`;
+  };
 
   const handleIncrement = () => {
     if (qty < product.stock) setQty(prev => prev + 1);
@@ -805,6 +834,20 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </button>
               </div>
 
+              {/* Chat with Farmer (কৃষকের সাথে চ্যাট) Button */}
+              {farmer && (
+                <div className="mt-3">
+                  <button
+                    id="chat-with-farmer-btn"
+                    onClick={() => setChatModalOpen(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 py-3.5 text-xs font-sans font-black text-white shadow-md hover:shadow-lg transition-all active:scale-[0.97] duration-150 text-center cursor-pointer"
+                  >
+                    <MessageCircle className="h-4.5 w-4.5 text-white animate-bounce-subtle" />
+                    {language === 'bn' ? `খামারি ${farmer.name}-এর সাথে সরাসরি চ্যাট` : `Chat with Farmer ${farmer.name}`}
+                  </button>
+                </div>
+              )}
+
               {/* WhatsApp Ordering button */}
               {product.stock > 0 && (
                 <div className="mt-3">
@@ -969,10 +1012,19 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   </div>
                 </div>
                 
-                <span className="text-[10px] sm:text-[11px] font-sans font-black text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-350 px-3.5 py-2 rounded-xl flex items-center gap-1 shadow-xs transition duration-200 self-end sm:self-auto shrink-0">
-                  <Store className="h-4 w-4 text-emerald-600" />
-                  স্টোর ভিজিট
-                </span>
+                <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setChatModalOpen(true); }}
+                    className="text-[10px] sm:text-[11px] font-sans font-black text-white bg-emerald-650 hover:bg-emerald-750 px-3.5 py-2.5 rounded-xl flex items-center gap-1 shadow-xs hover:shadow-sm hover:scale-[1.01] transition-all duration-200 shrink-0 cursor-pointer"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 text-white" />
+                    {language === 'bn' ? 'সরাসরি চ্যাট (Chat)' : 'Live Chat'}
+                  </button>
+                  <span className="text-[10px] sm:text-[11px] font-sans font-black text-emerald-800 bg-white border border-emerald-200 hover:border-emerald-350 px-3.5 py-2.5 rounded-xl flex items-center gap-1 shadow-xs transition duration-200 shrink-0">
+                    <Store className="h-4 w-4 text-emerald-600" />
+                    {language === 'bn' ? 'স্টোর ভিজিট' : 'Visit Store'}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -1383,6 +1435,134 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* AGRICULTURAL LIVE CHAT MODAL SELECTION */}
+        {chatModalOpen && farmer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+            <div className="relative w-full max-w-md overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-2xl animate-scaleUp">
+              
+              {/* Header Cover / Hero Block */}
+              <div className="bg-gradient-to-br from-emerald-700 to-teal-850 p-6 text-white pb-10 relative">
+                <button
+                  onClick={() => setChatModalOpen(false)}
+                  className="absolute top-4 right-4 bg-black/20 hover:bg-black/35 text-white/90 hover:text-white h-8 w-8 rounded-full flex items-center justify-center cursor-pointer transition-all"
+                  title="Close Dialog"
+                >
+                  ✕
+                </button>
+                
+                <div className="flex items-center gap-3 select-none">
+                  <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-white/50 bg-white shadow-md shrink-0">
+                    <img
+                      src={farmer.gender === 'female' ? FEMALE_AVATAR : MALE_AVATAR}
+                      alt={farmer.name}
+                      className="h-full w-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] bg-white/20 text-white font-extrabold px-2 py-0.5 rounded-full border border-white/10 uppercase tracking-widest leading-none">
+                      {language === 'bn' ? 'সরাসরি খামারি যোগাযোগ' : 'Direct Farmer Live'}
+                    </span>
+                    <h3 className="text-sm font-black mt-1 font-sans flex items-center gap-1.5 leading-tight">
+                      {farmer.name} {farmer.verified && <span className="text-[9px] text-white bg-blue-500 rounded-full py-0.5 px-1 font-sans">✔ verified</span>}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+
+              {/* Box Info Container */}
+              <div className="p-6 -mt-6 bg-white rounded-t-3xl relative">
+                <div className="space-y-4">
+                  
+                  {/* Explanatory prompt detail */}
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-black text-gray-500 uppercase tracking-widest font-sans">
+                      {language === 'bn' ? 'প্রশ্নকৃত শস্য বা ফসল:' : 'Inquiring Product:'}
+                    </p>
+                    <div className="flex items-center gap-2.5 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                      <div className="h-10 w-10 bg-white rounded-lg overflow-hidden border border-gray-150-soft shrink-0">
+                        <img 
+                          src={convertGoogleDriveLink(product?.images[0] || '')} 
+                          alt={product?.title} 
+                          className="h-full w-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-[11.5px] font-black text-gray-800 truncate leading-tight font-sans">
+                          {product?.title}
+                        </h4>
+                        <p className="text-[10px] text-emerald-700 font-extrabold font-mono mt-0.5">
+                          ৳{displayPrice} <span className="text-gray-400 font-sans">({qty} {getFormattedUnit(product, language)})</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pre-filled Message Preview Container */}
+                  <div className="bg-amber-50/40 border border-amber-100 rounded-2xl p-3.5 space-y-1">
+                    <span className="text-[9px] font-black uppercase text-amber-800 tracking-wider font-sans block leading-none">
+                      {language === 'bn' ? 'প্রি-ফিল্ড বার্তা প্রিভিউ (Pre-filled Message text):' : 'Pre-filled Message Preview:'}
+                    </span>
+                    <p className="text-[10.5px] text-gray-650 italic leading-relaxed font-sans">
+                      "{language === 'bn' 
+                        ? `আসসালামু আলাইকুম ${farmer.name} ভাই, আমি কৃষক বাজার প্ল্যাটফর্ম থেকে আপনার উৎপাদিত "${product?.title}" ফসলটি সম্পর্কে বিস্তারিত জানতে আগ্রহী...` 
+                        : `Assalamu Alaikum ${farmer.name}, I am interested in your organic crop "${product?.title}" listed on Krishok Bazar...`
+                      }"
+                    </p>
+                  </div>
+
+                  {/* Information notification tag */}
+                  <p className="text-[10px] text-gray-400 leading-normal text-center font-sans">
+                    {language === 'bn' 
+                      ? 'যেকোনো একটি বাটন নির্বাচন করুন। এটি আপনার মোবাইলে বা ব্রাউজারে স্বয়ংক্রিয়ভাবে সরাসরি মেসেজিং উইন্ডো চালু করবে।' 
+                      : 'Choose your preferred platform below. The selected portal will launch instantly with the pre-filled message ready.'}
+                  </p>
+
+                  {/* Active dual channels buttons */}
+                  <div className="grid grid-cols-1 gap-2.5 pt-1.5 pb-1">
+                    {/* Channel 1: WhatsApp */}
+                    <a
+                      href={getWhatsappLink()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] hover:bg-[#20BA5A] hover:scale-[1.01] py-4 text-xs font-sans font-black text-white shadow-md hover:shadow-lg transition-all duration-150 text-center cursor-pointer"
+                    >
+                      <svg className="h-4.5 w-4.5 text-white fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008 0c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm6.49-5.385c1.654.982 3.511 1.5 5.414 1.501 5.474 0 9.93-4.45 9.934-9.92.001-2.648-1.03-5.138-2.902-7.015C17.12 1.306 14.636.275 12.001.275 6.529.275 2.073 4.73 2.069 10.2c-.001 1.958.513 3.869 1.492 5.568l-.979 3.579 3.665-.961zm11.233-7.531c-.301-.15-.178-.225-.375-.525-.097-.15-.525-.75-.525-.75s-.19-.24-.45-.24c-.112 0-.256.04-.37.15-.36.35-.95.95-.95 2.31s.99 2.67 1.13 2.85c.14.18 1.96 2.99 4.75 4.19.67.29 1.19.46 1.59.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.33-.07-.12-.27-.19-.57-.34z" />
+                      </svg>
+                      <span>{language === 'bn' ? 'হোয়াটসঅ্যাপ চ্যাট (WhatsApp Live)' : 'Chat on WhatsApp'}</span>
+                    </a>
+
+                    {/* Channel 2: Messenger */}
+                    <a
+                      href={getMessengerLink()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2.5 rounded-2xl bg-[#0084FF] hover:bg-[#0072DD] hover:scale-[1.01] py-4 text-xs font-sans font-black text-white shadow-md hover:shadow-lg transition-all duration-150 text-center cursor-pointer"
+                    >
+                      <svg className="h-4.5 w-4.5 text-white fill-current shrink-0" viewBox="0 0 24 24">
+                        <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.745 6.614 4.475 8.61V24l4.086-2.242c1.09.303 2.247.464 3.439.464 6.627 0 12-4.975 12-11.11C24 4.974 18.627 0 12 0zm1.261 14.939l-3.056-3.262-5.962 3.262 6.556-6.962 3.123 3.262 5.894-3.262-6.555 6.962z" />
+                      </svg>
+                      <span>{language === 'bn' ? 'মেসেঞ্জার চ্যাট (Messenger Live)' : 'Chat on Messenger'}</span>
+                    </a>
+                  </div>
+
+                  {/* Dismiss option */}
+                  <button
+                    onClick={() => setChatModalOpen(false)}
+                    className="w-full text-center py-2 text-[11px] font-black text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                  >
+                    {language === 'bn' ? 'বন্ধ করুন' : 'Cancel Dialogue'}
+                  </button>
+
+                </div>
+              </div>
+
             </div>
           </div>
         )}

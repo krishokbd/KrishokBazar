@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
-import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck, WifiOff, Download, Bell, MapPin } from 'lucide-react';
+import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck, WifiOff, Download, Bell, MapPin, Package, Tag, Percent, Truck, Sprout, Sparkles } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR, KRISHOK_BAZAR_LOGO } from '../assets';
 
 interface HeaderProps {
@@ -25,11 +25,12 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   setSearchQuery
 }) => {
-  const { currentUser, logout, cart, language, toggleLanguage, harvestAlerts, dynamicPages } = useApp();
+  const { currentUser, logout, cart, language, toggleLanguage, harvestAlerts, dynamicPages, siteSettings, orders } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notiTab, setNotiTab] = useState<'all' | 'orders' | 'discounts' | 'restocks' | 'harvest'>('all');
   const [hasUnreadAlerts, setHasUnreadAlerts] = useState(true);
   const [isPushEnabled, setIsPushEnabled] = useState(
     typeof window !== 'undefined' ? ('Notification' in window && Notification.permission === 'granted') : false
@@ -139,6 +140,232 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const fbUsername = siteSettings?.socialFacebook 
+    ? siteSettings.socialFacebook.replace(/\/$/, '').split('/').pop() || 'krishokbazar' 
+    : 'krishokbazar';
+
+  // Helpers to get Order updates in Bangla/English
+  const getOrderStatusBn = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'অর্ডার পেন্ডিং';
+      case 'Confirmed': return 'অর্ডার কনফার্মড';
+      case 'Processing': return 'প্রক্রিয়াকরণ চলছে';
+      case 'Packed': return 'প্যাক করা হয়েছে';
+      case 'Shipped': return 'শিপড করা হয়েছে';
+      case 'Out for delivery': return 'ডেলিভারির জন্য বের হয়েছে';
+      case 'Delivered': return 'ডেলিভারি সম্পন্ন';
+      default: return 'আপডেট করা হয়েছে';
+    }
+  };
+
+  const getOrderStatusEn = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'Pending';
+      case 'Confirmed': return 'Confirmed';
+      case 'Processing': return 'Processing';
+      case 'Packed': return 'Packed';
+      case 'Shipped': return 'Shipped';
+      case 'Out for delivery': return 'Out for delivery';
+      case 'Delivered': return 'Delivered';
+      default: return 'Updated';
+    }
+  };
+
+  const getOrderStatusDescBn = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'আপনার অর্ডারটি আমরা পেয়েছি এবং কৃষক নিশ্চিত করার অপেক্ষায় আছে।';
+      case 'Confirmed': return 'কৃষক কর্তৃক অর্ডারটি নিশ্চিত করা হয়েছে। শীঘ্রই ফসল তোলা শুরু হবে।';
+      case 'Processing': return 'মাঠ পর্যায় থেকে তাজা ফসল সংগ্রহ ও গুণগত মান পরীক্ষা করা হচ্ছে।';
+      case 'Packed': return 'পরিষ্কার ও স্যানিটাইজড বক্সে অর্ডারটি যত্নের সাথে প্যাক করা হয়েছে।';
+      case 'Shipped': return 'কৃষক বাজারের ডেডিকেটেড মিনি ট্রাকে আমাদের ঢাকা সেন্ট্রাল হাবে রওনা দিয়েছে।';
+      case 'Out for delivery': return 'আমাদের ডেলিভারি রাইডার সরাসরি আপনার ঠিকানায় নিয়ে আসছে।';
+      case 'Delivered': return 'অর্ডারটি সফলভাবে আপনার কাছে ডেলিভারি করা হয়েছে। খাঁটি পণ্য উপভোগ করুন!';
+      default: return 'আপনার অর্ডারের স্থিতি আপডেট করা হয়েছে।';
+    }
+  };
+
+  const getOrderStatusDescEn = (status: string) => {
+    switch (status) {
+      case 'Pending': return 'Your order is received and waiting for farmer confirmation.';
+      case 'Confirmed': return 'Order confirmed by the farmer. Preparing logistics.';
+      case 'Processing': return 'Quality check and micro-sorting in progress.';
+      case 'Packed': return 'Carefully packed inside sanitized transit boxes.';
+      case 'Shipped': return 'Dispatched in our specialized temperature-regulated trucks.';
+      case 'Out for doorstep delivery':
+      case 'Out for delivery': return 'Out for doorstep delivery with our dedicated delivery rider.';
+      case 'Delivered': return 'Order delivered successfully. Enjoy your authentic farmer food!';
+      default: return 'Order status has been updated.';
+    }
+  };
+
+  // Build reactive list of order notifications based on global context orders state
+  const myOrders = (orders || []).filter(o => 
+    currentUser ? (o.customerId === currentUser.id || o.customerPhone === currentUser.phone) : true
+  );
+  
+  // If no user orders are present, show the standard demo list so any anonymous visitor can see the feature
+  const displayOrders = myOrders.length > 0 ? myOrders : (orders || []).slice(0, 2);
+
+  const orderNotis = displayOrders.map(order => ({
+    id: `order-noti-${order.id}-${order.status}`,
+    type: 'orders' as const,
+    titleBn: `অর্ডার আপডেট: #${order.trackingNumber || order.id.slice(0, 8)}`,
+    titleEn: `Order Update: #${order.trackingNumber || order.id.slice(0, 8)}`,
+    descBn: getOrderStatusDescBn(order.status),
+    descEn: getOrderStatusDescEn(order.status),
+    badgeBn: getOrderStatusBn(order.status),
+    badgeEn: getOrderStatusEn(order.status),
+    status: order.status,
+    date: 'আজকের আপডেট',
+    actionLabelBn: 'ট্র্যাক করুন 📦',
+    actionLabelEn: 'Track Order',
+    action: () => {
+      setView('customer-dashboard');
+      setNotificationsOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }));
+
+  // Campaign Discounts notifications
+  const discountNotis = [
+    {
+      id: 'disc-noti-eid',
+      type: 'discounts' as const,
+      titleBn: '🌙 পবিত্র ঈদ স্পেশাল ২৫% বড় ক্যাশব্যাক ছাড়!',
+      titleEn: '🌙 Holy Eid Special 25% Off Deal!',
+      descBn: 'আসন্ন ঈদ উৎসব উপলক্ষে সকল খাঁটি সরিষার তেল ও মসলাজাতীয় কম্বো প্যাকেজে ২৫% পর্যন্ত সরাসরি ক্যাশব্যাক ছাড় পেতে ব্যবহার করুন প্রোমোকোড: EIDPURE। অফারটি অফুরন্ত ও সীমিত সময়ের জন্য সক্রিয়।',
+      descEn: 'Get up to 25% flat discount on all pure mustard oil and spice combos for Eid. Use code: EIDPURE.',
+      badgeBn: '২৫% ছাড়',
+      badgeEn: '25% OFF',
+      date: 'আজকের অফার',
+      code: 'EIDPURE',
+      actionLabelBn: 'কোড কপি করুন ✂️',
+      actionLabelEn: 'Copy Code',
+      action: () => {
+        navigator.clipboard.writeText('EIDPURE');
+        alert(language === 'en' ? 'Code EIDPURE copied to clipboard!' : 'প্রোমো কোড EIDPURE ক্লিপবোর্ডে কপি হয়েছে! কার্টে ব্যবহার করুন।');
+      }
+    },
+    {
+      id: 'disc-noti-free-ship',
+      type: 'discounts' as const,
+      titleBn: '🚚 সরাসরি ঢাকা সিটিতে ফ্রি-ডেলিভারি',
+      titleEn: '🚚 Free Doorstep Delivery Dhaka Zone',
+      descBn: '৫০০ টাকার বেশি যেকোনো তাজা শাকসবজি ও অর্গানিক গ্রোসারি শপিং করলেই ঢাকা সিটির যেকোনো পয়েন্টে ডেলিভারি চার্জ একদম ফ্রি!',
+      descEn: 'Get free delivery anywhere in Dhaka district on vegetable and grocery purchases above 500 TK.',
+      badgeBn: 'ফ্রি শিপিং',
+      badgeEn: 'Free Delivery',
+      date: 'সীমিত অফার',
+      actionLabelBn: 'কিনুন এখনই 🥦',
+      actionLabelEn: 'Shop Now',
+      action: () => {
+        setView('shop');
+        setNotificationsOpen(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  ];
+
+  // Restock Alerts
+  const restockNotis = [
+    {
+      id: 'restock-noti-honey',
+      type: 'restocks' as const,
+      titleBn: '🍯 সুন্দরবনের বিশ্বস্ত খলিশা ফুলের মধু রিস্টক!',
+      titleEn: '🍯 Premium Sundarban Kholisha Honey Restocked',
+      descBn: 'বাওয়ালিদের হাত থেকে সরাসরি সংগৃহীত প্রিমিয়াম খলিশা ফুলের খাঁটি মধু এখন আবার পর্যাপ্ত পরিমাণে স্টকে এসেছে। ১০০% প্রাকৃতিক ও সুস্বাদু।',
+      descEn: 'Harvested directly from Sundarbans, our pure natural kholisha honey is now fully restocked and ready for delivery.',
+      badgeBn: 'স্টকে এসেছে',
+      badgeEn: 'Restocked',
+      date: 'সদ্য রিস্টক',
+      actionLabelBn: 'মধু কিনুন 🍯',
+      actionLabelEn: 'Buy Honey',
+      action: () => {
+        setView('shop');
+        setSearchQuery('মধু');
+        setNotificationsOpen(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    {
+      id: 'restock-noti-ghee',
+      type: 'restocks' as const,
+      titleBn: '🧈 সিরাজগঞ্জের খাঁটি গরুর ঘি স্টকে ফিরেছে',
+      titleEn: '🧈 Pure Sirajganj Cow Ghee Back in Stock',
+      descBn: 'সিরাজগঞ্জের মাঠ থেকে ঐতিহ্যবাহী পদ্ধতিতে প্রস্তুতকৃত সুগন্ধি ডবল-ফিল্টারড গাওয়া ঘি এখন প্রস্তুত। শতভাগ প্রিজারভেটিভমুক্ত ও খাঁটি।',
+      descEn: 'Sirajganj premium hand-churned cow milk ghee is fully restocked with premium aroma and rich nutrition.',
+      badgeBn: 'খাঁটি ঘি',
+      badgeEn: 'Cow Ghee',
+      date: 'উপলব্ধ আছে',
+      actionLabelBn: 'ঘি কিনুন 🧈',
+      actionLabelEn: 'Buy Ghee',
+      action: () => {
+        setView('shop');
+        setSearchQuery('ঘি');
+        setNotificationsOpen(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    {
+      id: 'restock-noti-mango',
+      type: 'restocks' as const,
+      titleBn: '🥭 রাজশাহীর কেমিক্যাল-মুক্ত হিমসাগর আম আসলো!',
+      titleEn: '🥭 Carbide-Free Rajshahi Himsagar Mango Restocked',
+      descBn: 'রাজশাহী বাঘা থেকে সরাসরি গাছপাকা হিমসাগর আম এসেছে। কোনো কার্বাইড বা ক্ষতিকর প্রিজারভেটিভ ব্যবহার করা হয়নি। একদম মিষ্টি রসাৎ আম সরাসরি ঢাকার দরজায়।',
+      descEn: 'Pure carbide-free, tree-ripened Himsagar fresh mangoes are restocked from Bagha, Rajshahi orchards today.',
+      badgeBn: 'আম এলার্ট',
+      badgeEn: 'Mango Alerts',
+      date: 'চলমান বুকিং',
+      actionLabelBn: 'আম দেখুন 🥭',
+      actionLabelEn: 'View Mangoes',
+      action: () => {
+        setView('shop');
+        setSearchQuery('আম');
+        setNotificationsOpen(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  ];
+
+  // Agricultural Live alerts
+  const harvestNotis = (harvestAlerts || []).map(alert => ({
+    id: `harvest-noti-${alert.id}`,
+    type: 'harvest' as const,
+    titleBn: `🌾 ফসল সংগ্রহ: ${alert.cropNameBn}`,
+    titleEn: `🌾 Harvested Crop: ${alert.cropNameEn}`,
+    descBn: `${alert.farmerName} (${alert.district}) কর্তৃক এইমাত্র সতেজ ঘোষণা দেয়া হয়েছে: "${alert.descriptionBn}"।`,
+    descEn: `Reported by farmer ${alert.farmerName} from ${alert.district}: "${alert.descriptionEn}"`,
+    badgeBn: alert.statusBn,
+    badgeEn: alert.statusEn,
+    date: alert.harvestDate,
+    imageUrl: alert.imageUrl,
+    actionLabelBn: 'কিনুন এখনই 🥕',
+    actionLabelEn: 'Buy Fresh',
+    action: () => {
+      setView('shop');
+      setSearchQuery(alert.cropNameBn.split(' ')[0]);
+      setNotificationsOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }));
+
+  // Consolidated active list of notifications
+  const allNotifications = [
+    ...orderNotis,
+    ...discountNotis,
+    ...restockNotis,
+    ...harvestNotis
+  ];
+
+  // Dynamic filter based on selected sub-tab
+  const filteredNotifications = allNotifications.filter(x => {
+    if (notiTab === 'all') return true;
+    return x.type === notiTab;
+  });
+
+  // Calculate dynamic unread total for interactive icon pill
+  const unreadCount = allNotifications.length;
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 border-b border-gray-100 shadow-sm backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -181,26 +408,79 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-sans leading-none mt-0.5">ঢাকা জেলা (Dhaka Zone)</span>
           </div>
 
-          {/* SEARCH COMPONENT */}
-          <div className="flex flex-1 max-w-[85px] xs:max-w-[180px] sm:max-w-xs md:max-w-sm relative">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="খুঁজুন..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full rounded-xl border border-gray-200/80 bg-gray-50/50 py-2 pl-8 pr-3 text-[10px] sm:text-xs transition-all outline-none focus:border-emerald-500 focus:bg-white focus:ring-1 focus:ring-emerald-500"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-2.5 text-xs text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
+          {/* REMOVED SEARCH OPTION & REPLACED WITH SOCIAL & VIDEO CHANNELS & BUTTONS */}
+          <div className="flex flex-1 max-w-[280px] sm:max-w-xs md:max-w-md items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-amber-50/70 to-emerald-50/40 border border-emerald-100/70 rounded-2xl px-1.5 sm:px-2.5 py-1 sm:py-1.5 shadow-2xs select-none">
+            
+            {/* FACEBOOK PAGE */}
+            <a 
+              href="https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-[#1877F2]/10 hover:text-[#1877F2] hover:scale-110 active:scale-95 transition-all shrink-0" 
+              title={language === 'en' ? 'Facebook Page' : 'আমাদের ফেসবুক পেইজ'}
+            >
+              <svg className="h-4 w-4 fill-current text-[#1877F2]" viewBox="0 0 24 24"><path d="M9 8H7v3h2v9h4v-9h3.6l.4-3H13V6c0-.5.5-1 1-1h3V1H13c-3 0-4 1.5-4 4v3z"/></svg>
+            </a>
+
+            {/* YOUTUBE CHANNEL */}
+            <a 
+              href="https://www.youtube.com/@KrishokBazarBD" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-[#FF0000]/10 hover:text-[#FF0000] hover:scale-110 active:scale-95 transition-all shrink-0" 
+              title={language === 'en' ? 'YouTube Channel' : 'আমাদের ইউটিউব চ্যানেল'}
+            >
+              <svg className="h-4 w-4 fill-current text-[#FF0000]" viewBox="0 0 24 24"><path d="M23.5 6.4c-.3-1.2-1.3-2.1-2.5-2.4C18.8 3.5 12 3.5 12 3.5s-6.8 0-9 .5c-1.2.3-2.2 1.2-2.5 2.4C0 8.6 0 12 0 12s0 3.4.5 5.6c.3 1.2 1.3 2.1 2.5 2.4 2.2.5 9 .5 9 .5s6.8 0 9-.5c1.2-.3 2.2-1.2 2.5-2.4.5-2.2.5-5.6.5-5.6s0-3.4-.5-5.6zM9.5 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
+            </a>
+
+            {/* TIKTOK PAGE */}
+            <a 
+              href="https://www.tiktok.com/@krishokbazarbd" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-black/10 hover:text-black hover:scale-110 active:scale-95 transition-all shrink-0" 
+              title={language === 'en' ? 'TikTok' : 'আমাদের টিকটক'}
+            >
+              <svg className="h-4 w-4 fill-current text-black" viewBox="0 0 24 24">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.4-.63-.62v7.33c0 1.94-.48 3.91-1.63 5.46-1.51 2.08-4.14 3.09-6.66 2.65-2.5-.4-4.63-2.26-5.28-4.72-.8-2.93.43-6.23 2.97-7.66 1.05-.6 2.27-.85 3.48-.75v4.14c-.69-.13-1.42-.04-2.03.32-1.07.61-1.53 1.94-1.12 3.12.36 1.08 1.48 1.79 2.62 1.67 1.25-.09 2.22-1.19 2.22-2.45V0c-.26.01-.52.01-.78.02z" />
+              </svg>
+            </a>
+
+            {/* INSTAGRAM PAGE */}
+            <a 
+              href="https://www.instagram.com/krishokbazarbd/" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-pink-50 hover:text-[#E1306C] hover:scale-110 active:scale-95 transition-all shrink-0" 
+              title={language === 'en' ? 'Instagram' : 'আমাদের ইনস্টাগ্রাম'}
+            >
+              <svg className="h-4 w-4 fill-none stroke-current stroke-[2] text-[#E1306C]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+            </a>
+
+            {/* MESSENGER SUPPORT */}
+            <a 
+              href="https://m.me/61578459151972" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-[#006AFF]/10 hover:text-[#006AFF] hover:scale-110 active:scale-95 transition-all shrink-0" 
+              title={language === 'en' ? 'Messenger' : 'আমাদের মেসেঞ্জার'}
+            >
+              <svg className="h-4 w-4 fill-current text-[#006AFF]" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.25c0 2.91 1.448 5.498 3.7 7.19v3.81a.5.5 0 00.72.45l4.13-2.27a13.91 13.91 0 001.45.07c5.523 0 10-4.145 10-9.25S17.523 2 12 2zm1 12.5l-2.5-2.5-4.5 2.5 5-5.5 2.5 2.5 4.5-2.5-5 5.5z"/></svg>
+            </a>
+
+            {/* WATCH REAL VIDEOS ACTION BUTTON */}
+            <button
+              onClick={() => handleNavClick('videos')}
+              className="ml-auto flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[9px] sm:text-[10px] font-black transition-all hover:scale-104 shadow-3xs cursor-pointer select-none border border-red-500 shrink-0"
+              title={language === 'en' ? 'Watch Farm Videos' : 'আমাদের বাস্তব খামার ভিডিওগুলো দেখুন'}
+            >
+              <svg className="h-3 w-3 fill-current shrink-0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+              <span>{language === 'en' ? 'Videos' : 'ভিডিও দেখুন 📹'}</span>
+            </button>
           </div>
 
           {/* NAVIGATION LINKS - DESKTOP */}
@@ -247,6 +527,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               {language === 'en' ? 'Blog' : 'ব্লগ'}
             </button>
+            <button 
+              onClick={() => handleNavClick('videos')}
+              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none text-red-650 font-black ${currentView === 'videos' ? 'text-red-700 border-b-2 border-red-500 pb-0.5' : ''}`}
+            >
+              {language === 'en' ? '📺 Farm Videos' : '📺 খামার ভিডিও'}
+            </button>
           </nav>
 
           {/* RIGHT ACTION BUTTONS */}
@@ -259,7 +545,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* NOTIFICATION INTERACTIVE BELL & DROPDOWN */}
-            <div className="relative hidden md:block">
+            <div className="relative block">
               <button
                 onClick={() => {
                   setNotificationsOpen(!notificationsOpen);
@@ -268,11 +554,10 @@ export const Header: React.FC<HeaderProps> = ({
                 className={`relative rounded-2xl border p-2 transition-all cursor-pointer flex items-center justify-center ${notificationsOpen ? 'bg-amber-50 border-amber-300 text-amber-700 ring-2 ring-amber-100' : 'border-gray-100 text-gray-650 bg-gray-50/50 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200'}`}
                 title="সোনালী ফসলসংগ্রহ এলার্ট ও নোটিফিকেশন"
               >
-                <Bell className={`h-4.5 w-4.5 ${hasUnreadAlerts && harvestAlerts?.length > 0 ? 'animate-bounce-subtle' : ''}`} />
-                {hasUnreadAlerts && harvestAlerts?.length > 0 && (
-                  <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                <Bell className={`h-4.5 w-4.5 ${hasUnreadAlerts && unreadCount > 0 ? 'animate-bounce-subtle' : ''}`} />
+                {hasUnreadAlerts && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white shadow-md border border-white">
+                    {unreadCount}
                   </span>
                 )}
               </button>
@@ -280,16 +565,16 @@ export const Header: React.FC<HeaderProps> = ({
               {/* FLOATING DROPDOWN LIST */}
               {notificationsOpen && (
                 <div 
-                  className="absolute right-0 mt-3 w-80 sm:w-[420px] rounded-3xl bg-white border border-gray-150 shadow-2xl p-4 z-50 text-gray-800 animate-fadeIn"
+                  className="absolute right-[-45px] sm:right-0 mt-3 w-[295px] xs:w-[350px] sm:w-[420px] rounded-3xl bg-white border border-gray-150 shadow-2xl p-3.5 sm:p-4 z-50 text-gray-800 animate-fadeIn"
                   style={{ boxShadow: '0 20px 40px -15px rgba(0,0,0,0.15)' }}
                 >
                   <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3">
                     <div className="flex items-center gap-1.5">
                       <span className="font-black text-xs sm:text-[13px] text-gray-850">
-                        {language === 'en' ? 'Seasonal Crop Alerts 🌾' : 'সোনালী ফসলসংগ্রহ এলার্ট 🌾'}
+                        {language === 'en' ? 'In-App Alerts 🔔' : 'ইন-অ্যাপ এলার্ট ও নোটিফিকেশন 🔔'}
                       </span>
-                      <span className="text-[10px] bg-amber-500 text-white font-black px-2 py-0.5 rounded-full">
-                        {harvestAlerts?.length || 0} Live
+                      <span className="text-[10px] bg-red-500 text-white font-black px-2 py-0.5 rounded-full">
+                        {unreadCount} New
                       </span>
                     </div>
                     <button 
@@ -300,14 +585,55 @@ export const Header: React.FC<HeaderProps> = ({
                     </button>
                   </div>
 
+                  {/* Horizontal Categories Tabs Selection */}
+                  <div className="flex gap-1 overflow-x-auto pb-2.5 mb-2.5 no-scrollbar scroll-smooth whitespace-nowrap border-b border-gray-100">
+                    {[
+                      { id: 'all', labelBn: 'সব', labelEn: 'All' },
+                      { id: 'orders', labelBn: 'অর্ডার', labelEn: 'Orders' },
+                      { id: 'discounts', labelBn: 'ডিসকাউন্ট', labelEn: 'Discounts' },
+                      { id: 'restocks', labelBn: 'রিস্টক', labelEn: 'Restocks' },
+                      { id: 'harvest', labelBn: 'মাঠের খবর', labelEn: 'Harvest' }
+                    ].map(tab => {
+                      const isActive = notiTab === tab.id;
+                      const count = tab.id === 'all' 
+                        ? allNotifications.length 
+                        : tab.id === 'orders' 
+                          ? orderNotis.length 
+                          : tab.id === 'discounts' 
+                            ? discountNotis.length 
+                            : tab.id === 'restocks' 
+                              ? restockNotis.length 
+                              : harvestNotis.length;
+
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setNotiTab(tab.id as any)}
+                          className={`px-2.5 py-1 text-[10px] font-black rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                            isActive 
+                              ? 'bg-emerald-600 text-white shadow-xs' 
+                              : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
+                          }`}
+                        >
+                          <span>{language === 'en' ? tab.labelEn : tab.labelBn}</span>
+                          {count > 0 && (
+                            <span className={`text-[8px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white text-emerald-800' : 'bg-gray-200 text-gray-700'}`}>
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   {/* Push Notification Toggle Button */}
-                  <div className="bg-amber-50/50 rounded-2xl border border-amber-100/70 p-3 mb-3 flex flex-col gap-2">
+                  <div className="bg-emerald-50/45 rounded-2xl border border-emerald-100/50 p-3 mb-3 flex flex-col gap-1.5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-[11px] font-black text-amber-950 leading-snug">
+                        <p className="text-[11px] font-black text-emerald-950 leading-snug">
                           {language === 'en' ? 'Live Harvest Push Alerts' : 'লাইভ ফসলসংগ্রহ পুশ বিজ্ঞপ্তি'}
                         </p>
-                        <p className="text-[9px] text-amber-800/85 leading-normal mt-[2px]">
+                        <p className="text-[9px] text-emerald-800/85 leading-normal mt-[2px]">
                           {language === 'en' ? 'Receive instant browser alerts when crops are harvested.' : 'কৃষক মাঠে ফসল কাটার সাথে সাথে তাৎক্ষণিক আপডেট পান।'}
                         </p>
                       </div>
@@ -316,7 +642,7 @@ export const Header: React.FC<HeaderProps> = ({
                           await handleTriggerPushNotification();
                           setIsPushEnabled(typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted');
                         }}
-                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all shrink-0 ${isPushEnabled ? 'bg-emerald-600 hover:bg-emerald-750 text-white shadow-3xs' : 'bg-amber-600 text-white hover:bg-amber-700 hover:scale-102 flex items-center gap-1'}`}
+                        className={`px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all shrink-0 ${isPushEnabled ? 'bg-emerald-600 hover:bg-emerald-750 text-white shadow-3xs' : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:scale-102 flex items-center gap-1'}`}
                       >
                         {isPushEnabled 
                           ? (language === 'en' ? '✓ Active' : '✓ সচল রয়েছে') 
@@ -326,68 +652,101 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   </div>
 
-                  {/* List of Alerts */}
+                  {/* List of Notifications */}
                   <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 pr-1 space-y-2.5">
-                    {(!harvestAlerts || harvestAlerts.length === 0) ? (
+                    {filteredNotifications.length === 0 ? (
                       <div className="text-center py-8 text-gray-400">
                         <Bell className="h-8 w-8 mx-auto stroke-1 mb-2 text-gray-300" />
                         <p className="text-xs font-bold">
-                          {language === 'en' ? 'No active seasonal alerts.' : 'বর্তমানে কোনো সক্রিয় বিজ্ঞপ্তি নেই।'}
+                          {language === 'en' ? 'No active notifications in this category.' : 'বর্তমানে এই ক্যাটাগরিতে কোনো সক্রিয় বিজ্ঞপ্তি নেই।'}
                         </p>
                       </div>
                     ) : (
-                      harvestAlerts.map((alert) => {
-                        const isJustHarvested = alert.statusEn === 'Just Harvested';
-                        const isTomorrow = alert.statusEn === 'Harvesting Tomorrow';
-                        
+                      filteredNotifications.map((item: any) => {
+                        const isOrders = item.type === 'orders';
+                        const isDiscounts = item.type === 'discounts';
+                        const isRestocks = item.type === 'restocks';
+                        const isHarvest = item.type === 'harvest';
+
                         return (
-                          <div key={alert.id} className="pt-2.5 first:pt-0 flex gap-3 items-start">
-                            <div className="h-11 w-11 rounded-xl overflow-hidden border border-gray-100 shrink-0 shadow-3xs">
-                              <img 
-                                src={alert.imageUrl} 
-                                alt={alert.cropNameBn} 
-                                className="h-full w-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
+                          <div key={item.id} className="pt-2.5 first:pt-0 flex gap-3 items-start">
+                            {/* Visual Avatar / Icon box */}
+                            <div className="shrink-0">
+                              {isHarvest && item.imageUrl ? (
+                                <div className="h-11 w-11 rounded-xl overflow-hidden border border-gray-100 shadow-3xs">
+                                  <img 
+                                    src={item.imageUrl} 
+                                    alt="Crop avatar" 
+                                    className="h-full w-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                              ) : (
+                                <div className={`h-11 w-11 rounded-xl flex items-center justify-center border shrink-0 shadow-3xs ${
+                                  isOrders 
+                                    ? 'bg-blue-50 border-blue-100 text-blue-600' 
+                                    : isDiscounts 
+                                      ? 'bg-amber-50 border-amber-100 text-amber-600' 
+                                      : isRestocks 
+                                        ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                                        : 'bg-orange-50 border-orange-100 text-orange-600'
+                                }`}>
+                                  {isOrders && <Package className="h-5 w-5" />}
+                                  {isDiscounts && <Tag className="h-5 w-5" />}
+                                  {isRestocks && <Sparkles className="h-5 w-5" />}
+                                  {isHarvest && <Sprout className="h-5 w-5" />}
+                                </div>
+                              )}
                             </div>
+
+                            {/* Text content details */}
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-full uppercase leading-none ${
-                                  isJustHarvested 
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                                    : isTomorrow 
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200 animate-pulse' 
-                                      : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  isOrders 
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                                    : isDiscounts 
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                                      : isRestocks 
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                        : 'bg-orange-50 text-orange-700 border border-orange-200'
                                 }`}>
-                                  {language === 'en' ? alert.statusEn : alert.statusBn}
+                                  {language === 'en' ? item.badgeEn || item.type : item.badgeBn || item.type}
                                 </span>
                                 <span className="text-[8.5px] text-gray-400 font-bold font-sans">
-                                  {alert.harvestDate}
+                                  {item.date}
                                 </span>
                               </div>
                               <h5 className="text-[11px] font-black text-gray-800 leading-tight mt-1 font-sans">
-                                {language === 'en' ? alert.cropNameEn : alert.cropNameBn}
+                                {language === 'en' ? item.titleEn : item.titleBn}
                               </h5>
-                              <p className="text-[9.5px] text-gray-500 leading-normal mt-[2px] line-clamp-2">
-                                {language === 'en' ? alert.descriptionEn : alert.descriptionBn}
+                              <p className="text-[9.5px] text-gray-500 leading-normal mt-[2px] line-clamp-3">
+                                {language === 'en' ? item.descEn : item.descBn}
                               </p>
                               
-                              {/* Direct Crop link details and navigation */}
-                              <div className="mt-1 bg-gray-50 p-1.5 rounded-xl flex items-center justify-between gap-2 border border-gray-100">
+                              {/* Direct action link details and navigation */}
+                              <div className="mt-2 bg-gray-50 p-1.5 rounded-xl flex items-center justify-between gap-2 border border-gray-100">
                                 <span className="text-[8.5px] text-emerald-750 font-extrabold truncate">
-                                  🚜 {alert.farmerName} ({language === 'en' ? alert.district : `${alert.district}`})
+                                  {isHarvest 
+                                    ? `🚜 ${language === 'en' ? 'Fresh Crop' : 'তাজা ফসল'}`
+                                    : isOrders 
+                                      ? `🛒 ${language === 'en' ? 'Real-Time Update' : 'রিয়েল-টাইম ট্র্যাকিং'}` 
+                                      : isDiscounts 
+                                        ? `🎁 ${language === 'en' ? 'Special Deal' : 'স্পেশাল ক্যাম্পেইন'}`
+                                        : `📦 ${language === 'en' ? 'Fresh Batch' : 'তাজা নতুন স্টক'}`
+                                  }
                                 </span>
                                 <button
-                                  onClick={() => {
-                                    setNotificationsOpen(false);
-                                    setView('shop');
-                                    // Extract first word of crop name to match in product search query
-                                    const searchPhrase = (language === 'en' ? alert.cropNameEn : alert.cropNameBn).split(' ')[0];
-                                    setSearchQuery(searchPhrase);
-                                  }}
-                                  className="text-[8.5px] font-black text-white hover:bg-emerald-750 bg-emerald-650 px-2 py-0.5 rounded-md transition cursor-pointer"
+                                  onClick={item.action}
+                                  className={`text-[8.5px] font-black text-white px-2 py-0.5 rounded-md transition cursor-pointer shrink-0 ${
+                                    isOrders 
+                                      ? 'bg-blue-600 hover:bg-blue-700' 
+                                      : isDiscounts 
+                                        ? 'bg-amber-600 hover:bg-amber-700' 
+                                        : 'bg-emerald-650 hover:bg-emerald-750'
+                                  }`}
                                 >
-                                  {language === 'en' ? 'Buy Now' : 'কিনুন 🛍️'}
+                                  {language === 'en' ? item.actionLabelEn || 'View' : item.actionLabelBn || 'দেখুন'}
                                 </button>
                               </div>
                             </div>
@@ -628,6 +987,13 @@ export const Header: React.FC<HeaderProps> = ({
                 className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'shipping-policy' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold' : 'bg-white text-emerald-850 border-emerald-100/70 hover:bg-emerald-100/40 hover:text-emerald-705'}`}
               >
                 <span>📦</span> <span>{language === 'en' ? 'Shipping' : 'ফেরত ও শিপিং নীতি'}</span>
+              </button>
+
+              <button
+                onClick={() => { handleNavClick('videos'); setIsMainMenuOpen(false); }}
+                className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'videos' ? 'bg-red-600 text-white border-red-600 font-extrabold' : 'bg-red-50 text-red-950 border-red-100 hover:bg-red-100/40'}`}
+              >
+                <span>📺</span> <span>{language === 'en' ? '📺 Farm Videos' : '📺 খামার ভিডিও গ্যালারি'}</span>
               </button>
             </div>
 

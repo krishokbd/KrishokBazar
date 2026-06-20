@@ -43,6 +43,7 @@ import { ProductComparisonModal } from './components/ProductComparisonModal';
 import { BottomNavigation } from './components/BottomNavigation';
 import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 import { ShippingPolicyView } from './components/ShippingPolicyView';
+import { VideoGalleryView } from './components/VideoGalleryView';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
   ShieldCheck, 
@@ -91,9 +92,9 @@ const COMBO_BASKETS: Product[] = [
     price: 550,
     discountPrice: 490,
     category: 'ready-to-cook',
-    farmerId: 'f5',
-    farmerName: 'Fazle Rabbi',
-    farmName: 'Fazle Rabbi অর্গানিক এগ্রো',
+    farmerId: 'f70',
+    farmerName: 'সাইফুল ইসলাম',
+    farmName: 'সাইফুল অর্গানিক এগ্রো',
     rating: 4.9,
     stock: 25,
     images: ['https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80'],
@@ -108,9 +109,9 @@ const COMBO_BASKETS: Product[] = [
     price: 980,
     discountPrice: 850,
     category: 'ready-to-cook',
-    farmerId: 'f12',
-    farmerName: 'Ayesha Begum',
-    farmName: 'Ayesha Begum অর্গানিক এগ্রো',
+    farmerId: 'f71',
+    farmerName: 'মান্নান হোসেন',
+    farmName: 'মান্নান সমন্বিত ডেইরি ও কৃষি',
     rating: 4.8,
     stock: 18,
     images: ['https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80'],
@@ -125,9 +126,9 @@ const COMBO_BASKETS: Product[] = [
     price: 780,
     discountPrice: 690,
     category: 'ready-to-cook',
-    farmerId: 'f23',
-    farmerName: 'Sultana Razia',
-    farmName: 'Sultana Razia অর্গানিক এগ্রো',
+    farmerId: 'f72',
+    farmerName: 'সুরুজ মিয়া',
+    farmName: 'সুরুজ সতেজ সবজি খামার',
     rating: 5.0,
     stock: 15,
     images: ['https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80'],
@@ -445,7 +446,7 @@ const AppContent: React.FC = () => {
     e.preventDefault();
     
     // Pick current farm-owner ID
-    const fId = currentUser?.role === 'Farmer' ? (currentUser.farmerId || 'f6') : 'f1';
+    const fId = currentUser?.role === 'Farmer' ? (currentUser.farmerId || 'f70') : 'f70';
 
     const pData = {
       title: newProdTitle,
@@ -875,6 +876,16 @@ const AppContent: React.FC = () => {
             }}
             onToggleCompare={handleToggleCompare}
             comparedProductIds={comparedProductIds}
+          />
+        )}
+
+        {/* DEDICATED OFFICIAL VIDEO GALLERY AND SOCIAL HUB PAGE */}
+        {currentView === 'videos' && (
+          <VideoGalleryView 
+            onBack={() => {
+              setView('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         )}
 

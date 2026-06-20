@@ -3,6 +3,7 @@ import { useApp } from '../AppContext';
 import { cleanImageUrl } from '../utils';
 import { Farmer, User } from '../types';
 import { MapPin, Phone, UserCheck, ShieldAlert, Award, Search, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface VerifiedFarmersViewProps {
   onBack: () => void;
@@ -194,13 +195,17 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
               const isRealFive = realIdx !== -1;
 
               return (
-                <div 
+                <motion.div 
                   key={farmer.id}
-                  className={`rounded-2xl border bg-white shadow-sm hover:shadow-lg transition-all overflow-hidden flex flex-col pt-5 ${
+                  className={`rounded-2xl border bg-white shadow-sm transition-all overflow-hidden flex flex-col pt-5 ${
                     isRealFive 
-                      ? 'border-emerald-300 ring-2 ring-emerald-50 bg-gradient-to-b from-emerald-50/10 to-white' 
+                      ? 'border-emerald-300 ring-2 ring-emerald-50 bg-gradient-to-b from-emerald-50/10 to-white shadow-emerald-50' 
                       : 'border-gray-150/60 hover:border-emerald-200'
                   }`}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -5, scale: 1.015, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
                 >
                   <div className="flex px-5 gap-4 items-start pb-4">
                     {/* Picture Profile */}
@@ -336,7 +341,7 @@ export const VerifiedFarmersView: React.FC<VerifiedFarmersViewProps> = ({
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

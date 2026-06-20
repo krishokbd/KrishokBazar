@@ -105,9 +105,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div 
+    <motion.div 
       onClick={() => onOpenQuickView(product)}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-xl hover:border-emerald-250 hover:scale-[1.015] active:scale-[0.995] transition-all cursor-pointer h-full"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-xl hover:border-emerald-250 transition-all cursor-pointer h-full"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6, scale: 1.015, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
     >
       {/* ADMIN CONTROL PANEL HEADER */}
       {((currentUser?.role === 'Admin' || (typeof window !== 'undefined' && window.location.hash === '#admin')) && onEditProduct) && (
@@ -376,6 +381,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

@@ -87,8 +87,175 @@ import {
   Camera,
   Upload,
   Image as ImageIcon,
-  Bell
+  Bell,
+  BookOpen,
+  Play,
+  Award,
+  Video,
+  GraduationCap,
+  Search
 } from 'lucide-react';
+
+export interface EducationGuide {
+  id: string;
+  category: 'soil' | 'pest' | 'irrigation' | 'grading';
+  titleBn: string;
+  titleEn: string;
+  descBn: string;
+  descEn: string;
+  durationBn: string;
+  durationEn: string;
+  difficultyBn: 'সহজ' | 'মধ্যম' | 'উন্নত';
+  difficultyEn: 'Easy' | 'Medium' | 'Advanced';
+  embedUrl: string;
+  thumbnail: string;
+  tipsBn: string[];
+  tipsEn: string[];
+  quiz: {
+    questionBn: string;
+    questionEn: string;
+    optionsBn: string[];
+    optionsEn: string[];
+    answerIndex: number;
+    explanationBn: string;
+    explanationEn: string;
+  };
+}
+
+export const SUSTAINABLE_GUIDES: EducationGuide[] = [
+  {
+    id: 'guide-soil-1',
+    category: 'soil',
+    titleBn: 'জৈব সার ও উন্নত কেঁচো সার (ভার্মিকম্পোস্ট) উৎপাদন',
+    titleEn: 'Vermi-composting & Organic Fertilizer Production',
+    descBn: 'কীভাবে খামারের গোবর ও উচ্ছিষ্ট সামগ্রী দিয়ে সাশ্রয়ী কেঁচো সার তৈরি করবেন এবং রাসায়নিক সারের খরচ ৫০% সাশ্রয় করবেন।',
+    descEn: 'Learn how to produce rich vermicompost from farm byproducts, cutting down synthetic fertilizer reliance by half.',
+    durationBn: '৫ মিনিট',
+    durationEn: '5 Mins',
+    difficultyBn: 'সহজ',
+    difficultyEn: 'Easy',
+    embedUrl: 'https://www.youtube.com/embed/zH87eHscG_c',
+    thumbnail: 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&q=80&w=400',
+    tipsBn: [
+      'রান্নাঘরের বা সবজির অবশিষ্টাংশ, গোবর ও কলার খোসা কেঁচো সার তৈরিতে আদর্শ উপাদান।',
+      'আর্দ্রতা সর্বদা ৫০-৬০% রাখতে হবে এবং সরাসরি কড়া রোদ থেকে দূরে ছায়াযুক্ত স্থানে রাখুন।',
+      '৪৫ থেকে ৬০ দিনের মধ্যে উৎকৃষ্ট মানের দানাদার কেঁচো সার সম্পূর্ণরূপে প্রস্তুত হয়ে যায়।'
+    ],
+    tipsEn: [
+      'Vegetable peels, standard farmyard manure, and banana skins make premium vermicompost ingredients.',
+      'Maintain dampness at 50-60% moisture, and place the compost bin under physical shade away from harsh sunlight.',
+      'Perfect dark, crumbly, granular organic vermicompost cures completely in 45 to 60 days.'
+    ],
+    quiz: {
+      questionBn: 'ভার্মিকম্পোস্ট বা কেঁচো সার তৈরিতে আর্দ্রতা বা ভেজা ভাব কতভাগ রাখা উত্তম?',
+      questionEn: 'What is the optimal moisture level required for compiling vermicompost?',
+      optionsBn: ['১০% (একেবারে শুকনো)', '৫০-৬০% (হালকা ভেজা ও আর্দ্র)', '১০০% (জলমগ্ন কাদাকাদা)', 'কোনোটিই নয়'],
+      optionsEn: ['10% (Very Dry)', '50-60% (Slightly Damp)', '100% (Submerged Muddy)', 'None of the above'],
+      answerIndex: 1,
+      explanationBn: 'কেঁচো সারের আর্দ্রতা ৫০-৬০% রাখা বাঞ্ছনীয়। অতিরিক্ত শুকনো হলে কেঁচো মারা যায় এবং অতিরিক্ত ভেজা হলে অক্সিজেন যাতায়াত ব্যাহত হয়ে দুর্গন্ধ ছড়ায়।',
+      explanationEn: 'Moisture between 50-60% keeps the earthworms active. Too dry kills them, while 100% water blocks oxygen Flow causing rot.'
+    }
+  },
+  {
+    id: 'guide-pest-2',
+    category: 'pest',
+    titleBn: 'আইপিএম পদ্ধতি ও জৈব ফেরোমন ফাঁদের ম্যাজিক',
+    titleEn: 'IPM Tactics & Pheromone Insect Traps Magic',
+    descBn: 'ক্ষতিকর রাসায়নিক কীটনাশক ছাড়াই সমন্বিত ফেরোমন ফাঁদ ও হলুদ স্টিকি বোর্ড দিয়ে ফসলকে বালাইমুক্ত রাখার আধুনিক উপায়।',
+    descEn: 'Protect vegetables without poison sprays using organic pheromone lures and sticky yellow cards.',
+    durationBn: '৮ মিনিট',
+    durationEn: '8 Mins',
+    difficultyBn: 'মধ্যম',
+    difficultyEn: 'Medium',
+    embedUrl: 'https://www.youtube.com/embed/N-R48cPhIhk',
+    thumbnail: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=400',
+    tipsBn: [
+      'সেক্স ফেরোমন ফাঁদ মূলত পুরুষ মাছি বা পোকার নজর কেড়ে প্রজনন চক্র ভঙ্গ করে বালাই প্রতিরোধ করে।',
+      'হলুদ আঠালো ট্র্যাপ বা কার্ড ছোট সাদা মাছি, থ্রিপস ও সাধারণ জাব পোকা দমনের জন্য দারুণ কার্যকরী।',
+      'প্রতি শতক জমিতে সাধারণত ১-২টি উপযুক্ত ফাঁদ বসালে খুব চমৎকার ফল পাওয়া যায়।'
+    ],
+    tipsEn: [
+      'Sex pheromone trap lures male insect pests using specific hormones, breaking the breeding cycle naturally.',
+      'Bright yellow sticky cards automatically trap aphid flyers, whiteflies, and small thrips.',
+      'Placing 1-2 standard pheromone traps per decimal is plenty to safeguard high-density crops.'
+    ],
+    quiz: {
+      questionBn: 'ফেরোমন ফাঁদ মূলত ফসলের কোন ধরণের বালাই বা পোকা প্রতিরোধে অনন্য ভুমিকা রাখ ট্র্যাপ?',
+      questionEn: 'Pheromone lures mainly work against which pest type to safeguard vegetables?',
+      optionsBn: ['মাটি সংলগ্ন উইপোকা', 'উড়ন্ত পোকা ও ফল ছিদ্রকারী মাছি পোকা', 'ফসলের ইঁদুর বা কাঠবিড়ালি', 'ক্ষতিকর ছত্রাক'],
+      optionsEn: ['Underground soil termites', 'Flying insects & fruit-boring flies', 'Feld rats & rodents', 'Mildew and fungus pathogens'],
+      answerIndex: 1,
+      explanationBn: 'ফেরোমন ফাঁদ উড়ন্ত স্ত্রী পোকার হরমোন উদ্দীপক ব্যবহার করে ক্ষতিকর বালাই উড়ানো পুরুষ পোকাকে বোতলে আটকে ফসল রক্ষা করে।',
+      explanationEn: 'They leverage synthetic female scents to trap target flying male flies, preventing mass reproduction.'
+    }
+  },
+  {
+    id: 'guide-irrigation-3',
+    category: 'irrigation',
+    titleBn: 'স্মার্ট সেচ প্রযুক্তি: AWD পদ্ধতিতে ২৫% পানির সাশ্রয়',
+    titleEn: 'Smart Irrigation: 25% Water Saving with AWD Method',
+    descBn: 'মাটির নিচে ছিদ্রযুক্ত নল ব্যবহার করে আর্দ্রতা বুজে পরিমিত সেচ দেয়া যা বোরো চাষে জ্বালানি ও খরচ অনেকাংশে কমায়।',
+    descEn: 'Learn Alternate Wetting & Drying (AWD) using standard soil tubes to save water, fuel pumping costs and effort.',
+    durationBn: '৬ মিনিট',
+    durationEn: '6 Mins',
+    difficultyBn: 'উন্নত',
+    difficultyEn: 'Advanced',
+    embedUrl: 'https://www.youtube.com/embed/E-9pZz19Jb0',
+    thumbnail: 'https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?auto=format&fit=crop&q=80&w=400',
+    tipsBn: [
+      'AWD প্লাস্টিক পাইপটি জমিতে মাটির নিচে অন্তত ১৫ থেকে ২০ সেমি গভীরতায় স্থাপন করতে হবে।',
+      'পাইপের ভেতরের পানির স্তর মাটির নিচে ১৫ সেমি নামলে তবেই পুনরায় নতুন করে জমিতে সেচ প্রদান করুন।',
+      'শস্যের কুশি বা ফ্লাওয়ারিং বা ফুল আসার সময়ে জমিতে ৩-৪ সেমি স্থির পানি বজায় রাখা অতি জরুরি।'
+    ],
+    tipsEn: [
+      'Install the perforated AWD irrigation tube at least 15 to 20 cm deep inside the rice soil.',
+      'Irrigate only when the internal standing water drops 15 cm below the outer soil surface.',
+      'Keep 3-4 cm of continuous standing water specifically during the crop tillering and flowering phase.'
+    ],
+    quiz: {
+      questionBn: 'AWD পাইপের নিচের পানির স্তর পৃষ্ঠ মাটি থেকে কতটুকু গভীর নামলে পুনরায় সেচ নির্ধারণ করতে হয়?',
+      questionEn: 'At what soil depth threshold inside the AWD tube should you trigger re-irrigation?',
+      optionsBn: ['মাটি বরাবর (০ সেমি)', 'মাটির নিচে ১৫ সেমি', 'মাটির নিচে ১০০ সেমি', 'সবসময় পানি উপচে থাকা জরুরি'],
+      optionsEn: ['Soil level (0 cm)', '15 cm below soil surface', '100 cm below soil surface', 'Continuous overflow required'],
+      answerIndex: 1,
+      explanationBn: 'পানির স্তর মাটির নিচে ১৫ সেমি পর্যন্ত নামা পর্যন্ত ধান ক্ষেত ভেজা থাকে। পুন-সেচ দিলে মাটির অক্সিজেন চলাচল ঠিক থাকে ও ২৫% পানি সাশ্রয় হয়।',
+      explanationEn: '15 cm ensures the soil remains humid while restoring deep soil oxygenation and saving immense fuel pump usage.'
+    }
+  },
+  {
+    id: 'guide-grading-4',
+    category: 'grading',
+    titleBn: 'ফসল কাটার পর গ্রেডিং ও বৈজ্ঞানিক ওয়াশিং পদ্ধতি',
+    titleEn: 'Post-Harvest Sorting, Grading & Cleaning Best Practices',
+    descBn: 'মাঠ থেকে তোলার পর শস্যকে পচনমুক্ত উপায়ে বাছাই ও প্যাকিং করার সঠিক প্রক্রিয়া যা ফসলের গুণাগুণ রক্ষা করবে।',
+    descEn: 'Master post-harvest grading, cleaning with safe sanitizers, and aerated packing to prevent cargo wastage.',
+    durationBn: '৭ মিনিট',
+    durationEn: '7 Mins',
+    difficultyBn: 'সহজ',
+    difficultyEn: 'Easy',
+    embedUrl: 'https://www.youtube.com/embed/vWb6_G2y4k4',
+    thumbnail: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&q=80&w=400',
+    tipsBn: [
+      'ক্ষেতের ফসল কাটার সাথে সাথে কড়া রোদ থেকে বাঁচিয়ে ছায়াযুক্ত ঠান্ডা জায়গায় স্তূপ করুন।',
+      'পানির সাথে হালকা ফিটকিরি বা অনুমোদিত মাত্রার ফুড-গ্রেড ক্লোরিন দিয়ে ফসল ধুলে জীবাণুমুক্ত থাকে।',
+      'প্যাক করার পূর্বে কখনোই সবজি ভেজা রাখতে নেই; ঠান্ডা বাতাসে শুকিয়ে বায়ুপূর্ণ প্লাস্টিক ক্র্যেটে ভরুন।'
+    ],
+    tipsEn: [
+      'Gather harvested organic crops promptly inside well-shaded, cool structures out of direct sun rays.',
+      'Rinse produce in clean water mixed with minimal certified alum or organic sanitizers to kill pathogens.',
+      'Never pack crops while moist. Chill-dry with ambient air, then stash in bio-ventilated crates only.'
+    ],
+    quiz: {
+      questionBn: 'ধৌত করা ফসল প্যাকেজিং করার ক্ষেত্রে কোন কাজটি করা অত্যন্ত ক্ষতিকর এবং পচন বেগবান করে?',
+      questionEn: 'What action is extremely hazardous and speeds up spoilage when packaging wet washed crops?',
+      optionsBn: ['বাতাসে পানি শুকিয়ে নেয়া', 'ভেজা অবস্থায় বাতাস নিরোধক বস্তায় ভরে ফেলা', 'ছিদ্রযুক্ত খাঁচা ব্যবহার', 'প্লাস্টিক ক্র্যেটস ব্যবহার'],
+      optionsEn: ['Drying thoroughly in a cool draft', 'Packing crops while fully wet into insulated bags', 'Using ventilated cages', 'Using plastic crates'],
+      answerIndex: 1,
+      explanationBn: 'ভেজা অবস্থায় ফসলে দ্রুত ছত্রাক ও ব্যাকটেরিয়া জন্মায়। তাই প্যাক করার পূর্বে অবশ্যই ঠান্ডা বাতাসে ফসল ভালো করে শুকিয়ে নিতে হয়।',
+      explanationEn: 'Moisture inside closed storage rapidly triggers fungus and rot. Cool-drying is non-negotiable before transport.'
+    }
+  }
+];
 
 export const FarmerDashboard: React.FC = () => {
   const { 
@@ -103,10 +270,22 @@ export const FarmerDashboard: React.FC = () => {
     deleteProduct,
     categories,
     logout,
-    setView
+    setView,
+    language
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'profile' | 'verification'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'profile' | 'verification' | 'education'>('overview');
+
+  // Farmer Education custom states
+  const [eduCategory, setEduCategory] = useState<'all' | 'soil' | 'pest' | 'irrigation' | 'grading'>('all');
+  const [eduSearch, setEduSearch] = useState('');
+  const [completedGuides, setCompletedGuides] = useState<string[]>(['guide-soil-1']);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  const [activeGuide, setActiveGuide] = useState<EducationGuide | null>(null);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState<Record<string, boolean>>({});
+  const [confettiActive, setConfettiActive] = useState<boolean>(false);
+  const [selectedGuideDetail, setSelectedGuideDetail] = useState<EducationGuide | null>(null);
 
   // Product Add/Edit Form state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -303,7 +482,7 @@ export const FarmerDashboard: React.FC = () => {
       stock: Number(prodStock),
       isReadyToCook: prodReadyToCook,
       images: finalImages,
-      farmerId: currentUser.farmerId || 'f1',
+      farmerId: currentUser.farmerId || 'f70',
       farmerName: currentUser.name || 'খামারি অংশীদার',
       rating: 5.0,
       isVerified: isVerified,
@@ -452,6 +631,12 @@ export const FarmerDashboard: React.FC = () => {
             className={`px-3 py-2 rounded-lg font-bold transition-all whitespace-nowrap ${activeTab === 'profile' ? 'bg-white text-emerald-800 shadow-sm' : 'text-gray-500 hover:bg-white/45'}`}
           >
             প্রোফাইল সেটিংস
+          </button>
+          <button
+            onClick={() => { setActiveTab('education'); setIsAddingProduct(false); }}
+            className={`px-3 py-2 rounded-lg font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${activeTab === 'education' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 hover:bg-white/45'}`}
+          >
+            🎓 খামারি শিক্ষা (Education)
           </button>
           <button
             onClick={() => { setActiveTab('verification'); setIsAddingProduct(false); }}
@@ -1307,6 +1492,535 @@ export const FarmerDashboard: React.FC = () => {
                     প্লাটিনাম কভার 🔓
                   </button>
                 </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: FARMER SUSTAINABLE EDUCATION & BEST PRACTICES */}
+        {activeTab === 'education' && (
+          <div className="space-y-6 font-sans animate-fade-in pb-12 text-left">
+            
+            {/* Header section with green eco accent badge */}
+            <div className="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-3xl p-6 text-white shadow-md relative overflow-hidden select-none">
+              <div className="relative z-10 max-w-xl space-y-2">
+                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-100 tracking-wider bg-white/10 p-1 px-2.5 rounded-full border border-white/5">
+                  <GraduationCap className="h-3 w-3 text-emerald-350" />
+                  সহজ টেকসই কৃষি বিজ্ঞান স্কুল
+                </span>
+                <h3 className="text-base sm:text-xl font-black font-sans leading-tight">খামারি শিক্ষা ও প্রশিক্ষণ সেন্টার 🎓</h3>
+                <p className="text-xs text-emerald-100/90 leading-relaxed font-semibold">
+                  আপনার ফসলের উৎপাদন খরচ ৫০% কমিয়ে লাভ দ্বিগুণ করুন! এখানে সংক্ষিপ্ত ভিডিও টিউটোরিয়ালগুলোর মাধ্যমে পরিবেশ-বান্ধব ও সবচেয়ে লাভজনক টেকসই চাষাবাদ পদ্ধতি শিখুন।
+                </p>
+              </div>
+              <div className="absolute right-[-15px] bottom-[-20px] text-8xl opacity-10 select-none pointer-events-none">🎓</div>
+            </div>
+
+            {/* Micro-Progress Dashboard Tracker */}
+            <div className="bg-white border border-gray-150-soft rounded-3xl p-5 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              
+              {/* Tracker 1: Progress percentage bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-sans font-black text-gray-500">গাইড কোর্স সম্পন্নকরণ:</span>
+                  <span className="font-mono font-black text-emerald-700">
+                    {completedGuides.length} / {SUSTAINABLE_GUIDES.length} ({Math.round((completedGuides.length / SUSTAINABLE_GUIDES.length) * 100)}%)
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-3.5 p-0.5 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${(completedGuides.length / SUSTAINABLE_GUIDES.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Tracker 2: Earned Medals Badge status */}
+              <div className="flex items-center gap-3 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-150/40">
+                <div className="bg-amber-100 p-2.5 rounded-xl shrink-0">
+                  <Award className="h-6 w-6 text-amber-600 animate-pulse-subtle" />
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Eco-Green Badge Certificate</span>
+                  <h4 className="text-xs font-black text-gray-800 font-sans mt-0.5">
+                    {completedGuides.length === SUSTAINABLE_GUIDES.length 
+                      ? '👑 স্বর্ণপদক জলবায়ু-বান্ধব মাস্টার খামারি' 
+                      : completedGuides.length >= 2 
+                      ? '🌱 উদ্যোগী সবুজ খামারি (Silver Pro)' 
+                      : '🌾 শিক্ষানবিস পরিবেশ-বান্ধব খামারি (Beginner)'}
+                  </h4>
+                </div>
+              </div>
+
+              {/* Tracker 3: Interactive Call to action */}
+              <div className="text-right flex flex-col items-start md:items-end justify-center">
+                <div className="text-xs font-black text-gray-700 font-sans">
+                  সঠিক কুইজ উত্তর: <span className="text-amber-600 font-mono text-sm">★ {Object.keys(quizSubmitted).filter(id => quizAnswers[id] === SUSTAINABLE_GUIDES.find(g => g.id === id)?.quiz.answerIndex).length} টি</span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1 font-semibold">
+                  সকল প্রশ্নের সঠিক উত্তর দিয়ে সোনার মেডেল আনলক করুন!
+                </p>
+              </div>
+
+            </div>
+
+            {/* Filter Buttons & Live Search Engine */}
+            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+              
+              {/* Category buttons rail */}
+              <div className="flex gap-1.5 overflow-x-auto w-full sm:w-auto no-scrollbar py-0.5 whitespace-nowrap">
+                <button
+                  onClick={() => setEduCategory('all')}
+                  className={`px-3.5 py-2 rounded-xl text-[11px] font-sans font-black transition-all cursor-pointer ${
+                    eduCategory === 'all' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'bg-white border border-gray-150 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  সবগুলো কোর্স
+                </button>
+                <button
+                  onClick={() => setEduCategory('soil')}
+                  className={`px-3.5 py-2 rounded-xl text-[11px] font-sans font-black transition-all cursor-pointer ${
+                    eduCategory === 'soil' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'bg-white border border-gray-150 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  🌱 মাটি ও জৈব সার
+                </button>
+                <button
+                  onClick={() => setEduCategory('pest')}
+                  className={`px-3.5 py-2 rounded-xl text-[11px] font-sans font-black transition-all cursor-pointer ${
+                    eduCategory === 'pest' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'bg-white border border-gray-150 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  🐛 বালাই দমন
+                </button>
+                <button
+                  onClick={() => setEduCategory('irrigation')}
+                  className={`px-3.5 py-2 rounded-xl text-[11px] font-sans font-black transition-all cursor-pointer ${
+                    eduCategory === 'irrigation' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'bg-white border border-gray-150 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  💧 সাশ্রয়ী সেচ
+                </button>
+                <button
+                  onClick={() => setEduCategory('grading')}
+                  className={`px-3.5 py-2 rounded-xl text-[11px] font-sans font-black transition-all cursor-pointer ${
+                    eduCategory === 'grading' 
+                      ? 'bg-emerald-600 text-white shadow-sm' 
+                      : 'bg-white border border-gray-150 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  📦 প্রসেসিং ও প্যাকিং
+                </button>
+              </div>
+
+              {/* Dynamic Search box */}
+              <div className="relative w-full sm:w-64 shrink-0">
+                <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="শিক্ষা গাইড বা টিপস খুঁজুন..."
+                  value={eduSearch}
+                  onChange={(e) => setEduSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-150 rounded-xl text-xs text-gray-800 outline-none focus:ring-1 focus:ring-emerald-500 focus:bg-white"
+                />
+              </div>
+
+            </div>
+
+            {/* Success confetti banner alert */}
+            {confettiActive && (
+              <div className="bg-amber-500 text-white p-3.5 rounded-2xl text-center text-xs font-black shadow-lg animate-bounce flex items-center justify-center gap-2 select-none">
+                🌟 অসামান্য! কুইজের উত্তর একেবারে সঠিক হয়েছে! আপনার সবুজ মেডেল স্কোর আপডেট হয়েছে। 🌟
+              </div>
+            )}
+
+            {/* Core training guides grid system */}
+            {SUSTAINABLE_GUIDES.filter(guide => {
+              const matchesCategory = eduCategory === 'all' || guide.category === eduCategory;
+              const matchesSearch = guide.titleBn.toLowerCase().includes(eduSearch.toLowerCase()) || 
+                                    guide.titleEn.toLowerCase().includes(eduSearch.toLowerCase()) || 
+                                    guide.descBn.toLowerCase().includes(eduSearch.toLowerCase()) ||
+                                    guide.descEn.toLowerCase().includes(eduSearch.toLowerCase());
+              return matchesCategory && matchesSearch;
+            }).length === 0 ? (
+              <div className="bg-white border border-dashed border-gray-200 rounded-3xl p-10 text-center space-y-2">
+                <BookOpen className="h-10 w-10 text-gray-350 mx-auto" />
+                <h4 className="text-xs font-black text-gray-700">কোনো শিক্ষা গাইড খুঁজে পাওয়া যায়নি</h4>
+                <p className="text-[11px] text-gray-400">অনুগ্রহ করে অন্য কোনো কী-ওয়ার্ড দিয়ে পুনরায় সার্চ ট্রাই করুন।</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {SUSTAINABLE_GUIDES.filter(guide => {
+                  const matchesCategory = eduCategory === 'all' || guide.category === eduCategory;
+                  const matchesSearch = guide.titleBn.toLowerCase().includes(eduSearch.toLowerCase()) || 
+                                        guide.titleEn.toLowerCase().includes(eduSearch.toLowerCase()) || 
+                                        guide.descBn.toLowerCase().includes(eduSearch.toLowerCase()) ||
+                                        guide.descEn.toLowerCase().includes(eduSearch.toLowerCase());
+                  return matchesCategory && matchesSearch;
+                }).map(guide => {
+                  const isCompleted = completedGuides.includes(guide.id);
+                  const isQuizDone = quizSubmitted[guide.id];
+                  const userAnsIdx = quizAnswers[guide.id];
+                  
+                  return (
+                    <div 
+                      key={guide.id}
+                      className="bg-white border border-gray-150-soft rounded-3xl overflow-hidden shadow-xs hover:shadow-md hover:border-emerald-250 transition-all duration-200 flex flex-col text-left"
+                    >
+                      {/* Image Thumbnail Container with Play Overlay */}
+                      <div className="relative h-44 bg-gray-100 overflow-hidden shrink-0 group">
+                        <img 
+                          src={guide.thumbnail} 
+                          alt={guide.titleBn} 
+                          className="h-full w-full object-cover group-hover:scale-105 transition duration-300 pointer-events-none"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-black/35 hover:bg-black/25 transition duration-200 flex items-center justify-center">
+                          <button
+                            onClick={() => {
+                              setActiveVideoUrl(guide.embedUrl);
+                              setActiveGuide(guide);
+                            }}
+                            className="bg-white/95 hover:bg-emerald-600 hover:scale-110 text-emerald-800 hover:text-white h-12 w-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 cursor-pointer"
+                            title="প্লে করুন / Watch Video"
+                          >
+                            <Play className="h-5 w-5 fill-current ml-0.5" />
+                          </button>
+                        </div>
+                        
+                        {/* Tags floating inside card cover image */}
+                        <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-lg tracking-wider">
+                          {guide.category === 'soil' ? '🌱 মাটি ও সার' : guide.category === 'pest' ? '🐛 বালাই দমন' : guide.category === 'irrigation' ? '💧 সাশ্রয়ী সেচ' : '📦 প্রসেসিং'}
+                        </span>
+                        
+                        <span className="absolute bottom-3 right-3 bg-emerald-800/90 text-white text-[9px] font-mono font-black px-2 py-0.5 rounded-md">
+                          {guide.durationBn}
+                        </span>
+                      </div>
+
+                      {/* Info & core metadata section */}
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[9px] bg-gray-100 text-gray-500 font-extrabold px-1.5 py-0.5 rounded-md">
+                              অধ্যয়ন লেভেল: {guide.difficultyBn} ({guide.difficultyEn})
+                            </span>
+                            {isCompleted && (
+                              <span className="text-[9px] bg-emerald-50 text-emerald-800 border border-emerald-250 font-black px-2 py-0.5 rounded-md flex items-center gap-0.5 select-none animate-pulse-subtle">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" /> সম্পন্ন
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-xs sm:text-[13px] font-black text-gray-700 font-sans leading-snug">
+                            {guide.titleBn}
+                          </h4>
+                          <p className="text-[11px] text-gray-400 font-medium leading-relaxed">
+                            {guide.descBn}
+                          </p>
+                        </div>
+
+                        {/* Interactive Actions Tray */}
+                        <div className="pt-3 border-t border-gray-50 flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => setSelectedGuideDetail(guide)}
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10.5px] font-black px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+                          >
+                            <BookOpen className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            গাইড টিপস ও কুইজ ({guide.tipsBn.length} টি)
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (isCompleted) {
+                                setCompletedGuides(prev => prev.filter(id => id !== guide.id));
+                              } else {
+                                setCompletedGuides(prev => [...prev, guide.id]);
+                              }
+                            }}
+                            className={`text-[10px] font-sans font-black px-3 py-2 rounded-xl border transition-all cursor-pointer ${
+                              isCompleted 
+                                ? 'bg-amber-50 text-amber-800 border-amber-250 hover:bg-amber-100' 
+                                : 'bg-white text-gray-600 border-gray-250 hover:bg-gray-50'
+                            }`}
+                          >
+                            {isCompleted ? '✘ অসমাপ্ত করুন' : '✔ সম্পন্ন চিহ্নিত করুন'}
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Useful External Agro Resources links banner card */}
+            <div className="border border-emerald-150 bg-emerald-50/15 rounded-3xl p-5 shadow-xs grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+              <div className="col-span-2 space-y-1 text-left">
+                <span className="text-[9px] font-black uppercase text-emerald-700 tracking-wider font-mono">BANGLADESH AGRI ADVISORY SERVICE</span>
+                <h4 className="text-xs font-black text-gray-700">বাংলাদেশ উপজেলা কৃষি তথ্য কক এবং সরাসরি ১৮২ কল সাপোর্ট</h4>
+                <p className="text-[10.5px] text-gray-400 font-medium leading-relaxed">
+                  যেকোনো জটিল পোকা-মাকড় রোগ নির্ণয় করতে প্রতিদিন সকাল ৯টা হতে রাত ৮টা পর্যন্ত সম্পূর্ণ ফ্রিতে কৃষি তথ্য সার্ভিস কল সেন্টার টোল-ফ্রি নম্বর <strong className="text-gray-600 font-sans">১৬১২৩</strong> এ যোগাযোগ করুন।
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <a 
+                  href="tel:16123" 
+                  className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-sans font-black px-5 py-3 rounded-2xl text-xs shadow-md transition cursor-pointer active:scale-95"
+                >
+                  <Phone className="h-4 w-4 text-white shrink-0" />
+                  ১৬১২৩ কল দিন 📞
+                </a>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* FULL SCREEN VIDEO PLAYBACK THEATRICAL MODAL COMPONENT */}
+        {activeVideoUrl && activeGuide && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-2xl overflow-hidden bg-gray-900 rounded-3xl shadow-2xl flex flex-col text-left">
+              
+              {/* Header inside theater panel */}
+              <div className="p-4 bg-gray-950/80 text-white flex items-center justify-between border-b border-gray-800">
+                <div className="min-w-0 pr-4">
+                  <span className="text-[8.5px] bg-emerald-800 text-emerald-100 font-bold px-2 py-0.5 rounded-md uppercase tracking-wider font-mono">
+                    {activeGuide.category.toUpperCase()} VIDEO INTERACTIVE
+                  </span>
+                  <h4 className="text-xs sm:text-sm font-black truncate text-gray-100 font-sans mt-0.5">
+                    {activeGuide.titleBn}
+                  </h4>
+                </div>
+                <button
+                  onClick={() => {
+                    setActiveVideoUrl(null);
+                    setActiveGuide(null);
+                  }}
+                  className="bg-white/10 hover:bg-red-650 hover:text-white text-gray-400 h-8 w-8 rounded-full flex items-center justify-center cursor-pointer transition text-xs shrink-0 font-bold"
+                  title="Close Video Pane"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Video container element inside modal */}
+              <div className="relative aspect-video bg-black scroll-smooth">
+                <iframe 
+                  src={activeVideoUrl}
+                  title={activeGuide.titleBn}
+                  className="absolute inset-0 w-full h-full border-none"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                ></iframe>
+              </div>
+
+              {/* Bottom detail actions info block inside theater */}
+              <div className="p-4 bg-gray-950/95 text-white/90 border-t border-gray-800 space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between text-xs select-none">
+                  <p className="text-[10.5px] text-gray-400">
+                    ভিডিওটি সম্পন্ন করা হলে "কমপ্লিট কোর্স" বোতাম টিপে আপনার ড্যাশবোর্ড আপডেট করুন।
+                  </p>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        if (!completedGuides.includes(activeGuide.id)) {
+                          setCompletedGuides(prev => [...prev, activeGuide.id]);
+                        }
+                        setActiveVideoUrl(null);
+                        setActiveGuide(null);
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10.5px] px-4 py-2 rounded-xl shadow-md transition cursor-pointer active:scale-95 text-center"
+                    >
+                      ✔ এই কোর্স সম্পন্ন করুন
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveVideoUrl(null);
+                        setActiveGuide(null);
+                        setSelectedGuideDetail(activeGuide);
+                      }}
+                      className="bg-white/10 hover:bg-white/20 text-white font-semibold text-[10.5px] px-4 py-2 rounded-xl transition cursor-pointer"
+                    >
+                      কুইজে অংশ নিন ⚡
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* COMPREHENSIVE TIPS & KNOWLEDGE QUIZ TRAY MODAL COMPONENT */}
+        {selectedGuideDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+            <div className="relative w-full max-w-lg bg-white rounded-3xl border border-gray-100 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden text-left font-sans">
+              
+              {/* Header Box */}
+              <div className="p-5 border-b border-gray-100 flex items-start justify-between bg-emerald-50/15">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 font-mono">Practice Tips & Topic Assessment</span>
+                  <h3 className="text-sm sm:text-base font-black text-gray-850 font-sans">
+                    {selectedGuideDetail.titleBn}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedGuideDetail(null)}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-500 h-8 w-8 rounded-full flex items-center justify-center cursor-pointer transition text-[11px]"
+                  title="Close Dialog"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scrollable Container Content */}
+              <div className="p-5 overflow-y-auto space-y-6 no-scrollbar">
+                
+                {/* Section A: Important agricultural guidance steps */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1">
+                    🌾 এই কোর্সের গুরুত্বপূর্ণ খামার টিপসসমূহ (Agronomy Best-practices):
+                  </h4>
+                  <ul className="space-y-2.5">
+                    {selectedGuideDetail.tipsBn.map((tip, idx) => (
+                      <li key={idx} className="flex gap-2.5 items-start text-xs text-gray-655 leading-relaxed bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                        <span className="h-5 w-5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-gray-700 text-xs">{tip}</p>
+                          <p className="text-[10px] text-gray-400 italic mt-0.5 font-semibold">{selectedGuideDetail.tipsEn[idx]}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Section B: Topic Quiz Block */}
+                <div className="border-t border-gray-100 pt-5 space-y-4">
+                  <div className="flex items-center gap-1.5 bg-amber-50 text-amber-905 border border-amber-200/50 p-2 px-3 rounded-xl">
+                    <span className="text-[10px] font-black uppercase leading-none font-mono">assessment quiz</span>
+                    <span className="h-1.5 w-1.5 bg-amber-500 rounded-full animate-ping"></span>
+                    <span className="text-[9.5px] text-amber-700 font-bold ml-auto">{language === 'bn' ? '১টি বহুনির্বাচনী প্রশ্ন' : '1 Multiple Choice Question'}</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h5 className="text-[12.5px] font-black text-gray-800 font-sans leading-snug">
+                      প্রশ্ন: {selectedGuideDetail.quiz.questionBn}
+                    </h5>
+                    <p className="text-[10.5px] text-gray-400 italic font-semibold">
+                      En: {selectedGuideDetail.quiz.questionEn}
+                    </p>
+
+                    {/* Radio Options List Container */}
+                    <div className="grid grid-cols-1 gap-2 pt-1">
+                      {selectedGuideDetail.quiz.optionsBn.map((opt, optIdx) => {
+                        const isSelected = quizAnswers[selectedGuideDetail.id] === optIdx;
+                        const hasSubmitted = quizSubmitted[selectedGuideDetail.id];
+                        const isOptCorrect = selectedGuideDetail.quiz.answerIndex === optIdx;
+                        
+                        let optionStyle = "border border-gray-200 bg-white hover:bg-gray-50 text-gray-700";
+                        if (isSelected) {
+                          optionStyle = "border-2 border-emerald-600 bg-emerald-50/20 text-emerald-950 font-black";
+                        }
+                        if (hasSubmitted) {
+                          if (isOptCorrect) {
+                            optionStyle = "border-2 border-green-500 bg-green-50/45 text-green-950 font-black";
+                          } else if (isSelected) {
+                            optionStyle = "border-2 border-red-500 bg-red-50/45 text-red-950 line-through";
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={optIdx}
+                            onClick={() => {
+                              if (!hasSubmitted) {
+                                setQuizAnswers(prev => ({ ...prev, [selectedGuideDetail.id]: optIdx }));
+                              }
+                            }}
+                            disabled={hasSubmitted}
+                            className={`p-3 rounded-xl flex flex-col text-left transition text-xs cursor-pointer ${optionStyle}`}
+                          >
+                            <span className="font-sans font-black">{optIdx + 1}. {opt}</span>
+                            <span className="text-[10px] text-gray-400 mt-0.5 font-medium italic">{selectedGuideDetail.quiz.optionsEn[optIdx]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Quiz Feedback Container */}
+                    {quizSubmitted[selectedGuideDetail.id] ? (
+                      <div className={`p-4 rounded-2xl border text-left ${
+                        quizAnswers[selectedGuideDetail.id] === selectedGuideDetail.quiz.answerIndex
+                          ? 'bg-green-50 border-green-200 text-green-950 text-xs'
+                          : 'bg-red-50 border-red-200 text-red-950 text-xs'
+                      } space-y-1`}>
+                        <h4 className="font-sans font-black text-xs flex items-center gap-1">
+                          {quizAnswers[selectedGuideDetail.id] === selectedGuideDetail.quiz.answerIndex 
+                            ? '🎉 উত্তর সঠিক হয়েছে (Correct Answer)!' 
+                            : '❌ দুঃখিত, ভুল উত্তর হয়েছে (Incorrect Answer)!'}
+                        </h4>
+                        <p className="text-[10.5px] leading-relaxed text-gray-655 font-sans font-medium mt-1 text-left">
+                          {selectedGuideDetail.quiz.explanationBn}
+                        </p>
+                        <p className="text-[10px] leading-relaxed text-gray-400 font-medium italic text-left">
+                          Eng: {selectedGuideDetail.quiz.explanationEn}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="pt-2">
+                        <button
+                          onClick={() => {
+                            if (quizAnswers[selectedGuideDetail.id] !== undefined) {
+                              setQuizSubmitted(prev => ({ ...prev, [selectedGuideDetail.id]: true }));
+                              const isCorrect = quizAnswers[selectedGuideDetail.id] === selectedGuideDetail.quiz.answerIndex;
+                              if (isCorrect) {
+                                setConfettiActive(true);
+                                setTimeout(() => setConfettiActive(false), 5000);
+                                // Automatically add and append to completed if correct
+                                if (!completedGuides.includes(selectedGuideDetail.id)) {
+                                  setCompletedGuides(prev => [...prev, selectedGuideDetail.id]);
+                                }
+                              }
+                            } else {
+                              alert("অনুগ্রহ করে একটি সঠিক উত্তর নির্বাচন করুন!");
+                            }
+                          }}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow transition"
+                        >
+                          প্রশ্নোত্তর লক করুন (Lock Selected Answer)
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+
+              </div>
+              
+              {/* Dismiss footer */}
+              <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedGuideDetail(null)}
+                  className="bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-xs font-black cursor-pointer shadow-xs"
+                >
+                  ফিরে যান (Return)
+                </button>
               </div>
 
             </div>

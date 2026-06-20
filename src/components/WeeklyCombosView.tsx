@@ -35,7 +35,7 @@ export const WeeklyCombosView: React.FC<WeeklyCombosViewProps> = ({ onBackToHome
       description: language === 'bn' ? "স্পেশাল অর্গানিক ফ্যামিলি বাস্কেট" : "Special Organic Family Basket",
       price: product.prices[0], // fallback default price
       images: [product.image],
-      farmerId: "f1", // Associate with a default approved partner farmer (e.g. Abdur Rahman)
+      farmerId: "f70", // Associate with a default approved partner farmer (e.g. সাইফুল ইসলাম)
       farmerName: language === 'bn' ? "কৃষক বাজার কম্বো টিম" : "KrishokBazar Combo Team",
       category: "combo",
       unit: product.weight,

@@ -7,12 +7,16 @@ export const FloatingSocials: React.FC = () => {
   const { siteSettings } = useApp();
 
   // Social Links mapping from dynamic siteSettings
+  const fbUsername = siteSettings?.socialFacebook 
+    ? siteSettings.socialFacebook.replace(/\/$/, '').split('/').pop() || 'krishokbazar' 
+    : 'krishokbazar';
+
   const links = {
     whatsapp: `https://wa.me/88${siteSettings?.footerPhone?.replace(/\D/g, '') || '01931355398'}`,
-    facebook: siteSettings?.socialFacebook || 'https://facebook.com',
-    youtube: siteSettings?.socialYoutube || 'https://youtube.com',
-    tiktok: siteSettings?.socialTwitter || 'https://twitter.com',
-    messenger: `https://m.me/krishokbazar`,
+    facebook: siteSettings?.socialFacebook || 'https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/',
+    youtube: siteSettings?.socialYoutube || 'https://www.youtube.com/@KrishokBazarBD',
+    tiktok: siteSettings?.socialInstagram || 'https://www.tiktok.com/@krishokbazarbd',
+    messenger: 'https://m.me/61578459151972',
     tel: `tel:${siteSettings?.footerPhone || '01931355398'}`
   };
 

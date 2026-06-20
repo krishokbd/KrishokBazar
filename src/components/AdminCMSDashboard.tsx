@@ -1514,7 +1514,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     setAdminProdStock(30);
                     setAdminProdReadyToCook(false);
                     setAdminProdImages(['https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500&auto=format&fit=crop&q=60-1']);
-                    setAdminProdFarmerId(farmers[0]?.id || 'f1');
+                    setAdminProdFarmerId(farmers[0]?.id || 'f70');
                     setAdminProdIsFeatured(false);
                     setAdminProdIsVerified(true);
                     setAdminProdIsWeeklyCombo(false);

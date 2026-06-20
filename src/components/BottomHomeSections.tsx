@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../AppContext';
 import { ShieldCheck, Star, ArrowRight, Play, ExternalLink } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export const BottomVideoSection: React.FC = () => {
   const { language } = useApp();
@@ -122,10 +123,14 @@ export const BottomFarmersSection: React.FC = () => {
             const farmerProducts = products.filter((p) => p.farmerId === farmer.id && !p.id.startsWith('cb')).slice(0, 3);
             
             return (
-              <div
+              <motion.div
                 key={farmer.id}
                 onClick={() => handleFarmerClick(farmer.id)}
-                className="bg-white rounded-3xl border border-emerald-100/60 p-4.5 space-y-4 hover:shadow-lg transition-all duration-300 relative cursor-pointer group flex flex-col justify-between"
+                className="bg-white rounded-3xl border border-emerald-100/60 p-4.5 space-y-4 relative cursor-pointer group flex flex-col justify-between"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -6, scale: 1.015, boxShadow: "0 10px 25px -5px rgba(16, 185, 129, 0.1), 0 8px 10px -6px rgba(16, 185, 129, 0.1)" }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
               >
                 <div className="space-y-3.5">
                   {/* Avatar wrapper */}
@@ -195,7 +200,7 @@ export const BottomFarmersSection: React.FC = () => {
                     {language === 'bn' ? 'খামারি স্টোর দেখুন →' : 'Visit Farm Shop →'}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
