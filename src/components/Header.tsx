@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../AppContext';
 import { Search, ShoppingCart, User, LogOut, Menu, X, Landmark, CheckCircle, ChevronDown, UserCheck, WifiOff, Download, Bell, MapPin, Package, Tag, Percent, Truck, Sprout, Sparkles } from 'lucide-react';
 import { FEMALE_AVATAR, MALE_AVATAR, KRISHOK_BAZAR_LOGO } from '../assets';
+import { motion } from 'motion/react';
 
 interface HeaderProps {
   onOpenAuth: () => void;
@@ -41,6 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
   // PWA states and listeners
   const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -57,11 +59,17 @@ export const Header: React.FC<HeaderProps> = ({
     const handleOpenMenu = () => setIsMainMenuOpen(true);
     window.addEventListener('open-main-menu', handleOpenMenu);
 
+    const handleScroll = () => {
+      setIsAtTop(window.scrollY < 10);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('open-main-menu', handleOpenMenu);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -292,7 +300,7 @@ export const Header: React.FC<HeaderProps> = ({
       type: 'restocks' as const,
       titleBn: '🧈 সিরাজগঞ্জের খাঁটি গরুর ঘি স্টকে ফিরেছে',
       titleEn: '🧈 Pure Sirajganj Cow Ghee Back in Stock',
-      descBn: 'সিরাজগঞ্জের মাঠ থেকে ঐতিহ্যবাহী পদ্ধতিতে প্রস্তুতকৃত সুগন্ধি ডবল-ফিল্টারড গাওয়া ঘি এখন প্রস্তুত। শতভাগ প্রিজারভেটিভমুক্ত ও খাঁটি।',
+      descBn: 'সিরাজগঞ্জের মাঠ থেকে ঐতিহ্যবাহী পদ্ধতিতে প্রস্তুতকৃত সুগন্ধি ডবল-ফিল্টারড গাওয়া ঘি এখন প্রস্তুত। শতভাগ প্রিজারভেティブমুক্ত ও খাঁটি।',
       descEn: 'Sirajganj premium hand-churned cow milk ghee is fully restocked with premium aroma and rich nutrition.',
       badgeBn: 'খাঁটি ঘি',
       badgeEn: 'Cow Ghee',
@@ -311,7 +319,7 @@ export const Header: React.FC<HeaderProps> = ({
       type: 'restocks' as const,
       titleBn: '🥭 রাজশাহীর কেমিক্যাল-মুক্ত হিমসাগর আম আসলো!',
       titleEn: '🥭 Carbide-Free Rajshahi Himsagar Mango Restocked',
-      descBn: 'রাজশাহী বাঘা থেকে সরাসরি গাছপাকা হিমসাগর আম এসেছে। কোনো কার্বাইড বা ক্ষতিকর প্রিজারভেটিভ ব্যবহার করা হয়নি। একদম মিষ্টি রসাৎ আম সরাসরি ঢাকার দরজায়।',
+      descBn: 'রাজশাহী বাঘা থেকে সরাসরি গাছপাকা হিমসাগর আম এসেছে। কোনো কার্বাইড বা ক্ষতিকর প্রিজারভে티브 ব্যবহার করা হয়নি। একদম মিষ্টি রসাৎ আম সরাসরি ঢাকার দরজায়।',
       descEn: 'Pure carbide-free, tree-ripened Himsagar fresh mangoes are restocked from Bagha, Rajshahi orchards today.',
       badgeBn: 'আম এলার্ট',
       badgeEn: 'Mango Alerts',
@@ -408,21 +416,64 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-sans leading-none mt-0.5">ঢাকা জেলা (Dhaka Zone)</span>
           </div>
 
-          {/* RESTORED INTEGRATED PRODUCT SEARCH BAR IN THE CENTER OF HEADER */}
-          <div className="flex flex-1 max-w-[280px] sm:max-w-xs md:max-w-md items-center gap-2 bg-gray-50 border border-gray-200/80 rounded-2xl px-3 py-2 shadow-2xs">
-            <Search className="h-4 w-4 text-gray-400 shrink-0" />
-            <input
-              type="text"
-              placeholder={language === 'en' ? "Search safe organic food..." : "নিরাপদ অর্গানিক খাদ্য খুঁজুন..."}
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onFocus={() => {
-                if (currentView !== 'shop') {
-                  handleNavClick('shop');
-                }
-              }}
-              className="w-full bg-transparent text-[11px] sm:text-xs font-semibold text-gray-800 outline-none placeholder:text-gray-400"
-            />
+          {/* ORIGINAL APP-LIKE SOCIAL ICONS ROW - PERFECTLY CENTERED & SIZED IDENTICALLY */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Facebook App Icon */}
+            <a 
+              href="https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/"
+              target="_blank" 
+              rel="noreferrer"
+              className="h-7.5 w-7.5 rounded-lg bg-[#1877F2] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-xs shrink-0 cursor-pointer"
+              title="Facebook"
+            >
+              <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+
+            {/* YouTube App Icon */}
+            <motion.a 
+              href="https://youtube.com/@krishokbazarbd?si=SvzrYv3A3M0fXDbO"
+              target="_blank" 
+              rel="noreferrer"
+              animate={isAtTop ? {
+                y: [0, -4, 0]
+              } : { y: 0 }}
+              transition={isAtTop ? {
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.2
+              } : {}}
+              className="h-7.5 w-7.5 rounded-lg bg-[#FF0000] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-xs shrink-0 cursor-pointer"
+              title="YouTube"
+            >
+              <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
+                <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.553 9.388.553 9.388.553s7.518 0 9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </motion.a>
+
+            {/* TikTok App Icon */}
+            <motion.a 
+              href="https://www.tiktok.com/@krishokbazarbd"
+              target="_blank" 
+              rel="noreferrer"
+              animate={isAtTop ? {
+                y: [0, -4, 0]
+              } : { y: 0 }}
+              transition={isAtTop ? {
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0.6
+              } : {}}
+              className="h-7.5 w-7.5 rounded-lg bg-black flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-xs shrink-0 cursor-pointer"
+              title="TikTok"
+            >
+              <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.4-.63-.62v7.33c0 1.94-.48 3.91-1.63 5.46-1.51 2.08-4.14 3.09-6.66 2.65-2.5-.4-4.63-2.26-5.28-4.72-.8-2.93.43-6.23 2.97-7.66 1.05-.6 2.27-.85 3.48-.75v4.14c-.69-.13-1.42-.04-2.03.32-1.07.61-1.53 1.94-1.12 3.12.36 1.08 1.48 1.79 2.62 1.67 1.25-.09 2.22-1.19 2.22-2.45V0c-.26.01-.52.01-.78.02z" />
+              </svg>
+            </motion.a>
           </div>
 
           {/* NAVIGATION LINKS - DESKTOP REMOVED AS REQUESTED */}

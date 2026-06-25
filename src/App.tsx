@@ -593,12 +593,6 @@ const AppContent: React.FC = () => {
     if (window.location.pathname !== path) {
       window.history.pushState(null, '', path);
     }
-
-    logAnalyticsEvent('screen_view', {
-      firebase_screen: currentView,
-      page_path: path,
-      user_role: currentUser?.role || 'Guest'
-    });
   }, [currentView, selectedProductId, selectedFarmerStoreId, currentUser]);
 
   // 3. Dynamic Page titles, Metadata tag updates, and JSON-LD schema generation for absolute SEO compliance
@@ -617,30 +611,12 @@ const AppContent: React.FC = () => {
       description = `কর্মব্যস্ত জীবনের জন্য প্রাক-কাটা তাজা ধুয়ে নেওয়া পুষ্টিকর শাকসবজি ও মাছ।`;
     } else if (currentView === 'farmers') {
       title = `ভেরিফাইড কৃষক সমাজ | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
-      description = `যশোর, রাজশাহী ও বগুড়ার তৃণমূলের ভেরিফাইড সাধারণ কৃষকদের সাথে সরাসরি সম্পর্কের নির্ভরযোগ্য প্ল্যাটফর্ম।`;
-    } else if (currentView === 'our-story') {
-      title = `আমাদের বৈপ্লবিক গল্প ও লক্ষ্য | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
-      description = `সিন্ডিকেট ও কমিশন সংস্কৃতি ভেঙে অংশীদার চাষীদের সমৃদ্ধ করা এবং বিশুদ্ধ নিরাপদ খাবার পৌঁছে দেওয়াই আমাদের লক্ষ্য।`;
-    } else if (currentView === 'customer-dashboard') {
-      title = `আমার প্রোফাইল ও ট্র্যাকার | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
-    } else if (currentView === 'admin') {
-      title = `পরিচালনা প্যানেল (Global CRM CMS) | ${siteSettings.seoTitle || 'কৃষক বাজার'}`;
-    } else if (currentView === 'product-details' && selectedProductId) {
-      const prod = products.find(p => p.id === selectedProductId);
-      if (prod) {
-        title = `${prod.title} - কৃষক বাজার`;
-        description = prod.description;
-      }
-    } else if (currentView === 'farmer-store' && selectedFarmerStoreId) {
-      const farm = farmers.find(f => f.id === selectedFarmerStoreId);
-      if (farm) {
-        title = `কৃষক ${farm.name} এর দোকান | কৃষক বাজার`;
-        description = farm.bio || `${farm.name} একজন ভেরিফাইড অংশীদার কৃষক।`;
-      }
+      description = `যশোর, রাজশাহী ও বগুড়ার তৃণমূলের ভেরিফাইড সাধারণ কৃষকদের সাথে সরাসরি যোগাযোগ ও ক্রয়।`;
     }
 
     document.title = title;
-    
+
+    // Update meta tags
     let metaDesc = document.querySelector('meta[name="description"]');
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
@@ -657,8 +633,9 @@ const AppContent: React.FC = () => {
     }
     metaKey.setAttribute('content', keywords);
 
-    const oldSchema = document.getElementById('kb-structured-schema');
-    if (oldSchema) oldSchema.remove();
+    // Remove old schema if exists
+    const oldScript = document.getElementById('kb-structured-schema');
+    if (oldScript) oldScript.remove();
 
     const schemaData: any = {
       "@context": "https://schema.org",
@@ -736,144 +713,6 @@ const AppContent: React.FC = () => {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
-
-      {/* SOCIAL MEDIA QUICK LINKS BAR - PLACED DIRECTLY BELOW THE HEADER */}
-      <div className="bg-slate-100 border-b border-gray-200/60 py-2.5 px-4 select-none">
-        <div className="max-w-7xl mx-auto flex flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-            <p className="text-xs font-black text-gray-700 font-sans tracking-tight">
-              {language === 'bn' ? 'সোশ্যাল মিডিয়া:' : 'Social Channels:'}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Facebook Page */}
-            <a 
-              href={siteSettings?.socialFacebook || 'https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/'}
-              target="_blank" 
-              rel="noreferrer" 
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
-              title="Facebook"
-            >
-              <Facebook className="h-4.5 w-4.5 fill-current" />
-            </a>
-
-            {/* YouTube Channel */}
-            <a 
-              href={siteSettings?.socialYoutube || 'https://www.youtube.com/@KrishokBazarBD'}
-              target="_blank" 
-              rel="noreferrer" 
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FF0000]/10 hover:bg-[#FF0000] text-[#FF0000] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
-              title="YouTube"
-            >
-              <Youtube className="h-4.5 w-4.5 fill-current" />
-            </a>
-
-            {/* TikTok Channel */}
-            <a 
-              href={siteSettings?.socialInstagram || 'https://www.tiktok.com/@krishokbazarbd'}
-              target="_blank" 
-              rel="noreferrer" 
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/10 hover:bg-black text-black hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
-              title="TikTok"
-            >
-              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.4-.63-.62v7.33c0 1.94-.48 3.91-1.63 5.46-1.51 2.08-4.14 3.09-6.66 2.65-2.5-.4-4.63-2.26-5.28-4.72-.8-2.93.43-6.23 2.97-7.66 1.05-.6 2.27-.85 3.48-.75v4.14c-.69-.13-1.42-.04-2.03.32-1.07.61-1.53 1.94-1.12 3.12.36 1.08 1.48 1.79 2.62 1.67 1.25-.09 2.22-1.19 2.22-2.45V0c-.26.01-.52.01-.78.02z" />
-              </svg>
-            </a>
-
-            {/* Messenger Chat */}
-            <a 
-              href="https://m.me/61578459151972"
-              target="_blank" 
-              rel="noreferrer" 
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#006AFF]/10 hover:bg-[#006AFF] text-[#006AFF] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
-              title="Messenger"
-            >
-              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.25c0 2.91 1.448 5.498 3.7 7.19v3.81a.5.5 0 00.72.45l4.13-2.27a13.91 13.91 0 001.45.07c5.523 0 10-4.145 10-9.25S17.523 2 12 2zm1 12.5l-2.5-2.5-4.5 2.5 5-5.5 2.5 2.5 4.5-2.5-5 5.5z"/></svg>
-            </a>
-
-            {/* WhatsApp Chat */}
-            <a 
-              href={`https://wa.me/88${siteSettings?.footerPhone?.replace(/\D/g, '') || '01931355398'}`}
-              target="_blank" 
-              rel="noreferrer" 
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
-              title="WhatsApp"
-            >
-              <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
-                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008 0c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm6.49-5.385c1.654.982 3.511 1.5 5.414 1.501 5.474 0 9.93-4.45 9.934-9.92.001-2.648-1.03-5.138-2.902-7.015C17.12 1.306 14.636.275 12.001.275 6.529.275 2.073 4.73 2.069 10.2c-.001 1.958.513 3.869 1.492 5.568l-.979 3.579 3.665-.961zm11.233-7.531c-.301-.15-.178-.225-.375-.525-.097-.15-.525-.75-.525-.75s-.19-.24-.45-.24c-.112 0-.256.04-.37.15-.36.35-.95.95-.95 2.31s.99 2.67 1.13 2.85c.14.18 1.96 2.99 4.75 4.19.67.29 1.19.46 1.59.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.33-.07-.12-.27-.19-.57-.34z" />
-              </svg>
-            </a>
-
-            {/* Direct Call */}
-            <a 
-              href={`tel:${siteSettings?.footerPhone || '01931355398'}`}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600/10 hover:bg-emerald-600 text-emerald-600 hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
-              title={language === 'bn' ? 'সরাসরি কল' : 'Call Hotline'}
-            >
-              <Phone className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* QUICK ACCESS HELPLINE, AI CHATBOT & KEY DIRECTORY SHORTCUTS BAR */}
-      <div className="bg-white border-b border-gray-150 py-3 px-4 shadow-3xs select-none">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
-            <p className="text-xs font-black text-gray-800 font-sans">
-              {language === 'bn' ? 'তাত্ক্ষণিক সহায়তা ও প্রধান মেনু লিঙ্কসমূহ:' : 'Instant Support & Core Navigation Links:'}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {/* AI CHATBOT ACTION BUTTON */}
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('open-riktaz-ai'))}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white text-xs font-black shadow-xs hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans"
-            >
-              <span className="animate-bounce">🤖</span>
-              <span>{language === 'bn' ? 'রিকতাজ AI সাপোর্ট' : 'Riktaz AI Chatbot'}</span>
-            </button>
-
-            {/* DIRECT HOTLINE CALL */}
-            <a 
-              href="tel:01931355398"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-black shadow-xs hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans"
-            >
-              <Phone className="h-3.5 w-3.5 animate-pulse" />
-              <span>{language === 'bn' ? '📞 হটলাইন: ০১৯৩১৩৫৫৩৯৮' : '📞 Hotline: 01931355398'}</span>
-            </a>
-
-            {/* DIRECT HOME LINK */}
-            <button 
-              onClick={() => setView('home')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans border ${currentView === 'home' ? 'bg-amber-500 text-white border-amber-500' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-            >
-              <span>🏠 {language === 'bn' ? 'হোমপেজ' : 'Homepage'}</span>
-            </button>
-
-            {/* DIRECT STORE LINK */}
-            <button 
-              onClick={() => setView('shop')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans border ${currentView === 'shop' ? 'bg-amber-500 text-white border-amber-550' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-            >
-              <span>🛍️ {language === 'bn' ? 'সবজি ও তাজা পণ্য' : 'Store & Products'}</span>
-            </button>
-
-            {/* DIRECT WEEKLY COMBOS */}
-            <button 
-              onClick={() => setView('weekly-combos')}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans border ${currentView === 'weekly-combos' ? 'bg-amber-500 text-white border-amber-550' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
-            >
-              <span>🧺 {language === 'bn' ? 'কম্বো বাস্কেট' : 'Combos'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
 
       {/* CHANNELS ALERT */}
       {successOrderId && (
@@ -1161,47 +1000,21 @@ const AppContent: React.FC = () => {
               </div>
             </section>
 
-            {/* PRODUCT CATEGORIES CAROUSEL SECTION */}
-            <section id="categories-carousel" className="py-10 bg-white border-b border-gray-100">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between mb-6">
+            {/* PRODUCT CATEGORIES CAROUSEL SECTION - COMPACT & HIGHLY TIGHT AS REQUESTED */}
+            <section id="categories-carousel" className="py-1 bg-slate-50/50 border-b border-gray-100">
+              <div className="mx-auto max-w-7xl px-3 sm:px-4">
+                <div className="flex items-center justify-between mb-1">
                   <div className="text-left">
-                    <span className="text-xs font-black text-emerald-600 tracking-wider uppercase block">
-                      📁 Fast Category Search • সহজ শ্রেণীবিভাগ অনুসন্ধান
+                    <span className="text-[9px] font-black text-emerald-600 tracking-wider uppercase block">
+                      📁 {language === 'bn' ? 'সহজ শ্রেণীবিভাগ' : 'Quick Categories'}
                     </span>
-                    <h2 className="text-xl sm:text-2.5xl font-black text-gray-900 font-sans mt-0.5">
-                      {language === 'bn' ? 'ক্যাটাগরি অনুযায়ী পণ্য খুঁজুন' : 'Shop by Product Categories'}
-                    </h2>
-                    <p className="text-xs text-gray-400 mt-0.5">সহজে ব্রাউজ করার জন্য ক্যাটাগরি ক্যারোসেল সিস্টেম</p>
-                  </div>
-
-                  {/* Slider Control Arrows */}
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={() => {
-                        const el = document.getElementById('categories-scroll-container');
-                        if (el) el.scrollBy({ left: -220, behavior: 'smooth' });
-                      }}
-                      className="h-8 w-8 rounded-xl bg-white border border-gray-150 text-gray-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all flex items-center justify-center shadow-3xs cursor-pointer"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => {
-                        const el = document.getElementById('categories-scroll-container');
-                        if (el) el.scrollBy({ left: 220, behavior: 'smooth' });
-                      }}
-                      className="h-8 w-8 rounded-xl bg-white border border-gray-150 text-gray-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all flex items-center justify-center shadow-3xs cursor-pointer"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
 
-                {/* Categories Horizontal Scroll list */}
+                {/* Categories Horizontal Scroll list - Micro Sized icons */}
                 <div 
                   id="categories-scroll-container"
-                  className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scroll-smooth scrollbar-thin scrollbar-thumb-emerald-150 scrollbar-track-transparent"
+                  className="flex overflow-x-auto gap-1.5 pb-1 snap-x snap-mandatory scroll-smooth scrollbar-none"
                 >
                   {/* "ALL" Button Card */}
                   <div
@@ -1210,19 +1023,18 @@ const AppContent: React.FC = () => {
                       const element = document.getElementById('all-products');
                       if (element) element.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className={`flex flex-col items-center justify-center p-4 min-w-[100px] sm:min-w-[120px] rounded-2xl border transition-all cursor-pointer select-none text-center snap-start ${
+                    className={`flex flex-col items-center justify-center p-1 min-w-[54px] sm:min-w-[62px] rounded-lg border transition-all cursor-pointer select-none text-center snap-start ${
                       selectedCategory === 'all'
-                        ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white border-emerald-600 shadow-md scale-102 font-bold'
-                        : 'bg-slate-50 border-gray-150 text-gray-600 hover:border-emerald-300 hover:bg-white hover:shadow-sm'
+                        ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white border-emerald-600 shadow-3xs scale-102 font-bold'
+                        : 'bg-white border-gray-150 text-gray-600 hover:border-emerald-300'
                     }`}
                   >
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-2 transition-colors text-xl ${
+                    <div className={`flex h-5.5 w-5.5 items-center justify-center rounded-md mb-0.5 transition-colors text-[10px] ${
                       selectedCategory === 'all' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'
                     }`}>
                       📦
                     </div>
-                    <span className="text-xs font-black block max-w-full truncate">সব পণ্য</span>
-                    <span className="text-[9px] uppercase opacity-75 font-mono tracking-wider mt-0.5">All Items</span>
+                    <span className="text-[9px] font-black block max-w-full truncate leading-none">সব পণ্য</span>
                   </div>
 
                   {/* Individual Categories List with dynamically matched icons */}
@@ -1246,7 +1058,7 @@ const AppContent: React.FC = () => {
                         if (norm.includes('tea') || norm.includes('চা')) return '🍵';
                         if (norm.includes('ready') || norm.includes('cook') || norm.includes('রান্না')) return '🍳';
                         if (norm.includes('organic') || norm.includes('জৈব')) return '🛡️';
-                        return '🌿'; // Beautiful default leaf icon for newly created categories!
+                        return '🌿'; 
                       };
 
                       const emoji = getCategoryEmoji(cat.id, cat.nameBn);
@@ -1255,26 +1067,52 @@ const AppContent: React.FC = () => {
                         <div
                           key={`cat-carousel-${cat.id}`}
                           onClick={() => {
+                            // Direct router action for Milk, Eggs, Fish as requested by customer
+                            const norm = cat.id.toLowerCase();
+                            if (norm === 'dairy' || norm.includes('milk')) {
+                              const milkProd = products.find(p => p.title.toLowerCase().includes('milk') || p.title.includes('দুধ'));
+                              if (milkProd) {
+                                setSelectedProductId(milkProd.id);
+                                setView('product-details');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                              }
+                            } else if (norm === 'eggs' || norm.includes('egg')) {
+                              const eggProd = products.find(p => p.title.toLowerCase().includes('egg') || p.title.includes('ডিম'));
+                              if (eggProd) {
+                                setSelectedProductId(eggProd.id);
+                                setView('product-details');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                              }
+                            } else if (norm === 'fish' || norm.includes('fish')) {
+                              const fishProd = products.find(p => p.title.toLowerCase().includes('fish') || p.title.includes('মাছ'));
+                              if (fishProd) { // note: safety fallback in case fishProd is matched
+                                setSelectedProductId(fishProd.id);
+                                setView('product-details');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                return;
+                              }
+                            }
+
+                            // Fallback to scrolling list filter if product is missing
                             setSelectedCategory(cat.id);
                             const element = document.getElementById('all-products');
                             if (element) element.scrollIntoView({ behavior: 'smooth' });
                           }}
-                          className={`flex flex-col items-center justify-center p-4 min-w-[100px] sm:min-w-[120px] rounded-2xl border transition-all cursor-pointer select-none text-center snap-start ${
+                          className={`flex flex-col items-center justify-center p-1 min-w-[54px] sm:min-w-[62px] rounded-lg border transition-all cursor-pointer select-none text-center snap-start ${
                             isSelected
-                              ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white border-emerald-600 shadow-md scale-102 font-bold'
-                              : 'bg-slate-50 border-gray-150 text-gray-700 hover:border-emerald-300 hover:bg-white hover:shadow-sm'
+                              ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white border-emerald-600 shadow-3xs scale-102 font-bold'
+                              : 'bg-white border-gray-150 text-gray-700 hover:border-emerald-300'
                           }`}
                         >
-                          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-2 transition-colors text-xl ${
-                            isSelected ? 'bg-white/20 text-white' : 'bg-white border border-gray-100 shadow-3xs'
+                          <div className={`flex h-5.5 w-5.5 items-center justify-center rounded-md mb-0.5 transition-colors text-[10px] ${
+                            isSelected ? 'bg-white/20 text-white' : 'bg-slate-50 border border-gray-100 shadow-3xs'
                           }`}>
                             {emoji}
                           </div>
-                          <span className="text-xs font-black block max-w-full truncate font-sans">
+                          <span className="text-[9px] font-black block max-w-full truncate font-sans leading-none">
                             {cat.nameBn}
-                          </span>
-                          <span className="text-[9px] uppercase opacity-75 font-mono tracking-wider mt-0.5 max-w-full truncate">
-                            {cat.nameEn || cat.id}
                           </span>
                         </div>
                       );
@@ -1738,148 +1576,176 @@ const AppContent: React.FC = () => {
         </main>
 
           {/* FOOTER */}
-      <footer className="bg-emerald-900 text-emerald-50 border-t border-emerald-950 py-12 text-xs select-none">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
+      <footer className="bg-emerald-900 text-emerald-50 border-t border-emerald-950 pt-10 pb-28 md:pb-12 text-xs select-none">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
           
           {/* SECURE PAYMENT METHODS SECTION */}
-          <div className="border-b border-emerald-800/50 pb-8 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="p-1 px-3 rounded-full bg-emerald-800 border border-emerald-700 text-[9px] font-black text-amber-400 uppercase tracking-wider font-sans">
-                    Secure checkout • শতভাগ নিরাপদ পেমেন্ট গেটওয়ে
+          <div className="border-b border-emerald-800/30 pb-5 space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-800 border border-emerald-700 text-[8px] font-black text-amber-400 uppercase tracking-wider font-sans">
+                    100% Secured Payment
                   </span>
+                  <span className="text-[10px] font-extrabold text-emerald-100">আমরা যেসব নিরাপদ পেমেন্ট মাধ্যম সমর্থন করি:</span>
                 </div>
-                <h4 className="text-sm font-black text-white">স্বীকৃত ও নিরাপদ পেমেন্ট মাধ্যমসমূহ (Payment Secured)</h4>
-                <p className="text-[11px] text-emerald-200 leading-relaxed max-w-2xl font-bold">
-                  কৃষক বাজারে কেনাকাটা আরও সহজ করতে আমরা দেশীয় শীর্ষস্থানীয় মোবাইল ব্যাংকিং এবং আন্তর্জাতিক ক্রেডিট ও ডেবিট কার্ড সমর্থন করি।
-                </p>
               </div>
             </div>
 
-            {/* VISUALLY GROUPED INT'L AND LOCAL BANGALDESHI PAYMENT OPTIONS */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-emerald-950/40 p-5 rounded-2xl border border-emerald-800/40">
+            {/* VISUALLY GROUPED COMPACT PAYMENT ICONS - CSS GRID LAYOUT */}
+            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 bg-emerald-950/25 p-2 rounded-xl border border-emerald-800/20">
               
-              {/* Group 1: Local mobile payments */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase text-amber-400 bg-amber-950/60 px-2.5 py-0.5 rounded-md border border-amber-800/60 font-sans tracking-wider">
-                    Local Mobile Wallets
-                  </span>
-                  <span className="text-[11px] font-extrabold text-emerald-100">স্থানীয় মোবাইল ব্যাংকিং পেমেন্ট</span>
-                </div>
-                
-                <div className="flex flex-wrap gap-2.5">
-                  {/* bKash */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-pink-100 shadow-xs transition hover:scale-103 shrink-0 select-none">
-                    <span className="h-4.5 w-4.5 bg-[#e2136e] rounded-full flex items-center justify-center text-[10px] font-black text-white font-sans shrink-0">b</span>
-                    <span className="text-[11px] font-bold text-[#e2136e] font-sans">bKash</span>
-                    <span className="text-[9px] font-extrabold text-zinc-400 px-1.5 border-l border-zinc-200">বিকাশ</span>
-                  </div>
-
-                  {/* Nagad */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-orange-100 shadow-xs transition hover:scale-103 shrink-0 select-none">
-                    <span className="h-4.5 w-4.5 bg-[#f85c24] rounded-full flex items-center justify-center text-[10px] font-black text-white font-sans shrink-0">n</span>
-                    <span className="text-[11px] font-bold text-[#f85c24] font-sans">Nagad</span>
-                    <span className="text-[9px] font-extrabold text-zinc-400 px-1.5 border-l border-zinc-200">নগদ</span>
-                  </div>
-
-                  {/* Rocket */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-purple-100 shadow-xs transition hover:scale-103 shrink-0 select-none">
-                    <span className="h-4.5 w-4.5 bg-[#8c3494] rounded-full flex items-center justify-center text-[9px] font-black text-white font-sans shrink-0">R</span>
-                    <span className="text-[11px] font-bold text-[#8c3494] font-sans">Rocket</span>
-                    <span className="text-[9px] font-extrabold text-zinc-400 px-1.5 border-l border-zinc-200">রকেট</span>
-                  </div>
-                </div>
+              {/* bKash */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-white rounded-md border border-pink-100 shadow-2xs select-none">
+                <span className="h-3.5 w-3.5 bg-[#e2136e] rounded-full flex items-center justify-center text-[8px] font-black text-white font-sans shrink-0">b</span>
+                <span className="text-[9px] font-black text-[#e2136e] font-sans">bKash</span>
+                <span className="text-[8px] font-bold text-zinc-400 px-1 border-l border-zinc-200">বিকাশ</span>
               </div>
 
-              {/* Group 2: Intl and Bank payments */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-black uppercase text-teal-400 bg-teal-950/60 px-2.5 py-0.5 rounded-md border border-teal-800/60 font-sans tracking-wider">
-                    Int'l Cards & Bank
-                  </span>
-                  <span className="text-[11px] font-extrabold text-emerald-100">আন্তর্জাতিক কার্ড ও অনলাইন ব্যাংক পেমেন্ট</span>
+              {/* Nagad */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-white rounded-md border border-orange-100 shadow-2xs select-none">
+                <span className="h-3.5 w-3.5 bg-[#f85c24] rounded-full flex items-center justify-center text-[8px] font-black text-white font-sans shrink-0">n</span>
+                <span className="text-[9px] font-black text-[#f85c24] font-sans">Nagad</span>
+                <span className="text-[8px] font-bold text-zinc-400 px-1 border-l border-zinc-200">নগদ</span>
+              </div>
+
+              {/* Rocket */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-white rounded-md border border-purple-100 shadow-2xs select-none">
+                <span className="h-3.5 w-3.5 bg-[#8c3494] rounded-full flex items-center justify-center text-[7px] font-black text-white font-sans shrink-0">R</span>
+                <span className="text-[9px] font-black text-[#8c3494] font-sans">Rocket</span>
+                <span className="text-[8px] font-bold text-zinc-400 px-1 border-l border-zinc-200">রকেট</span>
+              </div>
+
+              {/* Visa */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-[#1a1f71] rounded-md border border-blue-900 shadow-2xs select-none">
+                <span className="text-[8.5px] font-black italic text-white font-sans tracking-tight">VISA</span>
+                <span className="text-[8px] font-bold text-blue-300 px-1 border-l border-blue-800">ভিসা</span>
+              </div>
+
+              {/* Mastercard */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-[#212121] rounded-md border border-zinc-800 shadow-2xs select-none">
+                <div className="flex -space-x-0.5 items-center shrink-0">
+                  <span className="h-2.5 w-2.5 bg-[#eb001b] rounded-full opacity-90 block"></span>
+                  <span className="h-2.5 w-2.5 bg-[#ff5f00] rounded-full opacity-90 block"></span>
                 </div>
+                <span className="text-[8.5px] font-black text-white font-sans">MC</span>
+                <span className="text-[8px] font-bold text-zinc-400 px-1 border-l border-zinc-700">কার্ড</span>
+              </div>
 
-                <div className="flex flex-wrap gap-2.5">
-                  {/* Visa */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-[#1a1f71] rounded-xl border border-blue-900 shadow-xs transition hover:scale-103 shrink-0 select-none">
-                    <span className="text-[11px] font-black italic text-white font-sans tracking-tight">VISA</span>
-                    <span className="text-[9px] font-bold text-blue-300 px-1.5 border-l border-blue-800">ভিসা</span>
-                  </div>
+              {/* Bank Transfer */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-white rounded-md border border-emerald-100 shadow-2xs select-none">
+                <span className="text-[8px] font-black text-emerald-800 font-sans">🏛 BANK</span>
+                <span className="text-[8px] font-bold text-emerald-950 px-1 border-l border-zinc-200 font-sans">ব্যাংক</span>
+              </div>
 
-                  {/* Mastercard */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-[#212121] rounded-xl border border-zinc-800 shadow-xs transition hover:scale-103 shrink-0 select-none">
-                    <div className="flex -space-x-1 items-center shrink-0">
-                      <span className="h-3 w-3 bg-[#eb001b] rounded-full opacity-90 block"></span>
-                      <span className="h-3 w-3 bg-[#ff5f00] rounded-full opacity-90 block"></span>
-                    </div>
-                    <span className="text-[11px] font-black text-white font-sans">mastercard</span>
-                    <span className="text-[9px] font-bold text-zinc-400 px-1.5 border-l border-zinc-700">কার্ড</span>
-                  </div>
-
-                  {/* Bank Transfer */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-white rounded-xl border border-emerald-100 shadow-xs transition hover:scale-103 shrink-0 select-none">
-                    <span className="text-[10px] font-black text-emerald-800 font-sans">🏛 BANK</span>
-                    <span className="text-[9px] font-extrabold text-[#033c2a] px-1.5 border-l border-zinc-200">ব্যাংক পেমেন্ট</span>
-                  </div>
-                </div>
+              {/* Cash on Delivery */}
+              <div className="flex items-center justify-center gap-1 w-full h-8 px-2 bg-white rounded-md border border-emerald-100 shadow-2xs select-none col-span-2 xs:col-span-1 sm:col-span-1 md:col-span-1">
+                <span className="text-[8px] font-black text-emerald-800 font-sans">📦 COD</span>
+                <span className="text-[8px] font-bold text-emerald-950 px-1 border-l border-zinc-200 font-sans font-medium">ক্যাশ</span>
               </div>
 
             </div>
           </div>
 
           {/* Bottom Copyright and Navigation Bar */}
-          <div className="sm:flex sm:items-center sm:justify-between text-emerald-100 font-medium pt-2">
-            <div className="space-y-4 text-left">
-              <p className="text-[11px] text-emerald-300 font-sans">© 2026 কৃষক বাজার (Krishok Bazar). সামাজিক এগ্রো-উদ্যোগ। যথাযথ কপিরাইট সংরক্ষিত।</p>
-              {/* social media links as requested by user */}
-              <div className="flex items-center gap-3">
-                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ফেসবুক">
-                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M9 8H7v3h2v9h4v-9h3.6l.4-3H13V6c0-.5.5-1 1-1h3V1H13c-3 0-4 1.5-4 4v3z"/></svg>
-                </a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ইউটিউব">
-                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M23.5 6.4c-.3-1.2-1.3-2.1-2.5-2.4C18.8 3.5 12 3.5 12 3.5s-6.8 0-9 .5c-1.2.3-2.2 1.2-2.5 2.4C0 8.6 0 12 0 12s0 3.4.5 5.6c.3 1.2 1.3 2.1 2.5 2.4 2.2.5 9 .5 9 .5s6.8 0 9-.5c1.2-.3 2.2-1.2 2.5-2.4.5-2.2.5-5.6.5-5.6s0-3.4-.5-5.6zM9.5 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
-                </a>
-                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="টুইটার / এক্স">
-                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M18.2 2.4h3.3l-7.2 8.2 8.5 11h-6.6l-5.2-6.8-5.9 6.8H1.8l7.7-8.8L1.3 2.4h6.8l4.7 6.2 5.4-6.2zm-1.2 17.6h1.8L7.1 4.3H5.1l11.9 15.7z"/></svg>
-                </a>
-                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-emerald-800/80 text-emerald-100 hover:bg-amber-500 hover:text-white hover:scale-110 active:scale-95 transition-all shadow-xs" title="ইনস্টাগ্রাম">
-                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.1c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.5.6.2 1 .5 1.4 1s.7.8 1 1.4c.2.4.4 1 .5 2.2.1 1.3.1 1.6.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.5 2.2-.2.6-.5 1-1 1.4s-.8.7-1.4 1c-.4.2-1 .4-2.2.5-1.3.1-1.6.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.5-.6-.2-1-.5-1.4-1s-.7-.8-1-1.4c-.2-.4-.4-1-.5-2.2-.1-1.3-.1-1.6-.1-4.9s0-3.6.1-4.9c.1-1.2.3-1.8.5-2.2.2-.6.5-1 1-1.4s.8-.7 1.4-1c.4-.2 1-.4 2.2-.5 1.3-.1 1.6-.1 4.9-.1M12 0C8.7 0 8.3 0 7 .1 5.7.2 4.8.4 4 .7c-.8.3-1.5.7-2.1 1.4C1.2 2.7.8 3.4.5 4.2.2 5 .1 5.9.1 7.2 0 8.5 0 8.9 0 12.2s0 3.6.1 4.9c.1 1.3.3 2.1.6 2.9.3.8.7 1.5 1.4 2.1.7.7 1.4 1.1 2.1 1.4.8.3 1.6.4 2.9.5 1.3.1 1.7.1 4.9.1s3.6 0 4.9-.1c1.3-.1 2.1-.3 2.9-.6.8-.3 1.5-.7 2.1-1.4.7-.7 1.1-1.4 1.4-2.1.3-.8.4-1.6.5-2.9.1-1.3.1-1.7.1-4.9s0-3.6-.1-4.9c-.1-1.3-.3-2.1-.6-2.9-.3-.8-.7-1.5-1.4-2.1-.7-.7-1.4-1.1-2.1-1.4-.8-.3-1.6-.4-2.9-.5C15.6 0 15.2 0 12 0zm0 5.8c-3.4 0-6.1 2.7-6.1 6.1s2.7 6.1 6.1 6.1 6.1-2.7 6.1-6.1-2.7-6.1-6.1-6.1zm0 10.2c-2.3 0-4.1-1.8-4.1-4.1s1.8-4.1 4.1-4.1 4.1 1.8 4.1 4.1-1.8 4.1-4.1 4.1zm6.4-11.5c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5 1.5-.7 1.5-1.5-.7-1.5-1.5-1.5z"/></svg>
-                </a>
-              </div>
-            </div>
-            <div className="mt-6 sm:mt-0 flex flex-wrap items-center justify-center gap-5 text-[11px] font-black tracking-wide text-emerald-200">
-              <button onClick={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">হোম (Home)</button>
-              <button onClick={() => { setView('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">তাজা পণ্য (Products)</button>
-              <button onClick={() => { setView('weekly-combos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">কম্বো বাজেট (Weekly Budget)</button>
-              <button onClick={() => { setView('ready-to-cook'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">রেডি-টু-কুক (Ready to Cook)</button>
-              <button onClick={() => { setView('our-story'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">আমাদের গল্প (Our Story)</button>
-              <button onClick={() => { setView('privacy-policy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors text-amber-300 cursor-pointer select-none font-extrabold pb-0.5 border-b border-amber-300">গোপনীয়তা নীতি</button>
-              <button onClick={() => { setView('shipping-policy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors text-amber-300 cursor-pointer select-none font-extrabold pb-0.5 border-b border-amber-300">ফেরত ও শিপিং নীতি</button>
-              <button 
-                onClick={() => {
-                  setView('shop');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => {
-                    const searchInput = document.querySelector('input[type="text"]');
-                    if (searchInput) (searchInput as HTMLInputElement).focus();
-                  }, 250);
-                }} 
-                className="hover:text-amber-400 transition-colors cursor-pointer select-none"
-              >
-                খুঁজুন (Search)
-              </button>
+          <div className="relative w-full border-t border-emerald-800/20 pt-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start justify-between text-emerald-100 font-medium">
               
-              {/* LANGUAGE SWITCHER PLACED SOLELY IN THE FOOTER */}
-              <button 
-                onClick={toggleLanguage}
-                className="rounded-xl bg-emerald-800 border border-emerald-700 px-3 py-1.5 text-[10px] font-black text-emerald-100 hover:bg-emerald-700 hover:border-emerald-600 flex items-center gap-1 cursor-pointer transition active:scale-95 select-none shrink-0"
-                title=" ভাষা পরিবর্তন করুন / Switch Language"
-              >
-                🌐 <span className="font-sans font-extrabold">{language === 'en' ? 'বাংলা' : 'ENGLISH'}</span>
-              </button>
+              {/* Left Column: Copyright & Socials */}
+              <div className="relative space-y-4 text-left w-full">
+                <p className="text-[11px] text-emerald-300 font-sans leading-relaxed">© 2026 কৃষক বাজার (Krishok Bazar). সামাজিক এগ্রো-উদ্যোগ। যথাযথ কপিরাইট সংরক্ষিত।</p>
+                {/* social media links with high fidelity brand matching and direct support */}
+                <div className="flex flex-wrap items-center gap-2.5 mt-2">
+                  {/* Facebook Brand Icon */}
+                  <a 
+                    href="https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/"
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="h-8 w-8 rounded-xl bg-[#1877F2] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-sm cursor-pointer" 
+                    title="ফেসবুক পেজ"
+                  >
+                    <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  </a>
+
+                  {/* YouTube Brand Icon */}
+                  <a 
+                    href="https://youtube.com/@krishokbazarbd?si=SvzrYv3A3M0fXDbO"
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="h-8 w-8 rounded-xl bg-[#FF0000] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-sm cursor-pointer" 
+                    title="ইউটিউব চ্যানেল"
+                  >
+                    <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.4.5 5.6c.3 1.2 1.3 2.1 2.5 2.4 2.2.5 9 .5 9 .5s6.8 0 9-.5c1.2-.3 2.2-1.2 2.5-2.4.5-2.2.5-5.6.5-5.6s0-3.4-.5-5.6zM9.5 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
+                  </a>
+
+                  {/* TikTok Brand Icon */}
+                  <a 
+                    href="https://www.tiktok.com/@krishokbazarbd"
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="h-8 w-8 rounded-xl bg-black flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-sm cursor-pointer" 
+                    title="টিকটক আইডি"
+                  >
+                    <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.4-.63-.62v7.33c0 1.94-.48 3.91-1.63 5.46-1.51 2.08-4.14 3.09-6.66 2.65-2.5-.4-4.63-2.26-5.28-4.72-.8-2.93.43-6.23 2.97-7.66 1.05-.6 2.27-.85 3.48-.75v4.14c-.69-.13-1.42-.04-2.03.32-1.07.61-1.53 1.94-1.12 3.12.36 1.08 1.48 1.79 2.62 1.67 1.25-.09 2.22-1.19 2.22-2.45V0c-.26.01-.52.01-.78.02z" /></svg>
+                  </a>
+
+                  {/* WhatsApp Support Brand Icon */}
+                  <a 
+                    href="https://wa.me/8801931355398"
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="h-8 w-8 rounded-xl bg-[#25D366] flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-sm cursor-pointer" 
+                    title="হোয়াটসঅ্যাপ চ্যাট"
+                  >
+                    <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.456L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.858.002-2.634-1.02-5.111-2.879-6.972-1.858-1.861-4.336-2.883-6.971-2.884-5.441 0-9.868 4.425-9.872 9.863-.001 1.761.47 3.483 1.364 5.018l-.946 3.456 3.539-.928zM17.351 14.24c-.291-.146-1.727-.853-1.993-.95-.266-.097-.46-.146-.653.146-.193.291-.749.95-.918 1.143-.169.193-.338.218-.629.072-1.396-.697-2.31-1.2-3.153-2.645-.224-.385.224-.357.641-1.196.069-.141.034-.263-.017-.364-.051-.101-.46-1.107-.63-1.513-.166-.399-.333-.344-.46-.35-.121-.006-.259-.007-.396-.007-.137 0-.361.051-.55.259-.189.208-.724.708-.724 1.728 0 1.02.742 2.007.845 2.149.103.143 1.461 2.23 3.539 3.129 1.134.49 1.832.612 2.485.513.664-.1 1.727-.706 1.97-.1.242-.294.242-.544.17-.597-.072-.051-.266-.148-.557-.294z"/></svg>
+                  </a>
+
+                  {/* Call Hotline Icon */}
+                  <a 
+                    href="tel:01931355398"
+                    className="h-8 w-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white hover:scale-110 active:scale-95 transition shadow-sm cursor-pointer" 
+                    title="হটলাইন কল"
+                  >
+                    <span className="text-[14px]">📞</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Right Column: Navigation Links and Language Switcher */}
+              <div className="relative w-full text-left lg:text-right">
+                <div className="flex flex-wrap items-center justify-start lg:justify-end gap-x-4 gap-y-3 text-[11px] font-black tracking-wide text-emerald-200">
+                  <button onClick={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">হোম (Home)</button>
+                  <button onClick={() => { setView('shop'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">তাজা পণ্য (Products)</button>
+                  <button onClick={() => { setView('weekly-combos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">কম্বো বাজেট (Weekly Budget)</button>
+                  <button onClick={() => { setView('ready-to-cook'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">রেডি-টু-কুক (Ready to Cook)</button>
+                  <button onClick={() => { setView('our-story'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">আমাদের গল্প (Our Story)</button>
+                  <button onClick={() => { setView('privacy-policy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors text-amber-300 cursor-pointer select-none font-extrabold pb-0.5 border-b border-amber-300">গোপনীয়তা নীতি</button>
+                  <button onClick={() => { setView('shipping-policy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors text-amber-300 cursor-pointer select-none font-extrabold pb-0.5 border-b border-amber-300">ফেরত ও শিপিং নীতি</button>
+                  <button 
+                    onClick={() => {
+                      setView('shop');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => {
+                        const searchInput = document.querySelector('input[type="text"]');
+                        if (searchInput) (searchInput as HTMLInputElement).focus();
+                      }, 250);
+                    }} 
+                    className="hover:text-amber-400 transition-colors cursor-pointer select-none"
+                  >
+                    খুঁজুন (Search)
+                  </button>
+                  
+                  {/* LANGUAGE SWITCHER PLACED SOLELY IN THE FOOTER */}
+                  <button 
+                    onClick={toggleLanguage}
+                    className="rounded-xl bg-emerald-800 border border-emerald-700 px-3 py-1.5 text-[10px] font-black text-emerald-100 hover:bg-emerald-700 hover:border-emerald-600 flex items-center gap-1 cursor-pointer transition active:scale-95 select-none shrink-0"
+                    title=" ভাষা পরিবর্তন করুন / Switch Language"
+                  >
+                    🌐 <span className="font-sans font-extrabold">{language === 'en' ? 'বাংলা' : 'ENGLISH'}</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 

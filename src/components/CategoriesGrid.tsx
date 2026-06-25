@@ -33,43 +33,43 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ selectedCategory
   const { categories, siteSettings } = useApp();
 
   return (
-    <section className="py-8 bg-gray-50/50">
+    <section className="py-4 bg-gray-50/50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-bottom justify-between gap-2 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 mb-3">
           <div>
-            <span className="text-xs font-bold text-emerald-600 tracking-wider uppercase block">
+            <span className="text-[10px] font-bold text-emerald-600 tracking-wider uppercase block">
               {siteSettings?.sectionCategoriesSubtitleBn || 'পণ্য ও শ্রেণীবিভাগ'}
             </span>
-            <h2 className="text-2xl font-black text-gray-800 tracking-tight font-sans mt-0.5">
+            <h2 className="text-lg font-black text-gray-800 tracking-tight font-sans mt-0">
               {siteSettings?.sectionCategoriesTitleBn || 'ক্যাটাগরি অনুযায়ী শপিং করুন'}
             </h2>
           </div>
-          <p className="text-xs text-gray-400 font-mono tracking-wide max-w-xs self-end">
+          <p className="text-[10px] text-gray-400 font-mono tracking-wide max-w-xs self-start sm:self-center">
             {categories.length} Categories • Directly Harvested • Verified Farmers
           </p>
         </div>
 
         {/* Categories Horizontal Scroll on Mobile, Grid on Desktop */}
-        <div className="flex sm:grid overflow-x-auto pb-4 sm:pb-0 gap-4 scrollbar-thin scrollbar-thumb-emerald-150 scrollbar-track-transparent sm:grid-cols-5 md:grid-cols-10">
+        <div className="flex sm:grid overflow-x-auto pb-2 sm:pb-0 gap-2.5 scrollbar-thin scrollbar-thumb-emerald-150 scrollbar-track-transparent sm:grid-cols-5 md:grid-cols-10">
           
           {/* "ALL" Button Card */}
           <div
             onClick={() => onSelectCategory('all')}
-            className={`flex flex-col items-center justify-center p-4 min-w-[90px] rounded-2xl border transition-all cursor-pointer select-none text-center ${
+            className={`flex flex-col items-center justify-center p-2 min-w-[80px] rounded-xl border transition-all cursor-pointer select-none text-center ${
               selectedCategory === 'all'
-                ? 'bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white border-emerald-600 shadow-md scale-102 font-bold'
-                : 'bg-white border-gray-100 text-gray-600 hover:border-emerald-200 hover:shadow-sm'
+                ? 'bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white border-emerald-600 shadow-sm scale-102 font-bold'
+                : 'bg-white border-gray-100 text-gray-600 hover:border-emerald-200 hover:shadow-xs'
             }`}
           >
-            <div className={`flex h-12 w-12 items-center justify-center rounded-xl mb-2.5 transition-colors ${
+            <div className={`flex h-9 w-9 items-center justify-center rounded-lg mb-1.5 transition-colors ${
               selectedCategory === 'all' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'
             }`}>
-              <LucideIcons.LayoutGrid className="h-6 w-6" />
+              <LucideIcons.LayoutGrid className="h-5 w-5" />
             </div>
-            <span className="text-[11px] font-bold block max-w-full truncate">সব ক্যাটাগরি</span>
-            <span className="text-[9px] uppercase opacity-75 hidden sm:block font-mono tracking-wider mt-0.5">All Items</span>
+            <span className="text-[10px] font-bold block max-w-full truncate">সব ক্যাটাগরি</span>
+            <span className="text-[8px] uppercase opacity-75 hidden sm:block font-mono tracking-wider mt-0.5">All Items</span>
           </div>
 
           {/* Individual Category Cards */}
@@ -84,21 +84,21 @@ export const CategoriesGrid: React.FC<CategoriesGridProps> = ({ selectedCategory
               <div
                 key={cat.id}
                 onClick={() => onSelectCategory(cat.id)}
-                className={`flex flex-col items-center justify-center p-3.5 min-w-[92px] rounded-2xl border transition-all cursor-pointer select-none text-center ${
+                className={`flex flex-col items-center justify-center p-2 min-w-[82px] rounded-xl border transition-all cursor-pointer select-none text-center ${
                   isSelected
-                    ? 'bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white border-emerald-600 shadow-md scale-102 font-bold'
-                    : `bg-white border-gray-100 text-gray-700 hover:border-emerald-300 hover:shadow-sm hover:scale-101`
+                    ? 'bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white border-emerald-600 shadow-sm scale-102 font-bold'
+                    : `bg-white border-gray-100 text-gray-700 hover:border-emerald-300 hover:shadow-xs hover:scale-101`
                 }`}
               >
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl mb-2.5 transition-colors ${
+                <div className={`flex h-9 w-9 items-center justify-center rounded-lg mb-1.5 transition-colors ${
                   isSelected ? 'bg-white/20 text-white' : `${theme.bg} ${theme.text}`
                 }`}>
-                  <IconComponent className="h-5.5 w-5.5" />
+                  <IconComponent className="h-4.5 w-4.5" />
                 </div>
-                <span className="text-[11px] font-semibold block max-w-full truncate font-sans">
+                <span className="text-[10px] font-semibold block max-w-full truncate font-sans">
                   {cat.nameBn}
                 </span>
-                <span className={`text-[8px] uppercase tracking-wider block font-mono mt-0.5 ${
+                <span className={`text-[7.5px] uppercase tracking-wider block font-mono mt-0.5 ${
                   isSelected ? 'text-emerald-100' : 'text-gray-400'
                 }`}>
                   {cat.nameEn}

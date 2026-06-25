@@ -9,7 +9,6 @@ import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera, Heart } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
-import { LazyImage } from './LazyImage';
 import { motion } from 'motion/react';
 
 interface ProductCardProps {
@@ -85,11 +84,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const [currentSrc, setCurrentSrc] = React.useState(getInitialSrc());
   const [attemptIndex, setAttemptIndex] = React.useState(-1); // Start at -1 to indicate we are trying initial source
+  const [isImageLoaded, setIsImageLoaded] = React.useState(false);
 
   React.useEffect(() => {
     setCurrentSrc(getInitialSrc());
     setAttemptIndex(-1);
+    setIsImageLoaded(false);
   }, [product]);
+
+  React.useEffect(() => {
+    setIsImageLoaded(false);
+  }, [currentSrc]);
 
   const handleImageError = () => {
     const validUrls = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
@@ -189,35 +194,59 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* BADGES & COVERS CONTAINER */}
       <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-        <LazyImage
+        {/* High-performance Skeleton shimmer loader */}
+        {!isImageLoaded && (
+          <div className="absolute inset-0 z-10 bg-slate-100 overflow-hidden">
+            <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+            <div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" 
+              style={{
+                animation: 'kb-card-shimmer 1.5s infinite ease-in-out',
+                transform: 'translateX(-100%)'
+              }}
+            />
+            <style>{`
+              @keyframes kb-card-shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+              }
+            `}</style>
+          </div>
+        )}
+
+        <img
           src={currentSrc}
           alt={product.title}
-          className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108"
+          loading="lazy"
           referrerPolicy="no-referrer"
+          onLoad={(e) => {
+            const img = e.currentTarget;
+            if ('decode' in img) {
+              img.decode()
+                .then(() => {
+                  setIsImageLoaded(true);
+                })
+                .catch((err) => {
+                  console.error("Decoding image failed:", err);
+                  setIsImageLoaded(true);
+                });
+            } else {
+              setIsImageLoaded(true);
+            }
+          }}
           onError={handleImageError}
+          className={`h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108 ${
+            isImageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
         />
 
-        {/* VERIFIED BADGE */}
+        {/* BLUE VERIFICATION TICK ONLY (NO TEXT OVERLAY) */}
         {product.isVerified && (
-          <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded bg-emerald-600 px-1.5 py-0.5 text-[8px] font-bold tracking-wide text-white uppercase shadow-md border border-emerald-500">
-            ✔ Verified
-          </span>
-        )}
-
-        {/* LOW STOCK BADGE */}
-        {product.stock > 0 && product.stock < 5 && (
-          <span className={`absolute left-2 z-10 inline-flex items-center gap-1 rounded bg-red-600 text-white px-1.5 py-0.5 text-[8px] font-extrabold uppercase shadow-md animate-pulse border border-red-500 ${
-            product.isVerified ? 'top-8' : 'top-2'
-          }`}>
-            ⚠️ {language === 'bn' ? 'সীমিত স্টক' : 'Low Stock'}
-          </span>
-        )}
-
-        {/* READY TO COOK BADGE */}
-        {product.isReadyToCook && (
-          <span className="absolute right-11 top-2.5 z-10 inline-flex items-center gap-1 rounded bg-indigo-600 px-1.5 py-0.5 text-[8px] font-bold text-white uppercase shadow">
-            🍳 R2C
-          </span>
+          <div className="absolute left-2 top-2 z-10 flex items-center justify-center p-0.5 rounded-full bg-white/90 backdrop-blur-xs shadow-sm border border-sky-100" title={language === 'bn' ? 'ভেরিফাইড কৃষক' : 'Verified Farmer'}>
+            <svg className="h-3.5 w-3.5 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.7l-3.61.81.34 3.68L1 12l2.44 2.79-.34 3.69 3.61.82 1.89 3.2L12 21.04l3.4 1.46 1.89-3.2 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z" />
+            </svg>
+          </div>
         )}
 
         {/* WISHLIST HEART TOGGLE BUTTON */}
@@ -245,48 +274,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </motion.div>
         </button>
 
-        {/* DISCOUNT BADGE */}
+        {/* DISCOUNT BADGE (ONLY THIS WRITING ALLOWED ON THE IMAGE) */}
         {hasDiscount && (
-          <span className="absolute left-2 bottom-2 z-10 inline-flex items-center rounded bg-red-500 px-1.5 py-0.5 text-[8px] font-bold text-white shadow">
-            -{Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
+          <span className="absolute left-2 bottom-2 z-10 inline-flex items-center rounded-md bg-rose-600 px-1.5 py-0.5 text-[8px] sm:text-[9.5px] font-black text-white shadow-sm font-sans">
+            {Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% {language === 'bn' ? 'ছাড়' : 'OFF'}
           </span>
-        )}
-
-        {/* EXTERNAL WEB LINK BADGE */}
-        {product.googleDriveFolderUrl && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (product.googleDriveFolderUrl) {
-                window.open(product.googleDriveFolderUrl, '_blank');
-              }
-            }}
-            className="absolute right-2 bottom-2 z-10 inline-flex items-center gap-1 rounded bg-slate-900/85 hover:bg-slate-950 px-2 py-0.5 text-[8px] font-black tracking-wider text-white shadow-md border border-slate-700 transition cursor-pointer"
-            title={language === 'bn' ? 'সরাসরি পেজে ভিজিট করুন' : 'Visit original webpage'}
-          >
-            🌐 {product.googleDriveFolderUrl.includes('shopify.com') ? 'Shopify' : product.googleDriveFolderUrl.includes('drive.google.com') ? 'Drive' : 'Link'}
-          </button>
-        )}
-
-        {/* FLOATING COMPARE BUTTON */}
-        {onToggleCompare && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleCompare(product.id);
-            }}
-            className={`absolute right-2 bottom-2 z-15 px-2 py-1 rounded-sm border shadow-sm transition-all flex items-center justify-center gap-0.5 cursor-pointer hover:scale-105 active:scale-95 ${
-              isCompared 
-                ? 'bg-amber-500 border-amber-400 text-white font-extrabold' 
-                : 'bg-white/85 border-gray-200 text-gray-500 hover:bg-white hover:text-emerald-700'
-            }`}
-            title={language === 'bn' ? 'তুলনা তালিকায় যোগ করুন' : 'Add to comparison list'}
-          >
-            <span className="text-[10px]">⚖️</span>
-            <span className="text-[9px] font-bold leading-none">{isCompared ? (language === 'bn' ? 'যুক্ত' : 'Selected') : (language === 'bn' ? 'তুলনা' : 'Compare')}</span>
-          </button>
         )}
 
         {/* HOVER QUICK VIEW BUTTON */}
@@ -301,10 +293,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* TEXT CONTENT CONTAINER */}
-      <div className="flex flex-1 flex-col p-2 sm:p-3">
+      <div className="flex flex-1 flex-col p-2">
         {/* Category + Star Rating Row */}
         <div className="flex items-center justify-between gap-1 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-gray-400">
-          <span>{product.category}</span>
+          <div className="flex items-center gap-1 flex-wrap">
+            <span>{product.category}</span>
+            {product.isReadyToCook && (
+              <span className="text-[7px] text-indigo-600 font-black px-1 py-0.25 bg-indigo-50 rounded select-none shrink-0" title="Ready to Cook">
+                🍳 R2C
+              </span>
+            )}
+            {product.stock > 0 && product.stock < 5 && (
+              <span className="text-[7px] font-black text-rose-600 px-1 py-0.25 bg-rose-50 rounded select-none shrink-0 animate-pulse">
+                ⚠️ {language === 'bn' ? 'সীমিত স্টক' : 'Low Stock'}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-0.5 text-amber-500">
             <Star className="h-2 w-2 sm:h-2.5 sm:w-2.5 fill-amber-500 shrink-0" />
             <span className="text-gray-600 font-mono mt-0.5 text-[8px] sm:text-[9px]">{product.rating}</span>
@@ -319,14 +323,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Farmer credit reference */}
         <div className="mt-0.5 flex items-center gap-1 flex-wrap text-[8px] sm:text-[10px] text-gray-500 font-medium">
           <Landmark className="h-2.5 w-2.5 text-emerald-600 shrink-0" />
-          <span className="truncate max-w-[80px] sm:max-w-[120px]" title={product.farmerName}>
+          <span className="inline-flex items-center gap-1 truncate max-w-[100px] sm:max-w-[140px]" title={product.farmerName}>
             <strong className="text-gray-650 font-bold">{product.farmerName}</strong>
+            {product.isVerified && (
+              <svg className="h-3.5 w-3.5 text-[#1877F2] shrink-0 inline-block align-middle" viewBox="0 0 24 24" fill="currentColor" title={language === 'bn' ? 'ভেরিফাইড কৃষক' : 'Verified Farmer'}>
+                <path d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.7l-3.61.81.34 3.68L1 12l2.44 2.79-.34 3.69 3.61.82 1.89 3.2L12 21.04l3.4 1.46 1.89-3.2 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z" />
+              </svg>
+            )}
           </span>
         </div>
 
         {/* Stateful Pack Option Selection */}
         {packOptions.length > 0 && (
-          <div className="mt-2.5 mb-1.5 flex items-center gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
+          <div className="mt-1.5 mb-1 flex items-center gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
             <span className="text-gray-400 font-bold shrink-0">
               {language === 'bn' ? 'পরিমাণ:' : 'Size:'}
             </span>
@@ -350,7 +359,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Price + Single Buy Now Button Bottom Section */}
-        <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between gap-1.5">
+        <div className="mt-auto pt-1 border-t border-gray-100 flex items-center justify-between gap-1.5">
           {/* Pricing display */}
           <div className="flex flex-col">
             {hasDiscount && (
