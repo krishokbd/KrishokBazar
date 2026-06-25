@@ -9,7 +9,7 @@ import { demoFarmers, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS 
 import { new45Products as demoProducts } from './newProducts';
 import { HERO_CAROUSEL_BANNERS } from './assets';
 import { db, isFirebaseConfigured, handleFirestoreError, OperationType } from './firebase';
-import { cleanImageUrl } from './utils';
+import { cleanImageUrl, sanitizeFirestoreData } from './utils';
 import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
 import { logAnalyticsEvent } from './lib/analytics';
 import { supabaseService } from './lib/supabaseService';
@@ -404,13 +404,116 @@ export const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
         nameEn: "Organic Fresh Spicy Chilies",
         image: "https://images.unsplash.com/photo-1588252303782-cb80119cb665?w=600",
         link: "",
-        // Ensure all 5 real partner farmers are always loaded if missing
-    const missing = demoFarmers.filter(df => !loaded.some(lf => lf.id === df.id));
-    if (missing.length > 0) {
-      loaded = [...loaded, ...missing];
-    }
-    return loaded;
-  });
+        weight: "২৫০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [30, 55, 100, 240],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      }
+    ]
+  },
+  {
+    id: "co-2",
+    titleBn: "২। পুষ্টি বুস্টার তাজা ফল বাস্কেট",
+    titleEn: "2. Vitamin Booster Fruit Basket",
+    products: [
+      {
+        id: "co-2-p-1",
+        nameBn: "সবুজ রসালো মাল্টা (Malta Juice)",
+        nameEn: "Juicy Mountain Green Malta",
+        image: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [120, 230, 440, 1050],
+        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
+      },
+      {
+        id: "co-2-p-2",
+        nameBn: "মিষ্টি লাল বেদানা (Sweet Pomegranate)",
+        nameEn: "Sweet Red Pomegranate",
+        image: "https://images.unsplash.com/photo-1601558252271-e405a76865d4?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [250, 480, 950, 2300],
+        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
+      },
+      {
+        id: "co-2-p-3",
+        nameBn: "সবুজ আপেল (Crisp Green Apple)",
+        nameEn: "Crisp Fresh Green Apples",
+        image: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [180, 350, 680, 1600],
+        priceLabels: ["১ কেজি", "২ কেজি", "৪ কেজি", "১০ কেজি"]
+      },
+      {
+        id: "co-2-p-4",
+        nameBn: "কলা সাগর সবরি কম্বো (Tasty Hill Bananas)",
+        nameEn: "Sweet Hill Bananas Pack",
+        image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600",
+        link: "",
+        weight: "১ ডজন",
+        date: "১২ জুন, ২০২৬",
+        prices: [90, 175, 340, 800],
+        priceLabels: ["১ ডজন", "২ ডজন", "৪ ডজন", "১০ ডজন"]
+      }
+    ]
+  },
+  {
+    id: "co-3",
+    titleBn: "৩। কিচেন এসেনশিয়াল অর্গানিক বাস্কেট",
+    titleEn: "3. Kitchen Essentials Organic Basket",
+    products: [
+      {
+        id: "co-3-p-1",
+        nameBn: "সুন্দরবনের খাঁটি মধু (Pure Honey)",
+        nameEn: "Pure Unfiltered Sundarban Honey",
+        image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600",
+        link: "",
+        weight: "২৫০ গ্রাম",
+        date: "১২ জুন, ২০২৬",
+        prices: [350, 680, 1320, 3100],
+        priceLabels: ["২৫০ গ্রাম", "৫০০ গ্রাম", "১ কেজি", "২.৫ কেজি"]
+      },
+      {
+        id: "co-3-p-2",
+        nameBn: "সতেজ শসা (Green Cucumber)",
+        nameEn: "Crisp Green Cucumbers",
+        image: "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [40, 75, 140, 320],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      },
+      {
+        id: "co-3-p-3",
+        nameBn: "কাগজি সুগন্ধি লেবু (Green Lemons)",
+        nameEn: "Juicy Seedless Lemons",
+        image: "https://images.unsplash.com/photo-1590502596717-295b7fece67b?w=600",
+        link: "",
+        weight: "১২ পিস",
+        date: "১২ জুন, ২০২৬",
+        prices: [30, 50, 95, 180],
+        priceLabels: ["৪টি", "১২টি (১ ডজন)", "২৪টি (২ ডজন)", "৪০টি"]
+      },
+      {
+        id: "co-3-p-4",
+        nameBn: "পাহাড়ি মিষ্টি পেঁপে (Sweet Papaya)",
+        nameEn: "Organic Sweet Rich Papaya",
+        image: "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=600",
+        link: "",
+        weight: "১ কেজি",
+        date: "১২ জুন, ২০২৬",
+        prices: [55, 100, 190, 450],
+        priceLabels: ["৫০০ গ্রাম", "১ কেজি", "২ কেজি", "৫ কেজি"]
+      }
+    ]
+  }
+];
 
   const COMBO_BASKETS_DEFAULT: Product[] = [
     {
@@ -557,269 +660,31 @@ export const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
   ];
 
   // MARKER_COMBO_END
-    {
-      id: 'cb3',
-      title: 'মেগা পুষ্টি কম্বো ঝুড়ি (Premium Mega Nutrients)',
-      description: 'বড় ও স্বাস্থ্যসচেতন যৌথ পরিবারের জন্য তৈরি মেগা প্যাক! তাজা লাল শাক ৪ আঁটি, দেশী আলু ৫ কেজি, রসুন ১ কেজি, পেঁয়াজ ৩ কেজি, আদা ৫০০ গ্রাম, কচি লাউ ২টি, বেগুন ও পটল ২ কেজি করে, তাজা মিষ্টি পেঁপে ৩ কেজি এবং ১ ডজন লাল ডিম।',
-      price: 1550,
-      discountPrice: 1450,
-      category: 'ready-to-cook',
-      farmerId: 'f72',
-      farmerName: 'সুরুজ মিয়া',
-      farmName: 'সুরুজ সতেজ সবজি খামার',
-      rating: 4.9,
-      stock: 15,
-      images: [
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    },
-    {
-      id: 'cb4',
-      title: 'মেগা খাসি ও সবজি উৎসব বাস্কেট (Grand Mutton Festival Basket)',
-      description: 'পারিবারিক ভোজ ও উৎসবের জন্য সেরা আয়োজন! ২ কেজি একদম তাজা প্রিমিয়াম কোয়ালিটির খাসির মাংস (হাড়সহ), ৫ কেজি দেশী আলুর বস্তা, ২ কেজি পেঁয়াজ, ৫০০ গ্রাম খাঁটি ঘি এবং সুগন্ধি চিনিগুঁড়া বাসমতি চাল ৩ কেজি।',
-      price: 3800,
-      discountPrice: 3500,
-      category: 'ready-to-cook',
-      farmerId: 'f73',
-      farmerName: 'ডাঃ মোতালেব',
-      farmName: 'মোতালেব এগ্রো ও পোল্ট্রি',
-      rating: 5.0,
-      stock: 10,
-      images: [
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    },
-    {
-      id: 'cb5',
-      title: 'জৈব লাল আলু মিষ্টিকন্দ (Organic Sweet Potato Selection)',
-      description: 'নরম সুস্বাদু আঁশছাড়া পুষ্টিকর লাল মিষ্টি আলু সরাসরি সাইফুল ভাইয়ের ক্ষেত থেকে!',
-      price: 150,
-      discountPrice: 120,
-      category: 'ready-to-cook',
-      farmerId: 'f70',
-      farmerName: 'সাইফুল ইসলাম',
-      farmName: 'সাইফুল অর্গানিক এগ্রো',
-      rating: 4.7,
-      stock: 40,
-      images: [
-        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    },
-    {
-      id: 'cb6',
-      title: 'খাঁটি সকালের নাস্তা কম্বো (Fresh Breakfast Mini Combo)',
-      description: '১ ডজন সতেজ হাঁসের ডিম এবং ১ লিটার খাঁটি গরুর দুধের স্বাস্থ্যকর ট্রায়াল বাস্কেট!',
-      price: 330,
-      discountPrice: 300,
-      category: 'ready-to-cook',
-      farmerId: 'f71',
-      farmerName: 'মান্নান হোসেন',
-      farmName: 'মান্নান সমন্বিত ডেইরি ও কৃষি',
-      rating: 4.8,
-      stock: 35,
-      images: [
-        'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/1545578418923.jpg?v=1778790838',
-        'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_13.jpg?v=1778789927'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    },
-    {
-      id: 'cb7',
-      title: 'দেশী সুগন্ধি মসলা ট্রায়াল প্যাক (Spice Starter Trial Pack)',
-      description: 'রান্নার প্রয়োজনীয় তাজা মসলার বাজেট অফার! লাল শুকনা মরিচ ১০০ গ্রাম, देशী হলুদ গুঁড়া ১০০ গ্রাম, ধনে গুঁড়া ১০০ গ্রাম, ও জিরা ৫০ গ্রাম।',
-      price: 150,
-      discountPrice: 120,
-      category: 'ready-to-cook',
-      farmerId: 'f72',
-      farmerName: 'সুরুজ মিয়া',
-      farmName: 'সুরুজ সতেজ সবজি খামার',
-      rating: 4.9,
-      stock: 50,
-      images: [
-        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    }
-  ];
 
-��ানো হয়নি। ল্যাব টেস্টে ১০০% খাঁটি প্রমাণিত।',
-      descriptionEn: 'Pure and organic wild flower honey directly harvested by expert honey hunters in Sundarbans forest. Chemically verified and completely raw.',
-      productId: 'p3',
-      createdAt: new Date(Date.now() - 24 * 3600000).toISOString()
-    }
-  ];ত জানাবেন!',
-      images: ['https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?w=600'],
-      videos: ['https://youtube.com/shorts/iRHqWnxj-jU?feature=share'],
-      likes: 24,
-      likedByUserIds: [],
-      comments: [
-        {
-          id: 'c1',
-          userName: 'মান্নান হোসেন',
-          content: 'মাশাআল্লাহ সাইফুল ভাই, আপনার উদ্যোগ প্রশংসনীয়। রাসায়নিকমুক্ত ফসল জোগানোর এই প্রচেষ্টা সার্থক হোক।',
-          createdAt: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: 'c2',
-          userName: 'সুরুজ মিয়া',
-          content: 'খুব সুন্দর ভিডিও সাইফুল ভাই!',
-          createdAt: new Date().toISOString()
-        }
-      ],
-      createdAt: new Date(Date.now() - 86400000).toISOString()
-    },
-    {
-      id: 'post2',
-      farmerId: 'f71',
-      farmerName: 'মান্নান হোসেন',
-      avatar: 'female',
-      content: 'সম্মানিত ক্রেতাবৃন্দ, আমার সমন্বিত দুগ্ধ ও ডিম খামারে আজকে একদম ফ্রেশ হাঁসের ডিম সংগ্রহ করেছি। কোনো কৃত্রিম ফিড ছাড়াই এদের প্রাকৃতিক উপায়ে পালন করা হয়েছে। ফ্যামিলি বাজেট কম্বো বাস্কেটের সাথে আপনারা ডিমের অর্ডারও প্লেস করতে পারেন।',
-      images: ['https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=600'],
-      videos: ['https://youtube.com/shorts/oLgAz7tiS-Y?feature=share'],
-      likes: 18,
-      likedByUserIds: [],
-      comments: [
-        {
-          id: 'c3',
-          userName: 'সাইফুল ইসলাম',
-          content: 'ভাই, হাঁসের এই ডিমের কোয়ালিটি সত্যিই অসাধারণ দেখায়!',
-          createdAt: new Date().toISOString()
-        }
-      ],
-      createdAt: new Date(Date.now() - 43200000).toISOString()
-    }
-  ];
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [farmers, setFarmers] = useState<Farmer[]>(() => {
+    const saved = localStorage.getItem('kb_farmers');
+    let loaded: Farmer[] = saved ? JSON.parse(saved) : demoFarmers;
+    
+    // Clean up old demo farmers (e.g., in f1 to f69 range) and keep the five real ones and newly introduced active files
+    const allowedIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
+    loaded = loaded.filter(f => {
+      if (allowedIds.includes(f.id)) return true;
+      const match = f.id.match(/^f(d+)$/);
+      if (match) {
+        const num = parseInt(match[1]);
+        if (num < 70) return false;
+      }
+      return true;
+    });
 
-  const DEFAULT_HARVEST_ALERTS: HarvestAlert[] = [
-    {
-      id: 'ha-1',
-      cropNameBn: 'রাজশাহীর ল্যাংড়া ও গোপালভোগ আম',
-      cropNameEn: 'Himsagar & Lengra Mangoes from Rajshahi',
-      farmerName: 'সাইফুল ইসলাম',
-      district: 'Rajshahi',
-      imageUrl: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=600&auto=format&fit=crop&q=80',
-      statusBn: 'সদ্য সংগৃহীত',
-      statusEn: 'Just Harvested',
-      harvestDate: 'June 12, 2026',
-      descriptionBn: 'আমের রাজা হিমসাগর ও ল্যাংড়া আম এখন সম্পূর্ণ প্রাকৃতিক উপায়ে ডালপাকা মিষ্টি স্বাদে ভরপুর। সরাসরি খামারি সাইফুল ইসলামের বাগান থেকে পেড়ে ২৪ ঘন্টায় পৌঁছাবে আপনার ঘরে!',
-      descriptionEn: 'The king of mangoes, Himsagar and Lengra, is ready. Sourced directly from grower Saiful Islam orchard, they will reach your home in pristine fresh condition.',
-      productId: 'p1',
-      createdAt: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: 'ha-2',
-      cropNameBn: 'কুষ্টিয়ার সতেজ ফুলকপি ও শীতকালীন সবজি',
-      cropNameEn: 'Fresh Organic Cauliflower from Kushtia',
-      farmerName: 'মান্নান হোসেন',
-      district: 'Kushtia',
-      imageUrl: 'https://images.unsplash.com/photo-1568584711271-6c929fb49b60?w=600&auto=format&fit=crop&q=80',
-      statusBn: 'আগামীকাল সংগ্রহ',
-      statusEn: 'Harvesting Tomorrow',
-      harvestDate: 'June 13, 2026',
-      descriptionBn: 'সম্পূর্ণ অর্গ্যানিক পদ্ধতিতে উৎপাদিত কুষ্টিয়ার সতেজ ফুলকপি ক্ষেত থেকে সরাসরি তোলা হচ্ছে আগামীকাল ভোরে। কোনো কেমিক্যাল বা ফরমালিন নেই। এখনই বুকিং দিন।',
-      descriptionEn: 'Grown with zero chemicals, these fresh Kushtia cauliflowers are being harvested tomorrow morning. Pre-book to claim your fresh batch.',
-      productId: 'cb2',
-      createdAt: new Date(Date.now() - 4 * 3600000).toISOString()
-    },
-    {
-      id: 'ha-3',
-      cropNameBn: 'মাগুরার লাল টুকটুকে বেদানা ও বোম্বাই লিচু',
-      cropNameEn: 'Red Bedana Litchi Selection from Magura',
-      farmerName: 'সুরুজ মিয়া',
-      district: 'Magura',
-      imageUrl: 'https://images.unsplash.com/photo-1421167418805-7f170a738eb4?w=600&auto=format&fit=crop&q=80',
-      statusBn: 'আসন্ন',
-      statusEn: 'Upcoming',
-      harvestDate: 'June 20, 2026',
-      descriptionBn: 'লাল টসটসে মিষ্টি বোম্বাই লিচু সংগ্রহের প্রস্তুতি চলছে। খামারি সুরুজ মিয়ার বাগান থেকে সরাসরি প্রি-বুকিং ডিল। আগামী সপ্তাহে প্রথম চালান তোলা হবে।',
-      descriptionEn: 'Juicy, deep crimson Bedana litchis are ripening and preparation for harvest is underway. Sourced directly from farmer Suruj Mia.',
-      productId: 'p4',
-      createdAt: new Date(Date.now() - 12 * 3600000).toISOString()
-    },
-    {
-      id: 'ha-4',
-      cropNameBn: 'সুন্দরবনের খাঁটি চাকভাঙ্গা প্রাকৃতিক খলিশা মধু',
-      cropNameEn: 'Sundarbans Pure Khālisha Wild Flower Honey',
-      farmerName: 'ডাঃ মোতালেব',
-      district: 'Satkhira',
-      imageUrl: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?w=600&auto=format&fit=crop&q=80',
-      statusBn: 'সদ্য সংগৃহীত',
-      statusEn: 'Just Harvested',
-      harvestDate: 'June 10, 2026',
-      descriptionBn: 'সুন্দরবনের গভীর থেকে সদ্য সংগৃহীত খাঁটি সোনালী চাকের মধু। কোনো প্রিজারভেটিভ বা বাড়তি চিনি মেলানো হয়নি। ল্যাব টেস্টে ১০০% খাঁটি প্রমাণিত।',
-      descriptionEn: 'Pure and organic wild flower honey directly harvested by expert honey hunters in Sundarbans forest. Chemically verified and completely raw.',
-      productId: 'p3',
-      createdAt: new Date(Date.now() - 24 * 3600000).toISOString()
+    // Ensure all 5 real partner farmers are always loaded if missing
+    const missing = demoFarmers.filter(df => !loaded.some(lf => lf.id === df.id));
+    if (missing.length > 0) {
+      loaded = [...loaded, ...missing];
     }
-  ];farmerId: 'f70',
-      farmerName: 'সাইফুল ইসলাম',
-      farmName: 'সাইফুল অর্গানিক এগ্রো',
-      rating: 4.7,
-      stock: 40,
-      images: [
-        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    },
-    {
-      id: 'cb6',
-      title: 'খাঁটি সকালের নাস্তা কম্বো (Fresh Breakfast Mini Combo)',
-      description: '১ ডজন সতেজ হাঁসের ডিম এবং ১ লিটার খাঁটি গরুর দুধের স্বাস্থ্যকর ট্রায়াল বাস্কেট!',
-      price: 330,
-      discountPrice: 300,
-      category: 'ready-to-cook',
-      farmerId: 'f71',
-      farmerName: 'মান্নান হোসেন',
-      farmName: 'মান্নান সমন্বিত ডেইরি ও কৃষি',
-      rating: 4.8,
-      stock: 35,
-      images: [
-        'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/1545578418923.jpg?v=1778790838',
-        'https://cdn.shopify.com/s/files/1/0991/0717/6761/files/download_13.jpg?v=1778789927'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    },
-    {
-      id: 'cb7',
-      title: 'দেশী সুগন্ধি মসলা ট্রায়াল প্যাক (Spice Starter Trial Pack)',
-      description: 'রান্নার প্রয়োজনীয় তাজা মসলার বাজেট অফার! লাল শুকনা মরিচ ১০০ গ্রাম, দেশী হলুদ গুঁড়া ১০০ গ্রাম, ধনে গুঁড়া ১০০ গ্রাম, ও জিরা ৫০ গ্রাম।',
-      price: 150,
-      discountPrice: 120,
-      category: 'ready-to-cook',
-      farmerId: 'f72',
-      farmerName: 'সুরুজ মিয়া',
-      farmName: 'সুরুজ সতেজ সবজি খামার',
-      rating: 4.9,
-      stock: 50,
-      images: [
-        'https://images.unsplash.com/photo-1506806732259-39c2d0268443?w=1000&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=1000'
-      ],
-      isVerified: true,
-      isReadyToCook: true,
-      harvestDate: 'June 12, 2026'
-    }
-  ];
+    return loaded;
+  });
 
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('kb_products');
@@ -3093,6 +2958,19 @@ export const DEFAULT_WEEKLY_COMBOS: WeeklyComboOffer[] = [
         console.error("Firestore error deleting harvest alert:", err);
       }
     }
+  };
+
+  const [language, setLanguage] = useState<'bn' | 'en'>(() => {
+    const saved = localStorage.getItem('kb_language');
+    return (saved === 'bn' || saved === 'en') ? saved : 'bn';
+  });
+
+  const toggleLanguage = () => {
+    setLanguage(prev => {
+      const next = prev === 'bn' ? 'en' : 'bn';
+      localStorage.setItem('kb_language', next);
+      return next;
+    });
   };
 
   return (

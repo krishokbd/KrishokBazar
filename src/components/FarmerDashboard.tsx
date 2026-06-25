@@ -486,7 +486,7 @@ export const FarmerDashboard: React.FC = () => {
       farmerName: currentUser.name || 'খামারি অংশীদার',
       rating: 5.0,
       isVerified: isVerified,
-      approved: false, // MANDATORY: Starts as unapproved, goes to Admin first!
+      approved: true, // Auto-approved as requested by user to directly link to homepage
       uploaderRole: 'Farmer' as const,
       unit: prodUnit,
       harvestDate: prodHarvestDate || undefined
@@ -494,11 +494,14 @@ export const FarmerDashboard: React.FC = () => {
 
     if (editingProduct) {
       editProduct(editingProduct.id, pPayload);
-      alert("পণ্যটি হালনাগাদ করা হয়েছে! পরিবর্তনের জন্য এটি এডমিন পুর্নরিভিউতে থাকবে।");
+      alert("পণ্যটি সফলভাবে হালনাগাদ করা হয়েছে এবং সরাসরি হোমে যুক্ত হয়েছে!");
     } else {
       addProduct({ id: `p-farm-${Date.now()}`, ...pPayload } as any);
-      alert("বাছাইকৃত তাজা ফসলটি সফলভাবে আপলোড করা হয়েছে! এটি এডমিন অনুমোদন করার সাথে সাথেই লাইভ চালু হয়ে যাবে।");
+      alert("বাছাইকৃত তাজা ফসলটি সফলভাবে আপলোড করা হয়েছে এবং সরাসরি হোমে যুক্ত হয়েছে!");
     }
+
+    // Redirect to homepage to show the uploaded product instantly
+    setView('home');
 
     // Reset Form
     setIsAddingProduct(false);
@@ -604,6 +607,39 @@ export const FarmerDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* FARMER PANEL SMALL OFFERS & INCENTIVES SECTION */}
+      <div className="max-w-7xl mx-auto px-4 mt-5 w-full select-none text-left">
+        <div className="bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-150 rounded-2xl p-4 sm:p-5">
+          <div className="flex items-center gap-1.5 text-blue-900 font-extrabold text-xs sm:text-sm">
+            <span>📢</span>
+            <span>{language === 'bn' ? 'খামারিদের জন্য চলমান বিশেষ অফার ও ইনসেন্টিভ' : 'Ongoing Special Offers & Incentives for Farmers'}</span>
+          </div>
+          <p className="text-[11px] text-blue-700/80 mt-1 font-semibold">
+            {language === 'bn' ? 'সরাসরি সোনালী ফসল প্ল্যাটফর্ম থেকে আপনার আয় বাড়াতে আমাদের ইনসেন্টিভ প্রোগ্রামসমূহ:' : 'Incentives designed to maximize your farming earnings on our platform:'}
+          </p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3.5">
+            <div className="bg-white border border-blue-100 rounded-xl p-3 shadow-3xs flex items-start gap-2.5">
+              <span className="text-xl">⚡</span>
+              <div>
+                <h4 className="text-xs font-black text-gray-800">{language === 'bn' ? 'কৃষক স্পেশাল: ০% কমিশন সপ্তাহ!' : 'Farmer Special: 0% Commission Week!'}</h4>
+                <p className="text-[10px] text-gray-500 font-medium mt-0.5">{language === 'bn' ? 'চলতি সপ্তাহে সবজি ও তাজা ফল বিক্রির অর্ডারে কোনো সার্ভিস ফি বা কমিশন কাটা হবে না।' : 'No platform fee or commission on vegetable and fruit sales during this week!'}</p>
+                <div className="mt-2 inline-block text-[9px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200">ACTIVE_0_PERCENT</div>
+              </div>
+            </div>
+
+            <div className="bg-white border border-blue-100 rounded-xl p-3 shadow-3xs flex items-start gap-2.5">
+              <span className="text-xl">🏆</span>
+              <div>
+                <h4 className="text-xs font-black text-gray-800">{language === 'bn' ? '১০০ কেজি ডেলিভারি সাকসেস বোনাস!' : '100kg Delivery Milestone Bonus!'}</h4>
+                <p className="text-[10px] text-gray-500 font-medium mt-0.5">{language === 'bn' ? '১০০ কেজির বেশি ফসল সফলভাবে ক্রেতার নিকট সরবরাহ করলেই পাবেন অতিরিক্ত ১,০০০ টাকা ক্যাশ বোনাস!' : 'Deliver over 100kg of crop yields successfully to claim a flat 1,000 BDT cash bonus!'}</p>
+                <div className="mt-2 inline-block text-[9px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200">FARMER_BOOST_100</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* NAVIGATION TABS RAIL */}
       <div className="max-w-7xl mx-auto px-4 mt-6 w-full">

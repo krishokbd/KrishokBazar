@@ -66,6 +66,7 @@ import {
   Package, 
   Truck, 
   ChevronRight, 
+  ChevronLeft,
   Building,
   Sparkles,
   ArrowRight,
@@ -239,10 +240,7 @@ const AppContent: React.FC = () => {
   }, [currentUser]);
 
   // Conditional subscription auto-trigger timing logic helper
-  const isEligibleForSubscriptionTrigger = 
-    (!currentUser || 
-      (currentUser.role !== 'Admin' && (!currentUser.subscriptionStatus || currentUser.subscriptionStatus === 'none'))
-    );
+  const isEligibleForSubscriptionTrigger = false;
 
   useSubscriptionTimer((planId) => {
     let targetTabRole: 'customer' | 'farmer' = 'customer';
@@ -739,6 +737,143 @@ const AppContent: React.FC = () => {
         setSearchQuery={setSearchQuery}
       />
 
+      {/* SOCIAL MEDIA QUICK LINKS BAR - PLACED DIRECTLY BELOW THE HEADER */}
+      <div className="bg-slate-100 border-b border-gray-200/60 py-2.5 px-4 select-none">
+        <div className="max-w-7xl mx-auto flex flex-row items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <p className="text-xs font-black text-gray-700 font-sans tracking-tight">
+              {language === 'bn' ? 'সোশ্যাল মিডিয়া:' : 'Social Channels:'}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Facebook Page */}
+            <a 
+              href={siteSettings?.socialFacebook || 'https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/'}
+              target="_blank" 
+              rel="noreferrer" 
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#1877F2]/10 hover:bg-[#1877F2] text-[#1877F2] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title="Facebook"
+            >
+              <Facebook className="h-4.5 w-4.5 fill-current" />
+            </a>
+
+            {/* YouTube Channel */}
+            <a 
+              href={siteSettings?.socialYoutube || 'https://www.youtube.com/@KrishokBazarBD'}
+              target="_blank" 
+              rel="noreferrer" 
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#FF0000]/10 hover:bg-[#FF0000] text-[#FF0000] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title="YouTube"
+            >
+              <Youtube className="h-4.5 w-4.5 fill-current" />
+            </a>
+
+            {/* TikTok Channel */}
+            <a 
+              href={siteSettings?.socialInstagram || 'https://www.tiktok.com/@krishokbazarbd'}
+              target="_blank" 
+              rel="noreferrer" 
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/10 hover:bg-black text-black hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title="TikTok"
+            >
+              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.4-.63-.62v7.33c0 1.94-.48 3.91-1.63 5.46-1.51 2.08-4.14 3.09-6.66 2.65-2.5-.4-4.63-2.26-5.28-4.72-.8-2.93.43-6.23 2.97-7.66 1.05-.6 2.27-.85 3.48-.75v4.14c-.69-.13-1.42-.04-2.03.32-1.07.61-1.53 1.94-1.12 3.12.36 1.08 1.48 1.79 2.62 1.67 1.25-.09 2.22-1.19 2.22-2.45V0c-.26.01-.52.01-.78.02z" />
+              </svg>
+            </a>
+
+            {/* Messenger Chat */}
+            <a 
+              href="https://m.me/61578459151972"
+              target="_blank" 
+              rel="noreferrer" 
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#006AFF]/10 hover:bg-[#006AFF] text-[#006AFF] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title="Messenger"
+            >
+              <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.25c0 2.91 1.448 5.498 3.7 7.19v3.81a.5.5 0 00.72.45l4.13-2.27a13.91 13.91 0 001.45.07c5.523 0 10-4.145 10-9.25S17.523 2 12 2zm1 12.5l-2.5-2.5-4.5 2.5 5-5.5 2.5 2.5 4.5-2.5-5 5.5z"/></svg>
+            </a>
+
+            {/* WhatsApp Chat */}
+            <a 
+              href={`https://wa.me/88${siteSettings?.footerPhone?.replace(/\D/g, '') || '01931355398'}`}
+              target="_blank" 
+              rel="noreferrer" 
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#25D366]/10 hover:bg-[#25D366] text-[#25D366] hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title="WhatsApp"
+            >
+              <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008 0c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm6.49-5.385c1.654.982 3.511 1.5 5.414 1.501 5.474 0 9.93-4.45 9.934-9.92.001-2.648-1.03-5.138-2.902-7.015C17.12 1.306 14.636.275 12.001.275 6.529.275 2.073 4.73 2.069 10.2c-.001 1.958.513 3.869 1.492 5.568l-.979 3.579 3.665-.961zm11.233-7.531c-.301-.15-.178-.225-.375-.525-.097-.15-.525-.75-.525-.75s-.19-.24-.45-.24c-.112 0-.256.04-.37.15-.36.35-.95.95-.95 2.31s.99 2.67 1.13 2.85c.14.18 1.96 2.99 4.75 4.19.67.29 1.19.46 1.59.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.33-.07-.12-.27-.19-.57-.34z" />
+              </svg>
+            </a>
+
+            {/* Direct Call */}
+            <a 
+              href={`tel:${siteSettings?.footerPhone || '01931355398'}`}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600/10 hover:bg-emerald-600 text-emerald-600 hover:text-white hover:scale-110 active:scale-95 shadow-3xs transition-all cursor-pointer"
+              title={language === 'bn' ? 'সরাসরি কল' : 'Call Hotline'}
+            >
+              <Phone className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* QUICK ACCESS HELPLINE, AI CHATBOT & KEY DIRECTORY SHORTCUTS BAR */}
+      <div className="bg-white border-b border-gray-150 py-3 px-4 shadow-3xs select-none">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+            <p className="text-xs font-black text-gray-800 font-sans">
+              {language === 'bn' ? 'তাত্ক্ষণিক সহায়তা ও প্রধান মেনু লিঙ্কসমূহ:' : 'Instant Support & Core Navigation Links:'}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {/* AI CHATBOT ACTION BUTTON */}
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('open-riktaz-ai'))}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white text-xs font-black shadow-xs hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans"
+            >
+              <span className="animate-bounce">🤖</span>
+              <span>{language === 'bn' ? 'রিকতাজ AI সাপোর্ট' : 'Riktaz AI Chatbot'}</span>
+            </button>
+
+            {/* DIRECT HOTLINE CALL */}
+            <a 
+              href="tel:01931355398"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-black shadow-xs hover:shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans"
+            >
+              <Phone className="h-3.5 w-3.5 animate-pulse" />
+              <span>{language === 'bn' ? '📞 হটলাইন: ০১৯৩১৩৫৫৩৯৮' : '📞 Hotline: 01931355398'}</span>
+            </a>
+
+            {/* DIRECT HOME LINK */}
+            <button 
+              onClick={() => setView('home')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans border ${currentView === 'home' ? 'bg-amber-500 text-white border-amber-500' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+            >
+              <span>🏠 {language === 'bn' ? 'হোমপেজ' : 'Homepage'}</span>
+            </button>
+
+            {/* DIRECT STORE LINK */}
+            <button 
+              onClick={() => setView('shop')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans border ${currentView === 'shop' ? 'bg-amber-500 text-white border-amber-550' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+            >
+              <span>🛍️ {language === 'bn' ? 'সবজি ও তাজা পণ্য' : 'Store & Products'}</span>
+            </button>
+
+            {/* DIRECT WEEKLY COMBOS */}
+            <button 
+              onClick={() => setView('weekly-combos')}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-95 cursor-pointer font-sans border ${currentView === 'weekly-combos' ? 'bg-amber-500 text-white border-amber-550' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'}`}
+            >
+              <span>🧺 {language === 'bn' ? 'কম্বো বাস্কেট' : 'Combos'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
 
       {/* CHANNELS ALERT */}
       {successOrderId && (
@@ -943,43 +1078,255 @@ const AppContent: React.FC = () => {
         )}
         
         {/* HOMEPAGE VIEW */}
+        {/* HOMEPAGE VIEW */}
         {currentView === 'home' && (
           <div className="space-y-0 text-gray-850 selection:bg-emerald-100 select-none">
-            {/* Carousel */}
-            <HeroCarousel 
-              onShopNow={() => setView('shop')}
-              onViewFarmers={() => setView('farmers')}
-              onCallHelp={() => handleOpenAuthModal()}
-              setView={setView}
-            />
+            
+            {/* PROMOTIONS SECTION */}
+            <section id="promotions" className="bg-white">
+              <HeroCarousel 
+                onShopNow={() => setView('shop')}
+                onViewFarmers={() => setView('farmers')}
+                onCallHelp={() => handleOpenAuthModal()}
+                setView={setView}
+              />
+            </section>
 
-            {/* SPOTLIGHTS & DISCOUNT OFFERS CARDS */}
-            <section className="py-12 bg-gray-50">
+            {/* BEST SELLING PRODUCTS CAROUSEL SECTION */}
+            <section id="best-sellers-carousel" className="py-10 bg-slate-50 border-b border-gray-100">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <span className="text-xs font-bold text-blue-600 tracking-wider uppercase block">
-                      {siteSettings?.sectionMarketSubtitleBn || 'বিশেষ ছাড় ও সতেজ অফার'}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-left">
+                    <span className="text-xs font-black text-amber-600 tracking-wider uppercase block">
+                      🔥 Top Rated Best Sellers • আমাদের সেরা পণ্যসমূহ
                     </span>
-                    <h2 className="text-lg sm:text-2xl font-black text-gray-800 font-sans mt-0.5">
-                      {siteSettings?.sectionMarketTitleBn || 'সেরা অফার ও তাজা ফসল'}
+                    <h2 className="text-xl sm:text-2.5xl font-black text-gray-900 font-sans mt-0.5">
+                      {language === 'bn' ? 'সেরা বিক্রিত জনপ্রিয় পণ্য' : 'Best Selling Products'}
                     </h2>
+                    <p className="text-xs text-gray-400 mt-0.5">৮ থেকে ১০টি সর্বোচ্চ গ্রাহক রেটিং প্রাপ্ত তাজা অর্গানিক পণ্য</p>
                   </div>
-                  <button onClick={() => setView('shop')} className="text-xs text-emerald-600 hover:text-emerald-700 font-black flex items-center gap-1 cursor-pointer">
-                    সব পণ্য দেখুন <ArrowRight className="h-4 w-4" />
-                  </button>
+                  
+                  {/* Slider Control Arrows */}
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => {
+                        const el = document.getElementById('best-sellers-scroll-container');
+                        if (el) el.scrollBy({ left: -320, behavior: 'smooth' });
+                      }}
+                      className="h-8 w-8 rounded-xl bg-white border border-gray-150 text-gray-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all flex items-center justify-center shadow-3xs cursor-pointer"
+                      title="Slide Left"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const el = document.getElementById('best-sellers-scroll-container');
+                        if (el) el.scrollBy({ left: 320, behavior: 'smooth' });
+                      }}
+                      className="h-8 w-8 rounded-xl bg-white border border-gray-150 text-gray-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all flex items-center justify-center shadow-3xs cursor-pointer"
+                      title="Slide Right"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Grid limit of 12 freshest active standard featured products (excluding combo baskets) */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Best Sellers Horizontal Grid list (8 to 10 products max) */}
+                <div 
+                  id="best-sellers-scroll-container"
+                  className="flex overflow-x-auto gap-5 pb-4 snap-x snap-mandatory scroll-smooth scrollbar-thin scrollbar-thumb-emerald-150 scrollbar-track-transparent"
+                >
                   {products
                     .filter((p) => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false)
-                    .sort((a, b) => {
-                      if (a.isFeatured && !b.isFeatured) return -1;
-                      if (!a.isFeatured && b.isFeatured) return 1;
-                      return b.id.localeCompare(a.id);
-                    })
-                    .slice(0, 12)
+                    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                    .slice(0, 10)
+                    .map((p) => (
+                      <div 
+                        key={`bs-${p.id}`} 
+                        className="w-[180px] xs:w-[210px] sm:w-[240px] shrink-0 snap-start"
+                      >
+                        <ProductCard 
+                          product={p} 
+                          onOpenQuickView={(prod) => {
+                            setSelectedProductId(prod.id);
+                            setView('product-details');
+                          }} 
+                          onEditProduct={setEditingProduct}
+                          onToggleCompare={handleToggleCompare}
+                          isCompared={comparedProductIds.includes(p.id)}
+                        />
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </section>
+
+            {/* PRODUCT CATEGORIES CAROUSEL SECTION */}
+            <section id="categories-carousel" className="py-10 bg-white border-b border-gray-100">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-left">
+                    <span className="text-xs font-black text-emerald-600 tracking-wider uppercase block">
+                      📁 Fast Category Search • সহজ শ্রেণীবিভাগ অনুসন্ধান
+                    </span>
+                    <h2 className="text-xl sm:text-2.5xl font-black text-gray-900 font-sans mt-0.5">
+                      {language === 'bn' ? 'ক্যাটাগরি অনুযায়ী পণ্য খুঁজুন' : 'Shop by Product Categories'}
+                    </h2>
+                    <p className="text-xs text-gray-400 mt-0.5">সহজে ব্রাউজ করার জন্য ক্যাটাগরি ক্যারোসেল সিস্টেম</p>
+                  </div>
+
+                  {/* Slider Control Arrows */}
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => {
+                        const el = document.getElementById('categories-scroll-container');
+                        if (el) el.scrollBy({ left: -220, behavior: 'smooth' });
+                      }}
+                      className="h-8 w-8 rounded-xl bg-white border border-gray-150 text-gray-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all flex items-center justify-center shadow-3xs cursor-pointer"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const el = document.getElementById('categories-scroll-container');
+                        if (el) el.scrollBy({ left: 220, behavior: 'smooth' });
+                      }}
+                      className="h-8 w-8 rounded-xl bg-white border border-gray-150 text-gray-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-500 transition-all flex items-center justify-center shadow-3xs cursor-pointer"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Categories Horizontal Scroll list */}
+                <div 
+                  id="categories-scroll-container"
+                  className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scroll-smooth scrollbar-thin scrollbar-thumb-emerald-150 scrollbar-track-transparent"
+                >
+                  {/* "ALL" Button Card */}
+                  <div
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      const element = document.getElementById('all-products');
+                      if (element) element.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className={`flex flex-col items-center justify-center p-4 min-w-[100px] sm:min-w-[120px] rounded-2xl border transition-all cursor-pointer select-none text-center snap-start ${
+                      selectedCategory === 'all'
+                        ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white border-emerald-600 shadow-md scale-102 font-bold'
+                        : 'bg-slate-50 border-gray-150 text-gray-600 hover:border-emerald-300 hover:bg-white hover:shadow-sm'
+                    }`}
+                  >
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-2 transition-colors text-xl ${
+                      selectedCategory === 'all' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'
+                    }`}>
+                      📦
+                    </div>
+                    <span className="text-xs font-black block max-w-full truncate">সব পণ্য</span>
+                    <span className="text-[9px] uppercase opacity-75 font-mono tracking-wider mt-0.5">All Items</span>
+                  </div>
+
+                  {/* Individual Categories List with dynamically matched icons */}
+                  {categories
+                    .filter((cat) => cat.isActive !== false)
+                    .map((cat) => {
+                      const isSelected = selectedCategory === cat.id;
+                      
+                      // Match dynamic icons cleanly based on category name/ID
+                      const getCategoryEmoji = (id: string, nameBn: string): string => {
+                        const norm = (id + ' ' + nameBn).toLowerCase();
+                        if (norm.includes('egg') || norm.includes('ডিম')) return '🥚';
+                        if (norm.includes('milk') || norm.includes('dairy') || norm.includes('দুধ') || norm.includes('ডেইরি')) return '🥛';
+                        if (norm.includes('veg') || norm.includes('green') || norm.includes('সবজি') || norm.includes('শাক')) return '🥦';
+                        if (norm.includes('fruit') || norm.includes('ফল')) return '🍎';
+                        if (norm.includes('rice') || norm.includes('grain') || norm.includes('চাল') || norm.includes('শস্য')) return '🌾';
+                        if (norm.includes('fish') || norm.includes('মাছ')) return '🐟';
+                        if (norm.includes('meat') || norm.includes('beef') || norm.includes('chicken') || norm.includes('মাংস')) return '🍗';
+                        if (norm.includes('honey') || norm.includes('মধু')) return '🍯';
+                        if (norm.includes('spice') || norm.includes('মসলা')) return '🌶️';
+                        if (norm.includes('tea') || norm.includes('চা')) return '🍵';
+                        if (norm.includes('ready') || norm.includes('cook') || norm.includes('রান্না')) return '🍳';
+                        if (norm.includes('organic') || norm.includes('জৈব')) return '🛡️';
+                        return '🌿'; // Beautiful default leaf icon for newly created categories!
+                      };
+
+                      const emoji = getCategoryEmoji(cat.id, cat.nameBn);
+
+                      return (
+                        <div
+                          key={`cat-carousel-${cat.id}`}
+                          onClick={() => {
+                            setSelectedCategory(cat.id);
+                            const element = document.getElementById('all-products');
+                            if (element) element.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className={`flex flex-col items-center justify-center p-4 min-w-[100px] sm:min-w-[120px] rounded-2xl border transition-all cursor-pointer select-none text-center snap-start ${
+                            isSelected
+                              ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white border-emerald-600 shadow-md scale-102 font-bold'
+                              : 'bg-slate-50 border-gray-150 text-gray-700 hover:border-emerald-300 hover:bg-white hover:shadow-sm'
+                          }`}
+                        >
+                          <div className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-2 transition-colors text-xl ${
+                            isSelected ? 'bg-white/20 text-white' : 'bg-white border border-gray-100 shadow-3xs'
+                          }`}>
+                            {emoji}
+                          </div>
+                          <span className="text-xs font-black block max-w-full truncate font-sans">
+                            {cat.nameBn}
+                          </span>
+                          <span className="text-[9px] uppercase opacity-75 font-mono tracking-wider mt-0.5 max-w-full truncate">
+                            {cat.nameEn || cat.id}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </section>
+
+            {/* ALL PRODUCTS SECTION */}
+            <section id="all-products" className="py-12 bg-white">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+                  <div className="text-left">
+                    <span className="text-xs font-bold text-emerald-600 tracking-wider uppercase block">
+                      Direct from Farmers • সরাসরি কৃষকের মাঠ থেকে
+                    </span>
+                    <h2 className="text-xl sm:text-3.5xl font-black text-gray-900 font-sans mt-1 leading-none">
+                      {selectedCategory === 'all' 
+                        ? (language === 'bn' ? 'আমাদের সকল সতেজ পণ্যসমূহ' : 'Our All Fresh Products')
+                        : (language === 'bn' ? `তাজা পণ্য ক্যাটাগরি: ${categories.find(c=>c.id===selectedCategory)?.nameBn || selectedCategory}` : `Fresh Category: ${selectedCategory}`)
+                      }
+                    </h2>
+                    <p className="text-xs text-gray-400 font-medium mt-1">
+                      {products.filter(p => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false && (selectedCategory === 'all' || p.category === selectedCategory)).length}টি পণ্য সরাসরি মাঠ থেকে আপনার টেবিলে
+                    </p>
+                  </div>
+                  
+                  {/* Dynamic page / Offers navigators */}
+                  <div className="flex items-center gap-2">
+                    {selectedCategory !== 'all' && (
+                      <button 
+                        onClick={() => setSelectedCategory('all')}
+                        className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-black rounded-xl transition cursor-pointer"
+                      >
+                        {language === 'bn' ? 'সব পণ্য দেখান 🛍️' : 'Show All Products 🛍️'}
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => {
+                        setView('shop');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-black rounded-xl transition cursor-pointer"
+                    >
+                      {language === 'bn' ? 'ক্যাটাগরি ফিল্টার করুন 🔍' : 'Filter by Category 🔍'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {products
+                    .filter((p) => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false && (selectedCategory === 'all' || p.category === selectedCategory))
                     .map((p) => (
                       <ProductCard 
                         key={p.id} 
@@ -997,312 +1344,127 @@ const AppContent: React.FC = () => {
               </div>
             </section>
 
-            {/* DYNAMIC AND USER CUSTOM PAGES INDEX GRID ON HOME SCREEN */}
-            {dynamicPages && dynamicPages.length > 0 && (
-              <section className="py-12 bg-slate-50 border-t border-gray-150 select-none">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                  <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
-                    <div>
-                      <span className="text-xs font-bold text-amber-600 tracking-wider uppercase block">
-                        স্পেশাল ক্যাটাগরি কন্টেন্ট
-                      </span>
-                      <h2 className="text-lg sm:text-2xl font-black text-gray-800 font-sans mt-0.5">
-                        আপনার জন্য বাছাইকৃত স্পেশাল কম্বো ও বাস্কেট পেইজ সমূহ
-                      </h2>
-                    </div>
-                    <p className="text-xs text-gray-400 font-medium max-w-md mt-2 md:mt-0">
-                      অ্যাডমিন দ্বারা সরাসরি তৈরি করা এই বিশেষ সেকশন পেজগুলোর মাধ্যমে আপনার বাজেটের সাথে মিলিয়ে অর্গানিক খাবার সংগ্রহ করুন।
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {dynamicPages.map((dp) => (
-                      <div 
-                        key={dp.slug}
-                        onClick={() => setView(`dynamic-${dp.slug}`)}
-                        className="group relative overflow-hidden rounded-3xl border border-amber-100 bg-gradient-to-br from-amber-50/50 to-orange-50/30 p-5 shadow-2xs hover:shadow-md hover:border-amber-300 transition-all duration-350 transform hover:-translate-y-1 cursor-pointer flex flex-col justify-between"
-                      >
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-2xl">🍲</span>
-                            <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
-                              কম্বো প্যাকেজ
-                            </span>
-                          </div>
-                          
-                          <h3 className="font-extrabold text-sm sm:text-base text-gray-800 font-sans group-hover:text-amber-850 transition-colors">
-                            {language === 'en' ? dp.titleEn : dp.titleBn}
-                          </h3>
-                          
-                          <p className="text-xs text-slate-500 font-medium line-clamp-2">
-                            {language === 'en' ? dp.descriptionEn : dp.descriptionBn || 'বাছাই করা স্বাস্থ্যকর প্রিমিয়াম অর্গানিক খাবারের সংগ্রহপ্যাক।'}
-                          </p>
-                        </div>
-
-                        <div className="pt-4 flex items-center justify-between text-[11px] font-black text-amber-700 border-t border-amber-100/50 mt-4">
-                          <span>মোট পণ্য: {dp.productIds?.length || 0}টি</span>
-                          <span className="flex items-center gap-0.5 group-hover:translate-x-1 transition-transform">
-                            দেখুন <span>➔</span>
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {/* COMBO BASKET SECTION WITH TABS AND FILTERING */}
-            <section id="combo-basket" className="py-12 bg-white border-t border-gray-100 scroll-mt-20 select-none">
+            {/* WEEKLY COMBO PACKAGES SECTION */}
+            <section id="weekly-combos" className="py-12 bg-slate-50 border-t border-gray-100 scroll-mt-20">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-xl mx-auto mb-8">
-                  <span className="text-xs bg-emerald-50 text-emerald-800 border border-emerald-150 px-3 py-1 rounded-full font-black uppercase tracking-wider">পারিবারিক সাশ্রয়ী প্যাকেজ (Weekly Combo Buckets)</span>
-                  <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-3 leading-snug">
-                    {siteSettings?.sectionComboTitleBn || 'সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট'}
+                <div className="text-center max-w-xl mx-auto mb-10">
+                  <span className="text-xs bg-emerald-50 text-emerald-800 border border-emerald-150 px-3.5 py-1 rounded-full font-black uppercase tracking-wider">
+                    {language === 'bn' ? 'পারিবারিক সাশ্রয়ী প্যাকেজ' : 'Weekly & Family Combo Buckets'}
+                  </span>
+                  <h2 className="text-xl sm:text-3.5xl font-black text-gray-850 font-sans mt-3 leading-snug">
+                    {language === 'bn' ? 'সাপ্তাহিক ও ফ্যামিলি কম্বো বাস্কেট' : 'Weekly Combo Packages'}
                   </h2>
                   <p className="text-xs text-gray-400 mt-2 font-medium">
-                    {siteSettings?.sectionComboSubtitleBn || 'সরাসরি কৃষকের মাঠের বাছাই করা কম্বো বাস্কেট অফারসমূহ। ক্যাটাগরি ও ফ্যামিলি বাজেট অনুযায়ী বেছে নিন আপনার পছন্দের বাস্কেটটি।'}
+                    {language === 'bn' 
+                      ? 'বাছাই করা স্বাস্থ্যকর প্রিমিয়াম অর্গানিক খাবারের বাজেট সাশ্রয়ী কম্বো বাস্কেট সরাসরি আপনার দরজায়।' 
+                      : 'Handpicked premium organic vegetable & grocery combinations direct from farmers.'}
                   </p>
                 </div>
 
-                {/* 4 pricing-point Sections / Tabs */}
-                <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-8">
-                  <button
-                    onClick={() => setActiveComboSection('500')}
-                    className={`px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${activeComboSection === '500' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-sm scale-102' : 'bg-slate-50 text-gray-700 hover:bg-gray-100 border-gray-200/70'}`}
-                  >
-                    <span>🧺 ৳৫০০ বাজেট কম্বো</span> <span className="text-[9px] px-1 py-0.5 rounded-lg opacity-80">(Standard)</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveComboSection('1000')}
-                    className={`px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${activeComboSection === '1000' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-sm scale-102' : 'bg-slate-50 text-gray-700 hover:bg-gray-100 border-gray-200/70'}`}
-                  >
-                    <span>🧺 ৳১,০০০ বাস্কেট</span> <span className="text-[9px] px-1 py-0.5 rounded-lg opacity-80">(Premium)</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveComboSection('1500')}
-                    className={`px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${activeComboSection === '1500' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-sm scale-102' : 'bg-slate-50 text-gray-700 hover:bg-gray-100 border-gray-200/70'}`}
-                  >
-                    <span>🧺 ৳১,৫০০ বাস্কেট</span> <span className="text-[9px] px-1 py-0.5 rounded-lg opacity-80">(Super)</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveComboSection('small')}
-                    className={`px-4 sm:px-5 py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-2xs ${activeComboSection === 'small' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-sm scale-102' : 'bg-slate-50 text-gray-700 hover:bg-gray-100 border-gray-200/70'}`}
-                  >
-                    <span>✨ ছোটখাটো অফার সমূহ</span> <span className="text-[9px] px-1 py-0.5 rounded-lg opacity-80">(Trial Packs)</span>
-                  </button>
-                </div>
+                {/* Grid listing of all weekly combo baskets (No tabs/No empty sections) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products
+                    .filter(p => (p.id.startsWith('cb') || p.isWeeklyCombo === true) && p.isActive !== false && p.approved !== false)
+                    .map((basket) => {
+                      const originalPrice = basket.price;
+                      const displayPrice = basket.discountPrice || basket.price;
+                      const hasDiscount = !!basket.discountPrice;
+                      const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${basket.title}" কম্বো বাস্কেটটি কিনতে চাই।\nমূল্য: ৳${displayPrice}`);
+                      const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
 
-                {/* Filter and render chosen tab list */}
-                {(() => {
-                  const filteredBaskets = products.filter(p => {
-                    if (!(p.id.startsWith('cb') || p.isWeeklyCombo === true) || p.isActive === false || p.approved === false) return false;
-                    const price = p.discountPrice || p.price;
-                    if (activeComboSection === '500') {
-                      return price > 350 && price <= 650;
-                    } else if (activeComboSection === '1000') {
-                      return price > 650 && price <= 1250;
-                    } else if (activeComboSection === '1500') {
-                      return price > 1250 && price <= 1750;
-                    } else { // activeComboSection === 'small'
-                      return price <= 350;
-                    }
-                  });
+                      const isAuthorizedToEdit = (currentUser?.role === 'Admin') || 
+                        (currentUser?.role === 'Farmer' && currentUser.farmerId === basket.farmerId);
 
-                  if (filteredBaskets.length === 0) {
-                    return (
-                      <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                        <p className="text-xs font-bold text-gray-400">এই সেকশনে বর্তমানে কোনো অফার আপলোড করা নেই। অ্যাডমিন প্যানেল থেকে তৈরি করুন!</p>
-                      </div>
-                    );
-                  }
+                      return (
+                        <div 
+                          key={basket.id}
+                          className="group flex flex-col overflow-hidden rounded-2xl border border-gray-150 bg-white hover:border-emerald-250 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 relative"
+                        >
+                          {/* Edit Button */}
+                          {isAuthorizedToEdit && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingProduct(basket);
+                              }}
+                              className="absolute top-3 left-3 z-30 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 text-xs font-black shadow-md border border-amber-400 flex items-center gap-1 active:scale-95 transition-transform cursor-pointer"
+                            >
+                              ✏️ এডিট (Edit)
+                            </button>
+                          )}
 
-                  return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredBaskets.map((basket) => {
-                        const originalPrice = basket.price;
-                        const displayPrice = basket.discountPrice || basket.price;
-                        const hasDiscount = !!basket.discountPrice;
-                        const whatsappMessage = encodeURIComponent(`আসসালামু আলাইকুম, আমি কৃষক বাজার থেকে "${basket.title}" কম্বো বাস্কেটটি কিনতে চাই।\nমূল্য: ৳${displayPrice}`);
-                        const whatsappUrl = `https://wa.me/8801931355398?text=${whatsappMessage}`;
-
-                        const isAuthorizedToEdit = (currentUser?.role === 'Admin') || 
-                          (currentUser?.role === 'Farmer' && currentUser.farmerId === basket.farmerId);
-
-                        return (
-                          <div 
-                            key={basket.id}
-                            className="group flex flex-col overflow-hidden rounded-2xl border border-gray-150 bg-white hover:border-emerald-250 hover:shadow-xl hover:scale-[1.01] transition-all duration-300 relative"
-                          >
-                            {/* Edit Button directly on top of card on homepage if Admin/Owner */}
-                            {isAuthorizedToEdit && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingProduct(basket);
-                                }}
-                                className="absolute top-3 left-3 z-30 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 text-xs font-black shadow-md border border-amber-400 flex items-center gap-1 active:scale-95 transition-transform cursor-pointer"
-                                title="এই কম্বো অফারটি এডিট করুন"
-                              >
-                                ✏️ এডিট (Edit)
-                              </button>
-                            )}
-
-                            {/* Img portion */}
-                            <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-50 cursor-pointer" onClick={() => {
-                              setSelectedProductId(basket.id);
-                              setView('product-details');
-                            }}>
-                              <img
-                                src={basket.images[0]}
-                                alt={basket.title}
-                                className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-105"
-                                referrerPolicy="no-referrer"
-                              />
-                              <span className="absolute right-3 top-3 z-10 rounded-lg bg-emerald-600 px-2.5 py-1 text-[9px] font-black tracking-wide text-white uppercase shadow-md">
-                                🎯 সেরা ডিল
+                          {/* Image */}
+                          <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-50 cursor-pointer" onClick={() => {
+                            setSelectedProductId(basket.id);
+                            setView('product-details');
+                          }}>
+                            <img
+                              src={basket.images[0]}
+                              alt={basket.title}
+                              className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-105"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="absolute right-3 top-3 z-10 rounded-lg bg-emerald-600 px-2.5 py-1 text-[9px] font-black tracking-wide text-white uppercase shadow-md">
+                              🎯 {language === 'bn' ? 'সেরা ডিল' : 'Special Deal'}
+                            </span>
+                            {hasDiscount && (
+                              <span className="absolute right-3 top-10 z-10 rounded-lg bg-red-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md animate-pulse">
+                                {Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
                               </span>
-                              {hasDiscount && (
-                                <span className="absolute right-3 top-10 z-10 rounded-lg bg-red-500 px-2.5 py-1 text-[9px] font-black text-white shadow-md animate-pulse">
-                                  {Math.round(((originalPrice - displayPrice) / originalPrice) * 100)}% ছাড়
-                                </span>
-                              )}
-                            </div>
+                            )}
+                          </div>
 
-                            {/* Text portion */}
-                            <div className="flex flex-1 flex-col p-5">
+                          {/* Text Detail Info */}
+                          <div className="p-5 flex-1 flex flex-col justify-between font-sans space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-1 text-gray-400 text-[10px] font-bold">
+                                <span>👨‍🌾 {basket.farmerName || 'কৃষক বাজার'}</span>
+                                <span>•</span>
+                                <span>📍 {basket.farmName || 'সরাসরি হাব'}</span>
+                              </div>
                               <h3 
                                 onClick={() => {
                                   setSelectedProductId(basket.id);
                                   setView('product-details');
                                 }}
-                                className="text-sm sm:text-base font-black text-gray-800 font-sans hover:text-emerald-700 transition-colors cursor-pointer line-clamp-2"
+                                className="font-extrabold text-sm text-gray-800 hover:text-emerald-700 cursor-pointer line-clamp-1 text-left"
                               >
                                 {basket.title}
                               </h3>
-
-                              <p className="text-xs text-gray-500 mt-2 line-clamp-3">
+                              <p className="text-[11px] leading-relaxed text-gray-500 line-clamp-2 text-left">
                                 {basket.description}
                               </p>
+                            </div>
 
-                              {/* Offer's Farmer */}
-                              <div className="mt-2.5 flex items-center gap-1 text-[11px] text-gray-400 font-bold border-t border-gray-150 pt-2.5">
-                                📍 খামারি: <span className="text-gray-650 underline font-black cursor-pointer" onClick={() => {
-                                  if (basket.farmerId) {
-                                    setSelectedFarmerStoreId(basket.farmerId);
-                                    setView('farmer-store');
-                                  }
-                                }}>{basket.farmerName}</span> (ভেরিফাইড)
+                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-sm font-black text-emerald-700">৳{displayPrice}</span>
+                                {hasDiscount && (
+                                  <span className="text-[10px] text-gray-400 line-through">৳{originalPrice}</span>
+                                )}
                               </div>
-
-                              {/* Pricing row */}
-                              <div className="mt-4 flex items-center justify-between gap-1.5 border-t border-gray-150 pt-3">
-                                <div className="flex flex-col">
-                                  {hasDiscount && (
-                                    <span className="text-[10px] text-gray-400 line-through font-mono">
-                                      ৳{originalPrice}
-                                    </span>
-                                  )}
-                                  <span className="text-base font-black text-emerald-700 font-sans">
-                                    ৳{displayPrice} <span className="text-[10px] font-medium text-gray-400">/বাস্কেট</span>
-                                  </span>
-                                </div>
-
-                                {/* Cart keeping button */}
+                              
+                              <div className="flex gap-1.5 shrink-0">
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    addToCart(basket, 1);
-                                  }}
-                                  className="rounded-xl px-3 py-2 text-[11px] font-extrabold shadow-sm bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-105 transition-all cursor-pointer flex items-center gap-1"
+                                  onClick={() => addToCart(basket)}
+                                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black transition cursor-pointer"
                                 >
-                                  🛒 কার্টে রাখুন
-                                </button>
-                              </div>
-
-                              {/* Action Grid */}
-                              <div className="grid grid-cols-3 gap-1.5 pt-3">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedProductId(basket.id);
-                                    setView('product-details');
-                                  }}
-                                  className="flex items-center justify-center gap-1 rounded-xl bg-gray-100 hover:bg-gray-200 px-2 py-2 text-[10px] font-black text-gray-700 shadow-xs hover:scale-[1.02] transition-all cursor-pointer text-center font-sans font-bold"
-                                >
-                                  📄 বিস্তারিত
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    addToCart(basket, 1);
-                                    window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: { openCheckout: true } }));
-                                  }}
-                                  className="flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-2 py-2 text-[10px] font-black text-white shadow-xs hover:scale-[1.02] transition-all cursor-pointer text-center font-sans font-bold"
-                                >
-                                  🛒 কিনুন
+                                  🛒 বাস্কেটে নিন
                                 </button>
                                 <a
                                   href={whatsappUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center justify-center gap-1 rounded-xl bg-green-500 hover:bg-green-600 px-2 py-2 text-[10px] font-black text-white shadow-xs hover:scale-[1.02] transition-all cursor-pointer text-center text-sans font-bold"
+                                  className="px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-white text-[10px] font-black flex items-center gap-1 shadow-2xs transition-all active:scale-[0.98] duration-150 cursor-pointer"
                                 >
                                   📞 চ্যাট
                                 </a>
                               </div>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-
-              </div>
-            </section>
-
-            {/* CUSTOM ORDER SECTION FOR WHATSAPP ORDERS (REPLACES GENERAL SOCIAL/VIDEO SECTIONS) */}
-            <section id="custom-whatsapp-order" className="py-16 bg-gradient-to-b from-white to-slate-50 border-t border-gray-150-soft scroll-mt-20 flex flex-col items-center">
-              <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
-                <div className="max-w-xl mx-auto">
-                  <span className="text-xs font-black tracking-widest text-[#25D366] uppercase bg-green-50 border border-green-150 px-3.5 py-1 rounded-full">Custom & Bulk Orders</span>
-                  <h2 className="text-xl sm:text-3xl font-black text-gray-850 font-sans mt-3 leading-snug">
-                    কাস্টম ও বড় বাজারের জন্য সরাসরি হোয়াটসঅ্যাপ অর্ডার করুন
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-2 font-medium">
-                    পারিবারিক বড় অনুষ্ঠান, বিয়ে কিংবা যেকোনো নির্দিষ্ট পণ্যের কাস্টম ওজনের বাস্কেট মেলাতে নিচে আপনার চাহিদা লিখুন এবং সরাসরি হোয়াটসঅ্যাপ মেসেজ দিন।
-                  </p>
-                </div>
-
-                {/* Instant Draft messaging box */}
-                <div className="bg-white rounded-3xl border border-gray-150-soft p-6 sm:p-8 max-w-2xl mx-auto shadow-sm space-y-4">
-                  <div className="text-left space-y-2">
-                    <label className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest block">আপনার বার্তা খসড়া করুন (Type your requirements):</label>
-                    <textarea
-                      id="custom-whatsapp-msg-builder"
-                      rows={3}
-                      defaultValue="আসসালামু আলাইকুম, আমি আমার পরিবারের জন্য ৩ কেজি গরুর দুধ, ২ কেজি অর্গানিক দেশি আলু এবং ১ কেজি সতেজ টমেটো কাস্টম প্যাকেজে নিতে চাই।"
-                      placeholder="এখানে আপনার পণ্যের তালিকা ও পরিমাণ উল্লেখ করুন..."
-                      className="w-full text-xs font-medium border border-gray-200 focus:border-green-400 focus:ring-4 focus:ring-green-50 outline-none rounded-2xl p-4 transition text-gray-800 bg-slate-50/50"
-                    />
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      const txtarea = document.getElementById('custom-whatsapp-msg-builder') as HTMLTextAreaElement;
-                      const userMsg = txtarea ? txtarea.value : '';
-                      const finalUrl = `https://wa.me/8801931355398?text=${encodeURIComponent(userMsg)}`;
-                      window.open(finalUrl, '_blank');
-                    }}
-                    className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white flex items-center justify-center gap-2.5 rounded-2xl py-4 text-xs font-sans font-black shadow-lg hover:shadow-xl transition-all active:scale-[0.98] duration-150 text-center cursor-pointer font-sans"
-                  >
-                    <svg className="h-5 w-5 text-white fill-current" viewBox="0 0 24 24">
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008 0c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.503-5.714-1.458L0 24zm6.49-5.385c1.654.982 3.511 1.5 5.414 1.501 5.474 0 9.93-4.45 9.934-9.92.001-2.648-1.03-5.138-2.902-7.015C17.12 1.306 14.636.275 12.001.275 6.529.275 2.073 4.73 2.069 10.2c-.001 1.958.513 3.869 1.492 5.568l-.979 3.579 3.665-.961zm11.233-7.531c-.301-.15-.178-.225-.375-.525-.097-.15-.525-.75-.525-.75s-.19-.24-.45-.24c-.112 0-.256.04-.37.15-.36.35-.95.95-.95 2.31s.99 2.67 1.13 2.85c.14.18 1.96 2.99 4.75 4.19.67.29 1.19.46 1.59.59.67.21 1.28.18 1.76.11.54-.08 1.65-.67 1.88-1.32.23-.65.23-1.21.16-1.33-.07-.12-.27-.19-.57-.34z" />
-                    </svg>
-                    কাস্টম হোয়াটসঅ্যাপ বার্তা পাঠান (Message Direct)
-                  </button>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </section>
@@ -1784,8 +1946,6 @@ const AppContent: React.FC = () => {
         onClose={() => setSuccessOrderId(null)}
       />
 
-      <ScrollingBanners onOpenSubscription={() => openSubscriptionModal('customer')} setView={setView} />
-      <FloatingSocials />
       <RiktazAI setView={setView} setSelectedProductId={setSelectedProductId} />
       <BottomNavigation
         currentView={currentView}

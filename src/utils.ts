@@ -91,3 +91,29 @@ export function isDefaultPresettedImage(url: string | undefined): boolean {
   ];
   return defaultSeeds.some(seed => cleanUrl.includes(seed));
 }
+
+/**
+ * Recursively removes any undefined properties from an object so that it can be safely
+ * saved to Firestore database.
+ */
+export function sanitizeFirestoreData<T>(obj: T): T {
+  if (obj === undefined || obj === null) {
+    return null as unknown as T;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeFirestoreData(item)) as unknown as T;
+  }
+  if (typeof obj === 'object') {
+    const sanitized: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        const val = obj[key];
+        if (val !== undefined) {
+          sanitized[key] = sanitizeFirestoreData(val);
+        }
+      }
+    }
+    return sanitized as T;
+  }
+  return obj;
+}

@@ -408,132 +408,24 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="font-sans leading-none mt-0.5">ঢাকা জেলা (Dhaka Zone)</span>
           </div>
 
-          {/* REMOVED SEARCH OPTION & REPLACED WITH SOCIAL & VIDEO CHANNELS & BUTTONS */}
-          <div className="flex flex-1 max-w-[280px] sm:max-w-xs md:max-w-md items-center gap-1 sm:gap-1.5 bg-gradient-to-r from-amber-50/70 to-emerald-50/40 border border-emerald-100/70 rounded-2xl px-1.5 sm:px-2.5 py-1 sm:py-1.5 shadow-2xs select-none">
-            
-            {/* FACEBOOK PAGE */}
-            <a 
-              href="https://www.facebook.com/people/%E0%A6%95%E0%A7%83%E0%A6%B7%E0%A6%95-%E0%A6%AC%E0%A6%BE%E0%A6%9C%E0%A6%BE%E0%A6%B0-Krishok-Bazar/61578459151972/" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-[#1877F2]/10 hover:text-[#1877F2] hover:scale-110 active:scale-95 transition-all shrink-0" 
-              title={language === 'en' ? 'Facebook Page' : 'আমাদের ফেসবুক পেইজ'}
-            >
-              <svg className="h-4 w-4 fill-current text-[#1877F2]" viewBox="0 0 24 24"><path d="M9 8H7v3h2v9h4v-9h3.6l.4-3H13V6c0-.5.5-1 1-1h3V1H13c-3 0-4 1.5-4 4v3z"/></svg>
-            </a>
-
-            {/* YOUTUBE CHANNEL */}
-            <a 
-              href="https://www.youtube.com/@KrishokBazarBD" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-[#FF0000]/10 hover:text-[#FF0000] hover:scale-110 active:scale-95 transition-all shrink-0" 
-              title={language === 'en' ? 'YouTube Channel' : 'আমাদের ইউটিউব চ্যানেল'}
-            >
-              <svg className="h-4 w-4 fill-current text-[#FF0000]" viewBox="0 0 24 24"><path d="M23.5 6.4c-.3-1.2-1.3-2.1-2.5-2.4C18.8 3.5 12 3.5 12 3.5s-6.8 0-9 .5c-1.2.3-2.2 1.2-2.5 2.4C0 8.6 0 12 0 12s0 3.4.5 5.6c.3 1.2 1.3 2.1 2.5 2.4 2.2.5 9 .5 9 .5s6.8 0 9-.5c1.2-.3 2.2-1.2 2.5-2.4.5-2.2.5-5.6.5-5.6s0-3.4-.5-5.6zM9.5 15.5V8.5l6.5 3.5-6.5 3.5z"/></svg>
-            </a>
-
-            {/* TIKTOK PAGE */}
-            <a 
-              href="https://www.tiktok.com/@krishokbazarbd" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-black/10 hover:text-black hover:scale-110 active:scale-95 transition-all shrink-0" 
-              title={language === 'en' ? 'TikTok' : 'আমাদের টিকটক'}
-            >
-              <svg className="h-4 w-4 fill-current text-black" viewBox="0 0 24 24">
-                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.74-.22-.2-.43-.4-.63-.62v7.33c0 1.94-.48 3.91-1.63 5.46-1.51 2.08-4.14 3.09-6.66 2.65-2.5-.4-4.63-2.26-5.28-4.72-.8-2.93.43-6.23 2.97-7.66 1.05-.6 2.27-.85 3.48-.75v4.14c-.69-.13-1.42-.04-2.03.32-1.07.61-1.53 1.94-1.12 3.12.36 1.08 1.48 1.79 2.62 1.67 1.25-.09 2.22-1.19 2.22-2.45V0c-.26.01-.52.01-.78.02z" />
-              </svg>
-            </a>
-
-            {/* INSTAGRAM PAGE */}
-            <a 
-              href="https://www.instagram.com/krishokbazarbd/" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-pink-50 hover:text-[#E1306C] hover:scale-110 active:scale-95 transition-all shrink-0" 
-              title={language === 'en' ? 'Instagram' : 'আমাদের ইনস্টাগ্রাম'}
-            >
-              <svg className="h-4 w-4 fill-none stroke-current stroke-[2] text-[#E1306C]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-              </svg>
-            </a>
-
-            {/* MESSENGER SUPPORT */}
-            <a 
-              href="https://m.me/61578459151972" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-1 sm:p-1.5 rounded-xl text-gray-500 hover:bg-[#006AFF]/10 hover:text-[#006AFF] hover:scale-110 active:scale-95 transition-all shrink-0" 
-              title={language === 'en' ? 'Messenger' : 'আমাদের মেসেঞ্জার'}
-            >
-              <svg className="h-4 w-4 fill-current text-[#006AFF]" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.25c0 2.91 1.448 5.498 3.7 7.19v3.81a.5.5 0 00.72.45l4.13-2.27a13.91 13.91 0 001.45.07c5.523 0 10-4.145 10-9.25S17.523 2 12 2zm1 12.5l-2.5-2.5-4.5 2.5 5-5.5 2.5 2.5 4.5-2.5-5 5.5z"/></svg>
-            </a>
-
-            {/* WATCH REAL VIDEOS ACTION BUTTON */}
-            <button
-              onClick={() => handleNavClick('videos')}
-              className="ml-auto flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-[9px] sm:text-[10px] font-black transition-all hover:scale-104 shadow-3xs cursor-pointer select-none border border-red-500 shrink-0"
-              title={language === 'en' ? 'Watch Farm Videos' : 'আমাদের বাস্তব খামার ভিডিওগুলো দেখুন'}
-            >
-              <svg className="h-3 w-3 fill-current shrink-0" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-              <span>{language === 'en' ? 'Videos' : 'ভিডিও দেখুন 📹'}</span>
-            </button>
+          {/* RESTORED INTEGRATED PRODUCT SEARCH BAR IN THE CENTER OF HEADER */}
+          <div className="flex flex-1 max-w-[280px] sm:max-w-xs md:max-w-md items-center gap-2 bg-gray-50 border border-gray-200/80 rounded-2xl px-3 py-2 shadow-2xs">
+            <Search className="h-4 w-4 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder={language === 'en' ? "Search safe organic food..." : "নিরাপদ অর্গানিক খাদ্য খুঁজুন..."}
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onFocus={() => {
+                if (currentView !== 'shop') {
+                  handleNavClick('shop');
+                }
+              }}
+              className="w-full bg-transparent text-[11px] sm:text-xs font-semibold text-gray-800 outline-none placeholder:text-gray-400"
+            />
           </div>
 
-          {/* NAVIGATION LINKS - DESKTOP */}
-          <nav className="hidden lg:flex items-center gap-3.5 xl:gap-5 text-[12px] font-extrabold text-gray-600 shrink-0">
-            <button 
-              onClick={() => handleNavClick('home')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'home' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'Home' : 'হোম'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('shop')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'shop' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'All Products' : 'সব পণ্য'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('weekly-combos')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'weekly-combos' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'Weekly Combos' : 'কম্বো বাস্কেট'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('weekly-discount')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'weekly-discount' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'Weekly Discounts' : 'সাপ্তাহিক ছাড়'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('ready-to-cook')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'ready-to-cook' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'Ready-to-Cook' : 'রেডি-টু-কুক'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('farmers')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'farmers' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'Verified Farmers' : 'ভেরিফাইড কৃষক'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('blog')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none ${currentView === 'blog' ? 'text-emerald-750 border-b-2 border-emerald-600 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? 'Blog' : 'ব্লগ'}
-            </button>
-            <button 
-              onClick={() => handleNavClick('videos')}
-              className={`hover:text-emerald-700 transition-colors cursor-pointer select-none text-red-650 font-black ${currentView === 'videos' ? 'text-red-700 border-b-2 border-red-500 pb-0.5' : ''}`}
-            >
-              {language === 'en' ? '📺 Farm Videos' : '📺 খামার ভিডিও'}
-            </button>
-          </nav>
+          {/* NAVIGATION LINKS - DESKTOP REMOVED AS REQUESTED */}
 
           {/* RIGHT ACTION BUTTONS */}
           <div className="flex items-center gap-2 sm:gap-2.5">
@@ -969,6 +861,13 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
+                onClick={() => { handleNavClick('subscriptions'); setIsMainMenuOpen(false); }}
+                className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'subscriptions' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold' : 'bg-white text-emerald-850 border-emerald-100/70 hover:bg-emerald-100/40 hover:text-emerald-705'}`}
+              >
+                <span>👑</span> <span>{language === 'en' ? 'Subscriptions' : 'প্রিমিয়াম সাবস্ক্রিপশন (Subscriptions)'}</span>
+              </button>
+
+              <button
                 onClick={() => { handleNavClick('our-story'); setIsMainMenuOpen(false); }}
                 className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'our-story' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold' : 'bg-white text-emerald-850 border-emerald-100/70 hover:bg-emerald-100/40 hover:text-emerald-705'}`}
               >
@@ -994,6 +893,36 @@ export const Header: React.FC<HeaderProps> = ({
                 className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'videos' ? 'bg-red-600 text-white border-red-600 font-extrabold' : 'bg-red-50 text-red-950 border-red-100 hover:bg-red-100/40'}`}
               >
                 <span>📺</span> <span>{language === 'en' ? '📺 Farm Videos' : '📺 খামার ভিডিও গ্যালারি'}</span>
+              </button>
+
+              <button
+                onClick={() => { 
+                  window.dispatchEvent(new CustomEvent('open-riktaz-ai'));
+                  setIsMainMenuOpen(false);
+                }}
+                className="px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border border-emerald-100 bg-emerald-50 text-emerald-850 hover:bg-emerald-100 shadow-xs"
+              >
+                <span className="text-emerald-600 animate-bounce">🤖</span> <span>{language === 'en' ? 'Riktaz AI Chatbot' : 'রিকতাজ এআই চ্যাটবট'}</span>
+              </button>
+
+              <button
+                onClick={() => { 
+                  window.open('tel:01931355398', '_blank');
+                  setIsMainMenuOpen(false);
+                }}
+                className="px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border border-blue-100 bg-blue-50 text-blue-800 hover:bg-blue-100 shadow-xs"
+              >
+                <span className="text-blue-600 animate-pulse">📞</span> <span>{language === 'en' ? 'Call Hotline Support' : 'হটলাইন কল সাপোর্ট'}</span>
+              </button>
+
+              <button
+                onClick={() => { 
+                  window.open('https://wa.me/8801931355398', '_blank');
+                  setIsMainMenuOpen(false);
+                }}
+                className="px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border border-green-100 bg-green-50 text-green-800 hover:bg-green-100 shadow-xs"
+              >
+                <span className="text-green-600">💬</span> <span>{language === 'en' ? 'WhatsApp Support' : 'হোয়াটসঅ্যাপ সাপোর্ট'}</span>
               </button>
             </div>
 

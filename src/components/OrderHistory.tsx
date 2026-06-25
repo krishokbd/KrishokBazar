@@ -354,6 +354,37 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
         </button>
       </div>
 
+      {/* CUSTOMER PANEL SMALL OFFERS SECTION */}
+      <div className="mb-6 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-150 rounded-2xl p-4 sm:p-5 select-none text-left">
+        <div className="flex items-center gap-1.5 text-emerald-800 font-extrabold text-xs sm:text-sm">
+          <span>🎁</span>
+          <span>{language === 'bn' ? 'আপনার জন্য বিশেষ অফার ও কুপন সমূহ' : 'Special Offers & Coupons for You'}</span>
+        </div>
+        <p className="text-[11px] text-emerald-700/80 mt-1 font-semibold">
+          {language === 'bn' ? 'সরাসরি খামারিদের পক্ষ থেকে আপনার জন্য বাছাই করা সেরা সাশ্রয়ী অফার:' : 'Handpicked discount deals curated for our valued customers:'}
+        </p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3.5">
+          <div className="bg-white border border-emerald-100 rounded-xl p-3 shadow-3xs flex items-start gap-2.5">
+            <span className="text-xl">🥛</span>
+            <div>
+              <h4 className="text-xs font-black text-gray-800">{language === 'bn' ? 'প্রথম অর্ডারে ফ্রি গরুর দুধ!' : 'Free Milk on First Order!'}</h4>
+              <p className="text-[10px] text-gray-500 font-medium mt-0.5">{language === 'bn' ? 'প্রথম ৩ কেজি বা তদূর্ধ্ব অর্ডারে ৫০০ গ্রাম খাঁটি তরল দুধ একদম ফ্রি!' : 'Get 500g pure cow milk free on ordering 3kg+ organic vegetables!'}</p>
+              <div className="mt-2 inline-block text-[9px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">KB_MILK_FREE</div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-emerald-100 rounded-xl p-3 shadow-3xs flex items-start gap-2.5">
+            <span className="text-xl">🥔</span>
+            <div>
+              <h4 className="text-xs font-black text-gray-800">{language === 'bn' ? 'আলুর উপরে ১০% অতিরিক্ত ছাড়!' : 'Flat 10% Off on Red Potatoes!'}</h4>
+              <p className="text-[10px] text-gray-500 font-medium mt-0.5">{language === 'bn' ? '৫ কেজি লাল আলু অর্ডারে পাবেন সরাসরি ১০% ক্যাশব্যাক ছাড়।' : 'Enjoy 10% instant discount when you add a 5kg potato sack to your cart.'}</p>
+              <div className="mt-2 inline-block text-[9px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">KB_ALU_10</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* DASHBOARD TABS SWITCHER */}
       <div className="flex gap-2.5 pb-2 mb-6 border-b border-gray-100 font-sans">
         <button

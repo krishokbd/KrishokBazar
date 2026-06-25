@@ -630,51 +630,22 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
     });
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className={isFullscreen 
       ? "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm select-none p-4 font-sans"
       : "fixed bottom-5 right-3 xs:right-5 sm:right-6 z-50 select-none font-sans"
     }>
       
-      {/* 1. FLOATING CHAT TRIGGER MODULE */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-white text-white shadow-2xl hover:scale-110 active:scale-95 transition-all cursor-pointer ring-4 ring-emerald-600/30 border border-green-350 relative overflow-visible"
-          style={{ boxShadow: '0 8px 30px rgba(16, 185, 129, 0.45)' }}
-          title="রিকতাজ AI সহকারী (Riktaz AI)"
-        >
-          {/* Animated smart radar pulse rings */}
-          <div className="absolute inset-0 rounded-full border border-emerald-400 animate-ping opacity-75 pointer-events-none" />
-          <div className="absolute -inset-1 rounded-full border border-emerald-300 opacity-25 animate-pulse pointer-events-none" />
-          
-          {/* Active indicator dot and sparkles */}
-          <span className="absolute top-0 right-0 h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full bg-emerald-500 border-2 border-white z-1 flex items-center justify-center">
-            <span className="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-white animate-ping"></span>
-          </span>
-          <div className="absolute -bottom-1 -left-1 bg-gradient-to-tr from-amber-500 to-amber-600 p-0.5 sm:p-1 rounded-full text-white shadow-md z-1">
-            <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5 animate-spin" style={{ animationDuration: '4s' }} />
-          </div>
-          
-          {/* Core Logo Image of the Female AI Avatar */}
-          <img 
-            src={FEMALE_AVATAR} 
-            alt="Krishok Bazar Female Logo AI avatar" 
-            className="h-full w-full object-cover rounded-full hover:rotate-12 transition duration-500"
-            referrerPolicy="no-referrer"
-          />
-        </button>
-      )}
-
       {/* 2. CHAT POPUP LAYOUT BOX - OPTIMIZED STYLES FOR ALL MOBILE SCREENS */}
-      {isOpen && (
-        <div 
-          className={isFullscreen
-            ? "w-full max-w-5xl h-[85vh] rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col transition-all duration-300"
-            : "w-[calc(100vw-24px)] max-w-[340px] xs:w-[380px] sm:w-[420px] sm:max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col h-[75vh] min-h-[460px] xs:min-h-[500px] transition-all duration-300"
-          }
-          style={{ boxShadow: '0 25px 50px -12px rgba(6, 78, 59, 0.25)' }}
-        >
+      <div 
+        className={isFullscreen
+          ? "w-full max-w-5xl h-[85vh] rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col transition-all duration-300"
+          : "w-[calc(100vw-24px)] max-w-[340px] xs:w-[380px] sm:w-[420px] sm:max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-emerald-100 flex flex-col h-[75vh] min-h-[460px] xs:min-h-[500px] transition-all duration-300"
+        }
+        style={{ boxShadow: '0 25px 50px -12px rgba(6, 78, 59, 0.25)' }}
+      >
           {/* Header Bar */}
           <div className="bg-gradient-to-r from-emerald-800 to-emerald-650 px-4 xs:px-5 py-3 text-white flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1500,8 +1471,7 @@ export const RiktazAI: React.FC<RiktazAIProps> = ({ setView, setSelectedProductI
           </div>
 
         </div>
-      )}
 
-    </div>
+      </div>
   );
 };
