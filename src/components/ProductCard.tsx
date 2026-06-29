@@ -11,6 +11,116 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
 import { motion } from 'motion/react';
 
+interface LazyProductImageProps {
+  src: string;
+  alt: string;
+  onError?: () => void;
+  referrerPolicy?: React.HTMLAttributeReferrerPolicy;
+  className?: string;
+}
+
+const LazyProductImage: React.FC<LazyProductImageProps> = ({
+  src,
+  alt,
+  onError,
+  referrerPolicy,
+  className
+}) => {
+  const [isInView, setIsInView] = React.useState(false);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+  const [hasError, setHasError] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '120px', // start loading early for perfect smooth scroll
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(container);
+    return () => {
+      observer.disconnect();
+    };
+  }, [src]);
+
+  React.useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+  }, [src]);
+
+  React.useEffect(() => {
+    if (imgRef.current && imgRef.current.complete) {
+      setIsLoaded(true);
+    }
+  }, [isInView, src]);
+
+  return (
+    <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-slate-50 flex items-center justify-center">
+      {/* High-performance Skeleton shimmer loader */}
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 z-10 bg-slate-100 overflow-hidden">
+          <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+          <div 
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" 
+            style={{
+              animation: 'kb-card-shimmer 1.5s infinite ease-in-out',
+              transform: 'translateX(-100%)'
+            }}
+          />
+          <style>{`
+            @keyframes kb-card-shimmer {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(100%); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {hasError ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400 p-4 select-none border border-dashed border-slate-200">
+          {/* Beautiful SVG placeholder for failed/missing image */}
+          <svg className="w-10 h-10 mb-1.5 stroke-current text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          <span className="text-[10px] font-medium tracking-wide text-slate-400 text-center">ছবি লোড করা যায়নি (Unreachable)</span>
+        </div>
+      ) : (
+        isInView && (
+          <img
+            ref={imgRef}
+            src={src}
+            alt={alt}
+            referrerPolicy={referrerPolicy}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setIsLoaded(true)}
+            onError={() => {
+              console.warn(`[LazyProductImage] Failed to load image URL: ${src}`);
+              setHasError(true);
+              if (onError) onError();
+            }}
+            className={`${className} transition-all duration-500 ${
+              isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-98'
+            }`}
+          />
+        )
+      )}
+    </div>
+  );
+};
+
 interface ProductCardProps {
   product: Product;
   onOpenQuickView: (product: Product) => void;
@@ -75,36 +185,54 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       product.googleDriveFolderUrl.includes('lh3.googleusercontent.com')
     );
 
+    console.log(`[ProductCard/getInitialSrc] ID: ${product.id} "${product.title}" - images:`, product.images, "googleDriveFolderUrl:", product.googleDriveFolderUrl);
+
     if (isRealDriveImage && product.googleDriveFolderUrl) {
-      return convertGoogleDriveLink(product.googleDriveFolderUrl);
+      const parsedUrl = convertGoogleDriveLink(product.googleDriveFolderUrl);
+      console.log(`[ProductCard/getInitialSrc] Product ID: ${product.id}. Parsed googleDriveFolderUrl:`, {
+        input: product.googleDriveFolderUrl,
+        output: parsedUrl
+      });
+      return parsedUrl;
     }
     const validUrls = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
-    return validUrls[0] || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
+    if (validUrls[0]) {
+      const parsedUrl = convertGoogleDriveLink(validUrls[0]);
+      console.log(`[ProductCard/getInitialSrc] Product ID: ${product.id}. Parsed validUrls[0]:`, {
+        input: validUrls[0],
+        output: parsedUrl
+      });
+      return parsedUrl;
+    }
+    console.log(`[ProductCard/getInitialSrc] Product ID: ${product.id}. No valid images or Drive URL, using default fallback.`);
+    return 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500';
   };
 
   const [currentSrc, setCurrentSrc] = React.useState(getInitialSrc());
   const [attemptIndex, setAttemptIndex] = React.useState(-1); // Start at -1 to indicate we are trying initial source
-  const [isImageLoaded, setIsImageLoaded] = React.useState(false);
 
   React.useEffect(() => {
+    console.log(`[ProductCard/Effect] Product updated: "${product.title}" (ID: ${product.id}) images:`, product.images);
     setCurrentSrc(getInitialSrc());
     setAttemptIndex(-1);
-    setIsImageLoaded(false);
   }, [product]);
-
-  React.useEffect(() => {
-    setIsImageLoaded(false);
-  }, [currentSrc]);
 
   const handleImageError = () => {
     const validUrls = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
     
     // Determine next index to attempt
     const nextIdx = attemptIndex + 1;
+    console.warn(`[ProductCard/handleImageError] Failed to load image source: ${currentSrc} for Product "${product.title}" (ID: ${product.id}). Attempting fallback index ${nextIdx}`);
     if (nextIdx < validUrls.length) {
       setAttemptIndex(nextIdx);
-      setCurrentSrc(convertGoogleDriveLink(validUrls[nextIdx]));
+      const parsedUrl = convertGoogleDriveLink(validUrls[nextIdx]);
+      console.log(`[ProductCard/handleImageError] Product ID: ${product.id}. Parsed fallback index ${nextIdx}:`, {
+        input: validUrls[nextIdx],
+        output: parsedUrl
+      });
+      setCurrentSrc(parsedUrl);
     } else {
+      console.warn(`[ProductCard/handleImageError] All images failed for Product ID: ${product.id}. Falling back to default Unsplash placeholder.`);
       setCurrentSrc('https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500');
     }
   };
@@ -194,50 +322,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* BADGES & COVERS CONTAINER */}
       <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-        {/* High-performance Skeleton shimmer loader */}
-        {!isImageLoaded && (
-          <div className="absolute inset-0 z-10 bg-slate-100 overflow-hidden">
-            <div className="absolute inset-0 bg-slate-200 animate-pulse" />
-            <div 
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" 
-              style={{
-                animation: 'kb-card-shimmer 1.5s infinite ease-in-out',
-                transform: 'translateX(-100%)'
-              }}
-            />
-            <style>{`
-              @keyframes kb-card-shimmer {
-                0% { transform: translateX(-100%); }
-                100% { transform: translateX(100%); }
-              }
-            `}</style>
-          </div>
-        )}
-
-        <img
+        <LazyProductImage
           src={currentSrc}
           alt={product.title}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onLoad={(e) => {
-            const img = e.currentTarget;
-            if ('decode' in img) {
-              img.decode()
-                .then(() => {
-                  setIsImageLoaded(true);
-                })
-                .catch((err) => {
-                  console.error("Decoding image failed:", err);
-                  setIsImageLoaded(true);
-                });
-            } else {
-              setIsImageLoaded(true);
-            }
-          }}
           onError={handleImageError}
-          className={`h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-108 ${
-            isImageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover object-center group-hover:scale-108"
         />
 
         {/* BLUE VERIFICATION TICK ONLY (NO TEXT OVERLAY) */}

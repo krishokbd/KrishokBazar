@@ -67,9 +67,11 @@ self.addEventListener('fetch', (event) => {
       // If not cached, attempt network fetch
       return fetch(event.request).then((networkResponse) => {
         // Cache images, styles, and other statics on-the-fly
+        // Support caching of opaque responses (status === 0) specifically for cross-origin product images
+        const isOpaqueImage = networkResponse && networkResponse.status === 0 && event.request.destination === 'image';
         if (
           networkResponse &&
-          networkResponse.status === 200 &&
+          (networkResponse.status === 200 || isOpaqueImage) &&
           (event.request.destination === 'image' || 
            event.request.destination === 'style' || 
            event.request.destination === 'script' || 

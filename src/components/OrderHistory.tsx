@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../firebase';
 import { Order, OrderItem } from '../types';
-import { useApp } from '../AppContext';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { 
   FileText, 
   Eye, 
@@ -634,7 +634,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
                       {/* Product Image */}
                       <div className="relative aspect-square w-full bg-gray-50 overflow-hidden">
                         <img 
-                          src={(prod.images && prod.images[0]) || 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500'} 
+                          src={(prod.images && prod.images[0]) ? convertGoogleDriveLink(prod.images[0]) : 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500'} 
                           alt={prod.title} 
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                           referrerPolicy="no-referrer"

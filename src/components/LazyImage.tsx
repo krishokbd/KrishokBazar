@@ -1,5 +1,35 @@
 import React, { useState, useEffect } from 'react';
 
+const convertGoogleDriveLink = (url: string): string => {
+  if (!url) return '';
+  const clean = url.trim();
+  
+  let fileId = '';
+  
+  // 1. Matches /file/d/ID/view, /file/u/0/d/ID/view, /file/u/1/d/ID, etc.
+  const fileDMatch = clean.match(/\/file\/(?:u\/\d+\/)?d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch && fileDMatch[1]) {
+    fileId = fileDMatch[1];
+  } else {
+    // 2. General fallback for any /d/ID pattern in drive path
+    const generalDMatch = clean.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    if (generalDMatch && generalDMatch[1]) {
+      fileId = generalDMatch[1];
+    } else {
+      // 3. Matches query parameter id=FILE_ID
+      const idParam = clean.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (idParam && idParam[1]) {
+        fileId = idParam[1];
+      }
+    }
+  }
+  
+  if (fileId) {
+    return `https://lh3.googleusercontent.com/d/${fileId}`;
+  }
+  return url;
+};
+
 interface LazyImageProps {
   src: string;
   alt: string;
@@ -17,6 +47,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   onError,
   onClick
 }) => {
+  const resolvedSrc = React.useMemo(() => convertGoogleDriveLink(src), [src]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
 
@@ -24,7 +55,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     // Reset states when source changes
     setIsLoaded(false);
     setHasError(false);
-  }, [src]);
+  }, [resolvedSrc]);
 
   const handleLoad = () => {
     setIsLoaded(true);
@@ -69,7 +100,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
       {/* Actual Image loaded immediately so the browser fetches it instantly */}
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         referrerPolicy={referrerPolicy}
         onLoad={handleLoad}

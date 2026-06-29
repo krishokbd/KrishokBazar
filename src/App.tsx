@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { WifiOff, RefreshCw, X as CloseIcon } from 'lucide-react';
-import { AppProvider, useApp } from './AppContext';
+import { AppProvider, useApp, convertGoogleDriveLink } from './AppContext';
 import { NotificationProvider } from './components/NotificationProvider';
 import { logAnalyticsEvent } from './lib/analytics';
 import { Header } from './components/Header';
@@ -979,23 +979,26 @@ const AppContent: React.FC = () => {
                     .filter((p) => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false)
                     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
                     .slice(0, 10)
-                    .map((p) => (
-                      <div 
-                        key={`bs-${p.id}`} 
-                        className="w-[180px] xs:w-[210px] sm:w-[240px] shrink-0 snap-start"
-                      >
-                        <ProductCard 
-                          product={p} 
-                          onOpenQuickView={(prod) => {
-                            setSelectedProductId(prod.id);
-                            setView('product-details');
-                          }} 
-                          onEditProduct={setEditingProduct}
-                          onToggleCompare={handleToggleCompare}
-                          isCompared={comparedProductIds.includes(p.id)}
-                        />
-                      </div>
-                    ))}
+                    .map((p) => {
+                      console.log("[App.tsx (BestSellers)] Mapping product:", p.title, "ID:", p.id, "images:", p.images);
+                      return (
+                        <div 
+                          key={`bs-${p.id}`} 
+                          className="w-[180px] xs:w-[210px] sm:w-[240px] shrink-0 snap-start"
+                        >
+                          <ProductCard 
+                            product={p} 
+                            onOpenQuickView={(prod) => {
+                              setSelectedProductId(prod.id);
+                              setView('product-details');
+                            }} 
+                            onEditProduct={setEditingProduct}
+                            onToggleCompare={handleToggleCompare}
+                            isCompared={comparedProductIds.includes(p.id)}
+                          />
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </section>
@@ -1165,19 +1168,22 @@ const AppContent: React.FC = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   {products
                     .filter((p) => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false && (selectedCategory === 'all' || p.category === selectedCategory))
-                    .map((p) => (
-                      <ProductCard 
-                        key={p.id} 
-                        product={p} 
-                        onOpenQuickView={(prod) => {
-                          setSelectedProductId(prod.id);
-                          setView('product-details');
-                        }} 
-                        onEditProduct={setEditingProduct}
-                        onToggleCompare={handleToggleCompare}
-                        isCompared={comparedProductIds.includes(p.id)}
-                      />
-                    ))}
+                    .map((p) => {
+                      console.log("[App.tsx (CategoryGrid)] Mapping product:", p.title, "ID:", p.id, "images:", p.images);
+                      return (
+                        <ProductCard 
+                          key={p.id} 
+                          product={p} 
+                          onOpenQuickView={(prod) => {
+                            setSelectedProductId(prod.id);
+                            setView('product-details');
+                          }} 
+                          onEditProduct={setEditingProduct}
+                          onToggleCompare={handleToggleCompare}
+                          isCompared={comparedProductIds.includes(p.id)}
+                        />
+                      );
+                    })}
                 </div>
               </div>
             </section>
@@ -1237,7 +1243,7 @@ const AppContent: React.FC = () => {
                             setView('product-details');
                           }}>
                             <img
-                              src={basket.images[0]}
+                              src={convertGoogleDriveLink(basket.images[0])}
                               alt={basket.title}
                               className="h-full w-full object-cover object-center transition-all duration-500 group-hover:scale-105"
                               referrerPolicy="no-referrer"
@@ -1388,19 +1394,22 @@ const AppContent: React.FC = () => {
                     <p className="text-[11px] text-gray-400">অনুগ্রহ করে অন্য ক্যাটাগরি বা জেলা নির্বাচন করে চেষ্টা করুন।</p>
                   </div>
                 ) : (
-                  getFilteredProducts().map((p) => (
-                    <ProductCard 
-                      key={p.id} 
-                      product={p} 
-                      onOpenQuickView={(prod) => {
-                        setSelectedProductId(prod.id);
-                        setView('product-details');
-                      }} 
-                      onEditProduct={setEditingProduct} 
-                      onToggleCompare={handleToggleCompare}
-                      isCompared={comparedProductIds.includes(p.id)}
-                    />
-                  ))
+                  getFilteredProducts().map((p) => {
+                    console.log("[App.tsx (ShopGrid)] Mapping product:", p.title, "ID:", p.id, "images:", p.images);
+                    return (
+                      <ProductCard 
+                        key={p.id} 
+                        product={p} 
+                        onOpenQuickView={(prod) => {
+                          setSelectedProductId(prod.id);
+                          setView('product-details');
+                        }} 
+                        onEditProduct={setEditingProduct} 
+                        onToggleCompare={handleToggleCompare}
+                        isCompared={comparedProductIds.includes(p.id)}
+                      />
+                    );
+                  })
                 )}
               </div>
 

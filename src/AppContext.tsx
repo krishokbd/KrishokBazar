@@ -354,7 +354,7 @@ export const convertGoogleDriveLink = (url: string): string => {
   }
   
   if (fileId) {
-    return `https://docs.google.com/uc?export=download&id=${fileId}`;
+    return `https://lh3.googleusercontent.com/d/${fileId}`;
   }
   return url;
 };
