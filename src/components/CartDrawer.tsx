@@ -207,14 +207,14 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
                       <div className="mt-2.5 flex items-center justify-between">
                         <div className="flex items-center rounded-lg border border-gray-150 p-0.5 bg-white">
                           <button
-                            onClick={() => updateCartQuantity(item.productId, item.quantity - 1, item.selectedUnit)}
+                            onClick={() => updateCartQuantity(item.productId, item.quantity - 1, item.selectedUnit, item.variationId)}
                             className="h-6 w-6 flex items-center justify-center text-gray-500 font-extrabold hover:bg-gray-100 rounded"
                           >
                             -
                           </button>
                           <span className="w-8 text-center text-xs font-bold text-gray-700 font-mono">{item.quantity}</span>
                           <button
-                            onClick={() => updateCartQuantity(item.productId, item.quantity + 1, item.selectedUnit)}
+                            onClick={() => updateCartQuantity(item.productId, item.quantity + 1, item.selectedUnit, item.variationId)}
                             className="h-6 w-6 flex items-center justify-center text-gray-500 font-extrabold hover:bg-gray-100 rounded"
                           >
                             +
@@ -222,7 +222,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.productId, item.selectedUnit)}
+                          onClick={() => removeFromCart(item.productId, item.selectedUnit, item.variationId)}
                           className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />

@@ -175,6 +175,7 @@ const AppContent: React.FC = () => {
   const [selectedFarmerStoreId, setSelectedFarmerStoreId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [vegetableSubFilter, setVegetableSubFilter] = useState<'all' | 'regular' | 'ready'>('all');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [sortBy, setSortBy] = useState<string>('default');
   const [entryCompleted, setEntryCompleted] = useState(true);
@@ -410,6 +411,14 @@ const AppContent: React.FC = () => {
       list = list.filter((p) => p.isReadyToCook);
     } else if (selectedCategory !== 'all') {
       list = list.filter((p) => p.category === selectedCategory);
+    }
+
+    if (selectedCategory === 'vegetables' || selectedCategory === 'vegetables-page') {
+      if (vegetableSubFilter === 'ready') {
+        list = list.filter((p) => p.isReadyToCook === true);
+      } else if (vegetableSubFilter === 'regular') {
+        list = list.filter((p) => p.isReadyToCook !== true);
+      }
     }
 
     // District filter
@@ -1165,9 +1174,52 @@ const AppContent: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Vegetable Sub-Filter Tabs */}
+                {selectedCategory === 'vegetables' && (
+                  <div className="flex items-center gap-1.5 mb-6 bg-slate-50 border border-gray-150 p-1.5 rounded-2xl max-w-md mx-auto sm:mx-0 font-sans text-xs">
+                    <button
+                      onClick={() => setVegetableSubFilter('all')}
+                      className={`flex-1 text-center py-2 px-3 rounded-xl font-bold cursor-pointer transition-all duration-150 ${
+                        vegetableSubFilter === 'all'
+                          ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs'
+                          : 'text-gray-600 hover:bg-white hover:text-emerald-700 font-bold'
+                      }`}
+                    >
+                      সব সবজি (All)
+                    </button>
+                    <button
+                      onClick={() => setVegetableSubFilter('regular')}
+                      className={`flex-1 text-center py-2 px-3 rounded-xl font-bold cursor-pointer transition-all duration-150 ${
+                        vegetableSubFilter === 'regular'
+                          ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs'
+                          : 'text-gray-600 hover:bg-white hover:text-emerald-700 font-bold'
+                      }`}
+                    >
+                      এমনে সবজি (Regular)
+                    </button>
+                    <button
+                      onClick={() => setVegetableSubFilter('ready')}
+                      className={`flex-1 text-center py-2 px-3 rounded-xl font-bold cursor-pointer transition-all duration-150 ${
+                        vegetableSubFilter === 'ready'
+                          ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs'
+                          : 'text-gray-600 hover:bg-white hover:text-emerald-700 font-bold'
+                      }`}
+                    >
+                      রেডি-টু-কুক (Ready to Cook)
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
                   {products
                     .filter((p) => !p.id.startsWith('cb') && p.isActive !== false && p.approved !== false && (selectedCategory === 'all' || p.category === selectedCategory))
+                    .filter((p) => {
+                      if (selectedCategory === 'vegetables') {
+                        if (vegetableSubFilter === 'ready') return p.isReadyToCook === true;
+                        if (vegetableSubFilter === 'regular') return p.isReadyToCook !== true;
+                      }
+                      return true;
+                    })
                     .map((p) => {
                       console.log("[App.tsx (CategoryGrid)] Mapping product:", p.title, "ID:", p.id, "images:", p.images);
                       return (
@@ -1384,6 +1436,42 @@ const AppContent: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              {/* Vegetable Sub-Filter Tabs */}
+              {selectedCategory === 'vegetables' && (
+                <div className="flex items-center gap-1.5 mb-6 bg-white border border-gray-150 p-1.5 rounded-2xl max-w-md mx-auto sm:mx-0 font-sans text-xs">
+                  <button
+                    onClick={() => setVegetableSubFilter('all')}
+                    className={`flex-1 text-center py-2 px-3 rounded-xl font-bold cursor-pointer transition-all duration-150 ${
+                      vegetableSubFilter === 'all'
+                        ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs'
+                        : 'text-gray-600 hover:bg-slate-50 hover:text-emerald-700 font-bold'
+                    }`}
+                  >
+                    সব সবজি (All)
+                  </button>
+                  <button
+                    onClick={() => setVegetableSubFilter('regular')}
+                    className={`flex-1 text-center py-2 px-3 rounded-xl font-bold cursor-pointer transition-all duration-150 ${
+                      vegetableSubFilter === 'regular'
+                        ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs'
+                        : 'text-gray-600 hover:bg-slate-50 hover:text-emerald-700 font-bold'
+                    }`}
+                  >
+                    এমনে সবজি (Regular)
+                  </button>
+                  <button
+                    onClick={() => setVegetableSubFilter('ready')}
+                    className={`flex-1 text-center py-2 px-3 rounded-xl font-bold cursor-pointer transition-all duration-150 ${
+                      vegetableSubFilter === 'ready'
+                        ? 'bg-gradient-to-tr from-emerald-600 to-green-500 text-white shadow-xs'
+                        : 'text-gray-600 hover:bg-slate-50 hover:text-emerald-700 font-bold'
+                    }`}
+                  >
+                    রেডি-টু-কুক (Ready to Cook)
+                  </button>
+                </div>
+              )}
 
               {/* Product Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">

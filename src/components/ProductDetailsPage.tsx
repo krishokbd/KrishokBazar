@@ -281,6 +281,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   }, [product]);
 
   const [selectedPackId, setSelectedPackId] = useState<string>('');
+  const [selectedVariationId, setSelectedVariationId] = useState<string>('');
+
+  const selectedVariation = React.useMemo(() => {
+    if (!product || !product.variations || product.variations.length === 0) return null;
+    return product.variations.find(v => v.id === selectedVariationId) || product.variations[0];
+  }, [product, selectedVariationId]);
 
   const activeOption = React.useMemo(() => {
     return packOptions.find(o => o.id === selectedPackId) || packOptions[0];
@@ -295,7 +301,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     if (product && packOptions.length > 0) {
       setSelectedPackId(packOptions[1]?.id || packOptions[0]?.id || '1');
     }
-  }, [productId, packOptions]);
+    if (product && product.variations && product.variations.length > 0) {
+      setSelectedVariationId(product.variations[0].id);
+    } else {
+      setSelectedVariationId('');
+    }
+  }, [productId, packOptions, product]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -320,8 +331,12 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   }
 
   const farmer = farmers.find(f => f.id === product.farmerId);
-  const baseDisplayPrice = product.discountPrice || product.price;
-  const baseOriginalPrice = product.price;
+  const baseDisplayPrice = selectedVariation && selectedVariation.price !== undefined
+    ? selectedVariation.price
+    : (product.discountPrice || product.price);
+  const baseOriginalPrice = selectedVariation && selectedVariation.price !== undefined
+    ? (product.discountPrice ? Math.round(selectedVariation.price * (product.price / product.discountPrice)) : selectedVariation.price)
+    : product.price;
   const hasDiscount = !!product.discountPrice;
 
   const packMultiplier = activeOption?.multiplier || 1;
@@ -369,11 +384,11 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   };
 
   const handleAddToCart = () => {
-    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
+    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn, selectedVariation || undefined);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
+    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn, selectedVariation || undefined);
     // Programmatically open the shopping cart sidebar drawer by simulating click
     const cartBtn = document.getElementById('header-cart-btn');
     if (cartBtn) {
@@ -714,6 +729,37 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     </span>
                   </div>
                 </div>
+
+                {/* Product Variations selection */}
+                {product.variations && product.variations.length > 0 && (
+                  <div className="mt-4 pt-3.5 border-t border-dashed border-gray-200">
+                    <span className="block text-xs font-black text-gray-700 mb-2.5 flex items-center gap-1.5 font-sans">
+                      ✨ {language === 'bn' ? 'পছন্দের প্রকার বা সাইজ নির্বাচন করুন:' : 'Select Variation / Size:'}
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-sans">
+                      {product.variations.map((v) => {
+                        const isSelected = selectedVariationId === v.id;
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => setSelectedVariationId(v.id)}
+                            className={`flex flex-col justify-center items-center text-center cursor-pointer p-2.5 rounded-xl border transition-all duration-150 ${
+                              isSelected
+                                ? 'border-emerald-600 bg-emerald-50/40 text-emerald-900 shadow-xs font-black'
+                                : 'border-gray-200 bg-white hover:bg-slate-50 text-gray-650'
+                            }`}
+                          >
+                            <span className="text-xs sm:text-sm font-bold">{language === 'bn' ? v.nameBn : v.nameEn}</span>
+                            <span className="text-[10.5px] mt-0.5 text-emerald-700 font-mono font-bold">
+                              {v.price ? `৳${v.price}` : (language === 'bn' ? 'বেস প্রাইস' : 'Base Price')}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Clickable Packaging card selector */}
                 {packOptions.length > 0 && (

@@ -27,6 +27,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   }, [product]);
 
   const [selectedPackId, setSelectedPackId] = useState<string>('');
+  const [selectedVariationId, setSelectedVariationId] = useState<string>('base');
 
   // Reset indices and pack state on product shift
   useEffect(() => {
@@ -34,6 +35,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     setQty(1);
     if (product && packOptions.length > 0) {
       setSelectedPackId(packOptions[1]?.id || packOptions[0]?.id || '1');
+    }
+    if (product && product.variations && product.variations.length > 0) {
+      setSelectedVariationId(product.variations[0].id);
+    } else {
+      setSelectedVariationId('base');
     }
   }, [product, packOptions]);
 
@@ -48,12 +54,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const packLabelBn = activeOption?.labelBn || product.unit || 'পিস';
   const packLabelEn = activeOption?.labelEn || product.unit || 'piece';
 
-  const baseDisplayPrice = product.discountPrice || product.price;
-  const baseOriginalPrice = product.price;
+  const selectedVariation = product.variations?.find(v => v.id === selectedVariationId) || null;
+
+  const baseDisplayPrice = (selectedVariation && selectedVariation.price !== undefined)
+    ? selectedVariation.price
+    : (product.discountPrice || product.price);
+
+  const baseOriginalPrice = (selectedVariation && selectedVariation.price !== undefined)
+    ? selectedVariation.price
+    : product.price;
 
   const displayPrice = Math.round(baseDisplayPrice * packMultiplier);
   const originalPrice = Math.round(baseOriginalPrice * packMultiplier);
-  const hasDiscount = !!product.discountPrice;
+  const hasDiscount = !!product.discountPrice && !selectedVariation?.price;
   const discountPercent = hasDiscount && originalPrice > displayPrice
     ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100)
     : 0;
@@ -71,7 +84,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   };
 
   const handleAdd = () => {
-    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
+    addToCart(product, qty, displayPrice, language === 'bn' ? packLabelBn : packLabelEn, selectedVariation || undefined);
     onClose();
   };
 
@@ -240,6 +253,41 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 </span>
               </div>
             </div>
+
+            {/* Product Variations selector */}
+            {product.variations && product.variations.length > 0 && (
+              <div className="mt-3.5 pt-3.5 border-t border-dashed border-gray-200">
+                <span className="block text-[11px] font-bold text-gray-650 mb-2 flex items-center gap-1 font-sans">
+                  🥦 প্রোডাক্ট ভেরিয়েশন সিলেক্ট করুন (Select Variation):
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {product.variations.map((v) => {
+                    const diff = (v.price !== undefined) ? v.price - (product.discountPrice || product.price) : 0;
+                    let diffText = '';
+                    if (diff > 0) {
+                      diffText = ` (+৳${diff})`;
+                    } else if (diff < 0) {
+                      diffText = ` (-৳${Math.abs(diff)})`;
+                    }
+                    const isSelected = selectedVariationId === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setSelectedVariationId(v.id)}
+                        className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-black shadow-3xs'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {language === 'bn' ? v.nameBn : v.nameEn}{diffText}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Packaging card selector */}
             {packOptions.length > 0 && (

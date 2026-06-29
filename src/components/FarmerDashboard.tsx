@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../AppContext';
-import { Product, Order } from '../types';
+import { Product, ProductVariation, Order } from '../types';
 import { FEMALE_AVATAR, MALE_AVATAR } from '../assets';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase';
@@ -302,6 +302,10 @@ export const FarmerDashboard: React.FC = () => {
   const [prodHarvestDate, setProdHarvestDate] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [prodVariations, setProdVariations] = useState<ProductVariation[]>([]);
+  const [newVarNameBn, setNewVarNameBn] = useState('');
+  const [newVarNameEn, setNewVarNameEn] = useState('');
+  const [newVarPrice, setNewVarPrice] = useState('');
 
   const handleImageFileChange = async (files: FileList | null) => {
     if (!files) return;
@@ -482,6 +486,7 @@ export const FarmerDashboard: React.FC = () => {
       stock: Number(prodStock),
       isReadyToCook: prodReadyToCook,
       images: finalImages,
+      variations: prodVariations,
       farmerId: currentUser.farmerId || 'f70',
       farmerName: currentUser.name || 'খামারি অংশীদার',
       rating: 5.0,
@@ -516,6 +521,10 @@ export const FarmerDashboard: React.FC = () => {
     setProdImages([]);
     setProdUnit('Kg');
     setProdHarvestDate('');
+    setProdVariations([]);
+    setNewVarNameBn('');
+    setNewVarNameEn('');
+    setNewVarPrice('');
   };
 
   const handleStartEdit = (p: Product) => {
@@ -530,6 +539,10 @@ export const FarmerDashboard: React.FC = () => {
     setProdImages(p.images && p.images.length > 0 ? p.images : ['']);
     setProdUnit(p.unit || 'Kg');
     setProdHarvestDate(p.harvestDate || '');
+    setProdVariations(p.variations || []);
+    setNewVarNameBn('');
+    setNewVarNameEn('');
+    setNewVarPrice('');
     setIsAddingProduct(true);
   };
 
@@ -1001,6 +1014,184 @@ export const FarmerDashboard: React.FC = () => {
                     />
                   </div>
 
+                  {/* Product Variations section for farmers */}
+                  <div className="border border-emerald-150 rounded-2xl p-4 bg-emerald-50/20 space-y-4">
+                    <div>
+                      <span className="block text-xs font-black text-emerald-800 uppercase tracking-wider font-sans">
+                        🥦 প্রোডাক্ট ভেরিয়েশন বা প্রকারভেদ (Product Variations)
+                      </span>
+                      <p className="text-[10.5px] text-gray-500 mt-0.5">
+                        যেমন: সাইজ, রঙ, প্রকার বা রেডি-টু-কুক ধরণ যোগ করুন (কমপক্ষে একটি যোগ করার পরামর্শ দেওয়া হলো)
+                      </p>
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="bg-white p-3 rounded-xl border border-emerald-100 space-y-2">
+                      <span className="block text-[10px] font-bold text-gray-600 uppercase tracking-wider font-sans">⚡ দ্রুত ভেরিয়েশন টেমপ্লেট (Click to add):</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {/* Ready to Cook presets */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVar: ProductVariation = { id: `var-rtc-${Date.now()}-1`, nameBn: 'কুচি কাটা সবজি', nameEn: 'Finely Chopped', price: Math.round(Number(prodPrice) * 1.15) };
+                            setProdVariations(prev => [...prev, newVar]);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-150 cursor-pointer"
+                        >
+                          + রেডি-টু-কুক (কুচি কাটা)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVar: ProductVariation = { id: `var-rtc-${Date.now()}-2`, nameBn: 'ধুয়ে কাটা স্লাইস', nameEn: 'Washed & Sliced', price: Math.round(Number(prodPrice) * 1.1) };
+                            setProdVariations(prev => [...prev, newVar]);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold border border-indigo-150 cursor-pointer"
+                        >
+                          + রেডি-টু-কুক (ধুয়ে স্লাইস করা)
+                        </button>
+
+                        {/* Sizes presets */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVar: ProductVariation = { id: `var-size-${Date.now()}-1`, nameBn: 'মাঝারি সাইজ', nameEn: 'Medium Size' };
+                            setProdVariations(prev => [...prev, newVar]);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold border border-emerald-150 cursor-pointer"
+                        >
+                          + মাঝারি সাইজ (Medium)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVar: ProductVariation = { id: `var-size-${Date.now()}-2`, nameBn: 'বড় সাইজ', nameEn: 'Large Size', price: Math.round(Number(prodPrice) * 1.25) };
+                            setProdVariations(prev => [...prev, newVar]);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold border border-emerald-150 cursor-pointer"
+                        >
+                          + বড় সাইজ (Large)
+                        </button>
+
+                        {/* Colors presets */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVar: ProductVariation = { id: `var-color-${Date.now()}-1`, nameBn: 'লাল প্রকার', nameEn: 'Red Variant' };
+                            setProdVariations(prev => [...prev, newVar]);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-150 cursor-pointer"
+                        >
+                          + লাল প্রকার (Red)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVar: ProductVariation = { id: `var-color-${Date.now()}-2`, nameBn: 'সবুজ প্রকার', nameEn: 'Green Variant' };
+                            setProdVariations(prev => [...prev, newVar]);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-700 text-[10px] font-bold border border-teal-150 cursor-pointer"
+                        >
+                          + সবুজ প্রকার (Green)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Add Custom Variation Form */}
+                    <div className="bg-white p-3 rounded-xl border border-emerald-100 grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (বাংলা)</label>
+                        <input
+                          type="text"
+                          value={newVarNameBn}
+                          onChange={(e) => setNewVarNameBn(e.target.value)}
+                          placeholder="যেমন: গোল বেগুন"
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (English)</label>
+                        <input
+                          type="text"
+                          value={newVarNameEn}
+                          onChange={(e) => setNewVarNameEn(e.target.value)}
+                          placeholder="e.g. Round Eggplant"
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-655 mb-1">আলাদা দাম (ঐচ্ছিক ৳)</label>
+                        <input
+                          type="number"
+                          value={newVarPrice}
+                          onChange={(e) => setNewVarPrice(e.target.value)}
+                          placeholder="যেমন: ৬০"
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nameBn = newVarNameBn.trim();
+                          const nameEn = newVarNameEn.trim();
+                          const priceVal = newVarPrice ? Number(newVarPrice) : undefined;
+                          
+                          if (!nameBn || !nameEn) {
+                            alert("দয়া করে প্রকার নাম বাংলা এবং ইংরেজি দুই ভাষাতেই লিখুন!");
+                            return;
+                          }
+                          
+                          const newVar: ProductVariation = {
+                            id: `var-${Date.now()}`,
+                            nameBn,
+                            nameEn,
+                            price: priceVal
+                          };
+                          
+                          setProdVariations(prev => [...prev, newVar]);
+                          setNewVarNameBn('');
+                          setNewVarNameEn('');
+                          setNewVarPrice('');
+                        }}
+                        className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 font-sans"
+                      >
+                        প্রকার যোগ করুন
+                      </button>
+                    </div>
+
+                    {/* Custom Variation List */}
+                    {prodVariations.length > 0 ? (
+                      <div className="space-y-2 font-sans">
+                        <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">চলতি ভেরিয়েশনসমূহ (Current Variations):</span>
+                        <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                          {prodVariations.map((v, index) => (
+                            <div key={v.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-150 shadow-3xs text-xs font-sans">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-gray-800">{v.nameBn} <span className="text-gray-400 font-normal">({v.nameEn})</span></span>
+                                <span className="text-[10px] text-emerald-700 font-bold font-mono">
+                                  {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProdVariations(prev => prev.filter((_, i) => i !== index));
+                                }}
+                                className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:underline transition-colors cursor-pointer font-bold text-[10px]"
+                              >
+                                মুছুন
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 text-gray-400 text-[11px] font-sans">
+                        কোনো প্রকার বা সাইজ ভেরিয়েশন যোগ করা নেই। পণ্যটি একটি একক সাধারণ অপশনে বিক্রি হবে।
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block font-bold text-gray-600 mb-1">পণ্যের সচিত্র বিবরণ:</label>
                     <textarea 
@@ -1175,6 +1366,15 @@ export const FarmerDashboard: React.FC = () => {
                           <div>
                             <strong className="text-gray-800 text-[11px] block truncate max-w-[130px] sm:max-w-xs">{p.title}</strong>
                             <span className="text-[9.5px] text-gray-400 block font-mono capitalize">{p.category}</span>
+                            {p.variations && p.variations.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {p.variations.map((v) => (
+                                  <span key={v.id} className="text-[8.5px] font-bold bg-emerald-50/60 text-emerald-700 px-1 py-0.5 rounded border border-emerald-100 font-sans">
+                                    {v.nameBn} {v.price ? `(৳${v.price})` : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           
                           <div className="flex items-center gap-1.5 flex-wrap">

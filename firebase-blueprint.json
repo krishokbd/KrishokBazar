@@ -42,7 +42,8 @@
         "images": { "type": "array", "description": "3 to 5 high-fidelity image URLs" },
         "isVerified": { "type": "boolean", "description": "True if linked farmer is verified" },
         "isReadyToCook": { "type": "boolean", "description": "True if ready to cook product preset" },
-        "isFeatured": { "type": "boolean", "description": "True if highlight on main home window" }
+        "isFeatured": { "type": "boolean", "description": "True if highlight on main home window" },
+        "variations": { "type": "array", "description": "Array of variations like type, shapes, or sizes" }
       },
       "required": ["id", "title", "description", "price", "category", "farmerId", "farmerName", "rating", "stock", "images", "isVerified", "isReadyToCook"]
     },

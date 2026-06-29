@@ -32,6 +32,15 @@ export interface Farmer {
   password?: string;
 }
 
+export interface ProductVariation {
+  id: string;
+  name?: string;
+  nameBn: string;
+  nameEn: string;
+  price?: number;
+  stock?: number;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -56,6 +65,7 @@ export interface Product {
   unitType?: string; // custom unit type e.g. packet, dozen, kg
   isActive?: boolean;
   googleDriveFolderUrl?: string;
+  variations?: ProductVariation[];
 }
 
 export interface OrderItem {
@@ -65,6 +75,9 @@ export interface OrderItem {
   quantity: number;
   image: string;
   farmerId: string;
+  variationId?: string;
+  variationName?: string;
+  selectedUnit?: string;
 }
 
 export interface Order {

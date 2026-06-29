@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Farmer, Product, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert, WeeklyComboOffer, WeeklyComboProduct, DynamicPage } from './types';
+import { Farmer, Product, ProductVariation, Order, User, Review, OrderItem, WithdrawalRequest, Category, Banner, BlogPost, SiteSettings, Offer, MembershipSubmission, FarmerPost, PostComment, HarvestAlert, WeeklyComboOffer, WeeklyComboProduct, DynamicPage } from './types';
 import { demoFarmers, demoReviews, CATEGORIES, demoBlogs, DEFAULT_SITE_SETTINGS } from './data';
 import { new45Products as demoProducts } from './newProducts';
 import { HERO_CAROUSEL_BANNERS } from './assets';
@@ -52,9 +52,9 @@ interface AppContextType {
   registerFarmer: (name: string, phone: string, password: string, district: string, address: string, nidNumber: string, nidImage: string, gender: 'male' | 'female') => { success: boolean; message: string };
 
   // Cart actions
-  addToCart: (product: Product, quantity: number, customPrice?: number, customUnit?: string) => void;
-  removeFromCart: (productId: string, selectedUnit?: string) => void;
-  updateCartQuantity: (productId: string, quantity: number, selectedUnit?: string) => void;
+  addToCart: (product: Product, quantity: number, customPrice?: number, customUnit?: string, variation?: ProductVariation) => void;
+  removeFromCart: (productId: string, selectedUnit?: string, variationId?: string) => void;
+  updateCartQuantity: (productId: string, quantity: number, selectedUnit?: string, variationId?: string) => void;
   clearCart: () => void;
 
   // Order actions
@@ -1756,9 +1756,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // CART STATE MGMT
-  const addToCart = (product: Product, quantity: number, customPrice?: number, customUnit?: string) => {
+  const addToCart = (product: Product, quantity: number, customPrice?: number, customUnit?: string, variation?: ProductVariation) => {
     const itemPrice = customPrice !== undefined ? customPrice : (product.discountPrice || product.price);
-    const itemTitle = customUnit ? `${product.title} (${customUnit})` : product.title;
+    let itemTitle = product.title;
+    if (variation) {
+      itemTitle += ` [${variation.nameBn}]`;
+    }
+    if (customUnit) {
+      itemTitle += ` (${customUnit})`;
+    }
     logAnalyticsEvent('add_to_cart', {
       item_id: product.id,
       item_name: itemTitle,
@@ -1766,50 +1772,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       quantity: quantity
     });
     setCart(prev => {
-      // In order to separate items with different pack selections, we identify them by productId + customUnit
-      const itemKey = customUnit ? `${product.id}_${customUnit}` : product.id;
+      // Uniquely identify items by combination of productId, variationId, and customUnit
       const existing = prev.find(item => {
-        const existingKey = item.selectedUnit ? `${item.productId}_${item.selectedUnit}` : item.productId;
-        return existingKey === itemKey;
+        return item.productId === product.id && 
+               item.variationId === variation?.id && 
+               item.selectedUnit === customUnit;
       });
       if (existing) {
         return prev.map(item => {
-          const currentKey = item.selectedUnit ? `${item.productId}_${item.selectedUnit}` : item.productId;
-          return currentKey === itemKey 
+          const isMatch = item.productId === product.id && 
+                          item.variationId === variation?.id && 
+                          item.selectedUnit === customUnit;
+          return isMatch 
             ? { ...item, quantity: item.quantity + quantity } 
             : item;
         });
       }
       return [...prev, {
         productId: product.id,
-        title: product.title,
+        title: itemTitle,
         price: itemPrice,
         quantity: quantity,
         image: product.images[0],
         farmerId: product.farmerId,
+        variationId: variation?.id,
+        variationName: variation?.nameBn,
         selectedUnit: customUnit
       }];
     });
   };
 
-  const removeFromCart = (productId: string, selectedUnit?: string) => {
+  const removeFromCart = (productId: string, selectedUnit?: string, variationId?: string) => {
     setCart(prev => prev.filter(item => {
-      if (selectedUnit) {
-        return !(item.productId === productId && item.selectedUnit === selectedUnit);
-      }
-      return item.productId !== productId;
+      return !(item.productId === productId && 
+               item.selectedUnit === selectedUnit && 
+               item.variationId === variationId);
     }));
   };
 
-  const updateCartQuantity = (productId: string, quantity: number, selectedUnit?: string) => {
+  const updateCartQuantity = (productId: string, quantity: number, selectedUnit?: string, variationId?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId, selectedUnit);
+      removeFromCart(productId, selectedUnit, variationId);
       return;
     }
     setCart(prev => prev.map(item => {
-      const isMatch = selectedUnit 
-        ? (item.productId === productId && item.selectedUnit === selectedUnit)
-        : item.productId === productId;
+      const isMatch = item.productId === productId && 
+                      item.selectedUnit === selectedUnit && 
+                      item.variationId === variationId;
       return isMatch ? { ...item, quantity } : item;
     }));
   };

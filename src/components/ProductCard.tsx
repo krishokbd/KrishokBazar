@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Product, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
+import { Product, ProductVariation, getFormattedUnit, getProductPackOptions, PackOption } from '../types';
 import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { Star, ShoppingCart, Eye, Landmark, ShoppingBag, PhoneCall, Camera, Heart } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -157,18 +157,47 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const packLabelBn = activeOption?.labelBn || '';
   const packLabelEn = activeOption?.labelEn || '';
 
-  const displayPrice = Math.round((product.discountPrice || product.price) * packMultiplier);
-  const originalPrice = Math.round(product.price * packMultiplier);
-  const hasDiscount = !!product.discountPrice;
+  const [selectedVariationId, setSelectedVariationId] = React.useState<string>(() => {
+    if (product.variations && product.variations.length > 0) {
+      return product.variations[0].id;
+    }
+    return 'base';
+  });
+
+  // Keep state synchronized if product variations change
+  React.useEffect(() => {
+    if (product.variations && product.variations.length > 0) {
+      setSelectedVariationId(product.variations[0].id);
+    } else {
+      setSelectedVariationId('base');
+    }
+  }, [product.variations]);
+
+  const selectedVariation = React.useMemo(() => {
+    if (!product.variations || product.variations.length === 0) return null;
+    return product.variations.find(v => v.id === selectedVariationId) || null;
+  }, [product.variations, selectedVariationId]);
+
+  const basePrice = (selectedVariation && selectedVariation.price !== undefined) 
+    ? selectedVariation.price 
+    : (product.discountPrice || product.price);
+
+  const baseOriginalPrice = (selectedVariation && selectedVariation.price !== undefined)
+    ? selectedVariation.price
+    : product.price;
+
+  const displayPrice = Math.round(basePrice * packMultiplier);
+  const originalPrice = Math.round(baseOriginalPrice * packMultiplier);
+  const hasDiscount = !!product.discountPrice && !selectedVariation?.price;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product, 1, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
+    addToCart(product, 1, displayPrice, language === 'bn' ? packLabelBn : packLabelEn, selectedVariation || undefined);
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product, 1, displayPrice, language === 'bn' ? packLabelBn : packLabelEn);
+    addToCart(product, 1, displayPrice, language === 'bn' ? packLabelBn : packLabelEn, selectedVariation || undefined);
     window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: { openCheckout: true } }));
   };
 
@@ -330,6 +359,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className="h-full w-full object-cover object-center group-hover:scale-108"
         />
 
+        {/* Subtle dark gradient overlay at the bottom to ensure layered text/badges are readable over vibrant photos */}
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 via-black/10 to-transparent pointer-events-none z-5" />
+
         {/* BLUE VERIFICATION TICK ONLY (NO TEXT OVERLAY) */}
         {product.isVerified && (
           <div className="absolute left-2 top-2 z-10 flex items-center justify-center p-0.5 rounded-full bg-white/90 backdrop-blur-xs shadow-sm border border-sky-100" title={language === 'bn' ? 'ভেরিফাইড কৃষক' : 'Verified Farmer'}>
@@ -422,6 +454,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </span>
         </div>
+
+        {/* Stateful Variation Selection */}
+        {product.variations && product.variations.length > 0 && (
+          <div className="mt-1.5 mb-0.5 flex items-center gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
+            <span className="text-gray-400 font-bold shrink-0">
+              {language === 'bn' ? 'প্রকার:' : 'Variant:'}
+            </span>
+            <select
+              value={selectedVariationId}
+              onChange={(e) => setSelectedVariationId(e.target.value)}
+              className="flex-1 rounded border border-gray-200 bg-white px-1 py-0.5 text-[8.5px] font-bold text-gray-700 outline-none focus:border-emerald-500 cursor-pointer"
+            >
+              {product.variations.map((v) => {
+                const diff = (v.price !== undefined) ? v.price - (product.discountPrice || product.price) : 0;
+                let diffText = '';
+                if (diff > 0) {
+                  diffText = ` (+৳${diff})`;
+                } else if (diff < 0) {
+                  diffText = ` (-৳${Math.abs(diff)})`;
+                }
+                return (
+                  <option key={v.id} value={v.id}>
+                    {language === 'bn' ? v.nameBn : v.nameEn}{diffText}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        )}
 
         {/* Stateful Pack Option Selection */}
         {packOptions.length > 0 && (

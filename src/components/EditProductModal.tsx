@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Product } from '../types';
+import { Product, ProductVariation } from '../types';
 import { useApp } from '../AppContext';
 import { isDefaultPresettedImage, cleanImageUrl } from '../utils';
 import { X, Trash2, Save, Image, Check, Sparkles, ArrowRight, Upload } from 'lucide-react';
@@ -90,6 +90,10 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [harvestDate, setHarvestDate] = useState('');
   const [googleDriveFolderUrl, setGoogleDriveFolderUrl] = useState('');
   const [farmerId, setFarmerId] = useState('');
+  const [variations, setVariations] = useState<ProductVariation[]>([]);
+  const [newVarNameBn, setNewVarNameBn] = useState('');
+  const [newVarNameEn, setNewVarNameEn] = useState('');
+  const [newVarPrice, setNewVarPrice] = useState('');
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -213,6 +217,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setHarvestDate(product.harvestDate || '');
       setGoogleDriveFolderUrl(product.googleDriveFolderUrl || '');
       setFarmerId(product.farmerId || '');
+      setVariations(product.variations || []);
       setConfirmDelete(false);
       setSuccessAnimation(false);
       setUploadError('');
@@ -278,6 +283,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       harvestDate: harvestDate || undefined,
       googleDriveFolderUrl: googleDriveFolderUrl || undefined,
       farmerId: farmerId || undefined,
+      variations: variations.length > 0 ? variations : [],
       approved: true,
       isActive: true,
     };
@@ -514,6 +520,116 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                 placeholder="পণ্যের গুণগত মান, পুষ্টিগুণ বা ফলনের সংক্ষিপ্ত ইতিবাচক বর্ণনা দিন..."
                 className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs outline-none focus:border-emerald-500 shadow-sm h-24 resize-none leading-relaxed font-sans"
               />
+            </div>
+
+            {/* PRODUCT VARIATIONS SECTION */}
+            <div className="border border-emerald-150 rounded-2xl p-4 bg-emerald-50/20 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider font-sans flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-emerald-650 animate-pulse" />
+                    প্রোডাক্ট ভেরিয়েশন (Product Variations)
+                  </h4>
+                  <p className="text-[10.5px] text-gray-500 mt-0.5">
+                    যেমন: গোল বেগুন, লম্বা বেগুন ইত্যাদি প্রকার বা সাইজ যোগ করুন
+                  </p>
+                </div>
+              </div>
+
+              {/* Add New Variation Form */}
+              <div className="bg-white p-3 rounded-xl border border-emerald-100 grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-650 mb-1">প্রকার নাম (বাংলা)</label>
+                  <input
+                    type="text"
+                    value={newVarNameBn}
+                    onChange={(e) => setNewVarNameBn(e.target.value)}
+                    placeholder="যেমন: গোল বেগুন"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-650 mb-1">প্রকার নাম (English)</label>
+                  <input
+                    type="text"
+                    value={newVarNameEn}
+                    onChange={(e) => setNewVarNameEn(e.target.value)}
+                    placeholder="e.g. Round Eggplant"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-650 mb-1">আলাদা দাম (ঐচ্ছিক ৳)</label>
+                  <input
+                    type="number"
+                    value={newVarPrice}
+                    onChange={(e) => setNewVarPrice(e.target.value)}
+                    placeholder="যেমন: ৬০"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nameBn = newVarNameBn.trim();
+                    const nameEn = newVarNameEn.trim();
+                    const priceVal = newVarPrice ? Number(newVarPrice) : undefined;
+                    
+                    if (!nameBn || !nameEn) {
+                      alert("দয়া করে প্রকার নাম বাংলা এবং ইংরেজি দুই ভাষাতেই লিখুন!");
+                      return;
+                    }
+                    
+                    const newVar: ProductVariation = {
+                      id: `var-${Date.now()}`,
+                      nameBn,
+                      nameEn,
+                      price: priceVal,
+                      stock: stock, // Default to base product stock
+                    };
+                    
+                    setVariations(prev => [...prev, newVar]);
+                    setNewVarNameBn('');
+                    setNewVarNameEn('');
+                    setNewVarPrice('');
+                  }}
+                  className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                >
+                  <Check className="h-3.5 w-3.5" /> প্রকার যোগ করুন
+                </button>
+              </div>
+
+              {/* Variation List */}
+              {variations.length > 0 ? (
+                <div className="space-y-2">
+                  <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">চলতি প্রকারসমূহ (Current Variations):</span>
+                  <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                    {variations.map((v, index) => (
+                      <div key={v.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-150 shadow-3xs text-xs font-sans">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-800">{v.nameBn} <span className="text-gray-400 font-normal">({v.nameEn})</span></span>
+                          <span className="text-[10px] text-emerald-700 font-bold font-mono">
+                            {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVariations(prev => prev.filter((_, i) => i !== index));
+                          }}
+                          className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 text-gray-400 text-[11px]">
+                  কোনো প্রকার বা সাইজ ভেরিয়েশন যোগ করা নেই। পণ্যটি একটি একক সাধারণ অপশনে বিক্রি হবে।
+                </div>
+              )}
             </div>
 
             {/* Premium Images Controller Section */}
