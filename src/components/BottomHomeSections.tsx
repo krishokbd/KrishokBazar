@@ -208,3 +208,116 @@ export const BottomFarmersSection: React.FC = () => {
     </section>
   );
 };
+
+export const BottomFoundersSection: React.FC = () => {
+  const { siteSettings, language, setView } = useApp();
+
+  const founderName = language === 'bn' 
+    ? (siteSettings?.founderNameBn || 'জাকির হোসেন') 
+    : (siteSettings?.founderNameEn || 'Zakir Hossain');
+
+  const founderRole = language === 'bn'
+    ? (siteSettings?.founderRoleBn || 'প্রতিষ্ঠাতা')
+    : (siteSettings?.founderRoleEn || 'Founder');
+
+  const coFounderName = language === 'bn'
+    ? (siteSettings?.coFounderNameBn || 'আহসামুল হক রতন')
+    : (siteSettings?.coFounderNameEn || 'Ahsamul Haque Ratan');
+
+  const coFounderRole = language === 'bn'
+    ? (siteSettings?.coFounderRoleBn || 'সহ-প্রতিষ্ঠাতা')
+    : (siteSettings?.coFounderRoleEn || 'Co-Founder');
+
+  return (
+    <section className="py-14 bg-gradient-to-br from-emerald-900 to-emerald-950 text-white font-sans overflow-hidden relative select-none border-t border-emerald-800/40">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-green-500/10 via-transparent to-transparent"></div>
+      
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          
+          {/* Left Side: Call to Action & Story Intro */}
+          <div className="lg:col-span-5 space-y-5 text-left">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] sm:text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-widest">
+              👑 {language === 'bn' ? 'স্বপ্নদ্রষ্টা ও নেতৃত্ব' : 'Our Leadership'}
+            </span>
+            
+            <h2 className="text-2xl sm:text-3.5xl font-black tracking-tight leading-tight">
+              {language === 'bn' 
+                ? 'কৃষক বাজার আন্দোলনের পেছনের মুখ' 
+                : 'The Faces Behind Krishok Bazar'}
+            </h2>
+            
+            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium">
+              {language === 'bn' 
+                ? 'দালাল ও সিন্ডিকেটের অবসান ঘটিয়ে কৃষকের অধিকার নিশ্চিত করতে এবং বিষমুক্ত সতেজ খাবার ঘরে ঘরে পৌঁছে দিতে দিনরাত অক্লান্ত পরিশ্রম করছেন আমাদের প্রতিষ্ঠাতা ও পুরো টিম।' 
+                : 'Working day and night to break syndicate networks, ensure true farmer pricing, and supply chemical-free food to families.'}
+            </p>
+
+            <div className="pt-2 flex flex-wrap gap-3">
+              <button
+                onClick={() => { setView('founders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-md inline-flex items-center gap-1.5 active:scale-95 border border-amber-400"
+              >
+                <span>📖 {language === 'bn' ? 'প্রতিষ্ঠাতাদের পূর্ণ কাহিনী ও ভিশন' : 'Read Our Founders Story'}</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              
+              <button
+                onClick={() => { setView('our-story'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="px-5 py-2.5 bg-emerald-800/80 hover:bg-emerald-800 text-emerald-100 rounded-xl text-xs font-black transition-all cursor-pointer border border-emerald-700/60 inline-flex items-center gap-1.5 active:scale-95"
+              >
+                <span>🌿 {language === 'bn' ? 'আমাদের গল্প পেজ' : 'Our Story Page'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Side: Founders Spotlight Cards */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Founder 1 */}
+            <div className="bg-white/5 backdrop-blur-xs rounded-2xl border border-white/10 p-5 flex items-center gap-4 hover:border-white/25 transition">
+              <div className="h-16 w-16 rounded-xl overflow-hidden shrink-0 border border-emerald-500/30">
+                <img 
+                  src={siteSettings?.founderImage || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80'} 
+                  alt={founderName} 
+                  className="h-full w-full object-cover object-top"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="text-left space-y-0.5">
+                <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">{founderRole}</span>
+                <h4 className="text-sm font-black text-white">{founderName}</h4>
+                <p className="text-[10px] text-emerald-200/80 leading-normal line-clamp-2">
+                  {language === 'bn' 
+                    ? 'স্বপ্নদ্রষ্টা ও প্রতিষ্ঠাতা, কৃষক বাজার। "কৃষক দেশের সম্পদ" এই দর্শনে বিশ্বাসী।' 
+                    : 'Visionary & Founder. Believes that farmers are the wealth of our nation.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Founder 2 */}
+            <div className="bg-white/5 backdrop-blur-xs rounded-2xl border border-white/10 p-5 flex items-center gap-4 hover:border-white/25 transition">
+              <div className="h-16 w-16 rounded-xl overflow-hidden shrink-0 border border-emerald-500/30">
+                <img 
+                  src={siteSettings?.coFounderImage || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80'} 
+                  alt={coFounderName} 
+                  className="h-full w-full object-cover object-top"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="text-left space-y-0.5">
+                <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest">{coFounderRole}</span>
+                <h4 className="text-sm font-black text-white">{coFounderName}</h4>
+                <p className="text-[10px] text-emerald-200/80 leading-normal line-clamp-2">
+                  {language === 'bn' 
+                    ? 'সহ-প্রতিষ্ঠাতা, নিরাপদ ও রাসায়নিক মুক্ত খাদ্য সরবরাহের লড়াইয়ে অগ্রণী।' 
+                    : 'Co-Founder, dedicated to delivering pure, chemical-free foods to every home.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+};

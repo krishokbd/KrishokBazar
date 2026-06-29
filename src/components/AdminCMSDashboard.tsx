@@ -349,6 +349,7 @@ export const AdminCMSDashboard: React.FC = () => {
   const [adminNewVarNameBn, setAdminNewVarNameBn] = useState('');
   const [adminNewVarNameEn, setAdminNewVarNameEn] = useState('');
   const [adminNewVarPrice, setAdminNewVarPrice] = useState('');
+  const [adminNewVarStock, setAdminNewVarStock] = useState('');
 
   const handleAdminImageUpload = async (files: FileList | null) => {
     if (!files) return;
@@ -1528,6 +1529,7 @@ export const AdminCMSDashboard: React.FC = () => {
                     setAdminNewVarNameBn('');
                     setAdminNewVarNameEn('');
                     setAdminNewVarPrice('');
+                    setAdminNewVarStock('');
                   }}
                   className="rounded-xl px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-500 text-white font-bold text-xs shadow hover:scale-101 cursor-pointer flex items-center gap-1 self-start sm:self-auto"
                 >
@@ -1837,7 +1839,7 @@ export const AdminCMSDashboard: React.FC = () => {
                         </div>
 
                         {/* Add Custom Variation Form */}
-                        <div className="bg-white p-3 rounded-xl border border-indigo-100 grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
+                        <div className="bg-white p-3 rounded-xl border border-indigo-100 grid grid-cols-2 sm:grid-cols-5 gap-2.5 items-end">
                           <div>
                             <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (বাংলা)</label>
                             <input
@@ -1868,12 +1870,23 @@ export const AdminCMSDashboard: React.FC = () => {
                               className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-indigo-500 text-gray-700 font-mono"
                             />
                           </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-655 mb-1">স্টক পরিমাণ (ঐচ্ছিক)</label>
+                            <input
+                              type="number"
+                              value={adminNewVarStock}
+                              onChange={(e) => setAdminNewVarStock(e.target.value)}
+                              placeholder="যেমন: ১০০"
+                              className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-indigo-500 text-gray-700 font-mono"
+                            />
+                          </div>
                           <button
                             type="button"
                             onClick={() => {
                               const nameBn = adminNewVarNameBn.trim();
                               const nameEn = adminNewVarNameEn.trim();
                               const priceVal = adminNewVarPrice ? Number(adminNewVarPrice) : undefined;
+                              const stockVal = adminNewVarStock ? Number(adminNewVarStock) : undefined;
                               
                               if (!nameBn || !nameEn) {
                                 alert("দয়া করে প্রকার নাম বাংলা এবং ইংরেজি দুই ভাষাতেই লিখুন!");
@@ -1884,15 +1897,17 @@ export const AdminCMSDashboard: React.FC = () => {
                                 id: `var-${Date.now()}`,
                                 nameBn,
                                 nameEn,
-                                price: priceVal
+                                price: priceVal,
+                                stock: stockVal
                               };
                               
                               setAdminProdVariations(prev => [...prev, newVar]);
                               setAdminNewVarNameBn('');
                               setAdminNewVarNameEn('');
                               setAdminNewVarPrice('');
+                              setAdminNewVarStock('');
                             }}
-                            className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 font-sans"
+                            className="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 font-sans sm:col-span-1 col-span-2"
                           >
                             <Plus className="h-3.5 w-3.5" /> প্রকার যোগ করুন
                           </button>
@@ -1907,9 +1922,16 @@ export const AdminCMSDashboard: React.FC = () => {
                                 <div key={v.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-150 shadow-3xs text-xs font-sans">
                                   <div className="flex flex-col">
                                     <span className="font-bold text-gray-800">{v.nameBn} <span className="text-gray-400 font-normal">({v.nameEn})</span></span>
-                                    <span className="text-[10px] text-emerald-700 font-bold font-mono">
-                                      {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
-                                    </span>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="text-[10px] text-emerald-750 font-bold font-mono">
+                                        {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
+                                      </span>
+                                      {v.stock !== undefined && (
+                                        <span className="text-[9.5px] text-indigo-700 font-bold font-mono bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                          স্টক: {v.stock} পিস
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                   <button
                                     type="button"
@@ -2341,7 +2363,8 @@ export const AdminCMSDashboard: React.FC = () => {
                             harvestDate: adminProdHarvestDate || undefined,
                             googleDriveFolderUrl: adminProdGoogleDriveFolderUrl || undefined,
                             approved: true,
-                            isActive: true
+                            isActive: true,
+                            variations: adminProdVariations
                           };
 
                           editProduct(adminEditingProduct.id, prodPayload);
@@ -2520,6 +2543,7 @@ export const AdminCMSDashboard: React.FC = () => {
                                 setAdminNewVarNameBn('');
                                 setAdminNewVarNameEn('');
                                 setAdminNewVarPrice('');
+                                setAdminNewVarStock('');
                                 window.scrollTo({ top: 120, behavior: 'smooth' });
                               }}
                               className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-amber-50 hover:bg-amber-100 text-amber-805 rounded font-bold text-[9px] border border-amber-200 cursor-pointer transition duration-150 shadow-xs"
@@ -4905,6 +4929,214 @@ export const AdminCMSDashboard: React.FC = () => {
                           value={settingsForm.storyPillar4Text}
                           onChange={(e) => setSettingsForm({ ...settingsForm, storyPillar4Text: e.target.value })}
                         />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section E: 👑 প্রতিষ্ঠাতা ও সহ-প্রতিষ্ঠাতা পরিচিতি ও সত্য কাহিনী CMS */}
+                <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl space-y-4 font-sans md:col-span-2">
+                  <h3 className="font-black text-emerald-850 border-b border-gray-100 pb-2 uppercase tracking-wider flex items-center gap-1.5">
+                    👑 প্রতিষ্ঠাতা ও সহ-প্রতিষ্ঠাতা পরিচিতি ও সত্য কাহিনী CMS
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                    {/* Founder (Zakir Hossain) */}
+                    <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3 shadow-inner">
+                      <h4 className="text-xs font-black text-emerald-700 border-b border-gray-100 pb-1.5 uppercase tracking-wide">
+                        👤 প্রতিষ্ঠাতা (Founder)
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">নাম (বাংলা)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.founderNameBn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, founderNameBn: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">নাম (English)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.founderNameEn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, founderNameEn: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">পদবী (বাংলা)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.founderRoleBn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, founderRoleBn: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">পদবী (English)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.founderRoleEn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, founderRoleEn: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">ছবি লিঙ্ক (Image URL)</label>
+                        <input
+                          type="text"
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                          value={settingsForm.founderImage || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, founderImage: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">পরিচিতি/জীবনী (বাংলা)</label>
+                        <textarea
+                          rows={4}
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none leading-relaxed"
+                          value={settingsForm.founderBioBn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, founderBioBn: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">Bio (English)</label>
+                        <textarea
+                          rows={4}
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none leading-relaxed"
+                          value={settingsForm.founderBioEn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, founderBioEn: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Co-Founder (Ahsamul Haque Ratan) */}
+                    <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3 shadow-inner">
+                      <h4 className="text-xs font-black text-amber-600 border-b border-gray-100 pb-1.5 uppercase tracking-wide">
+                        👤 সহ-প্রতিষ্ঠাতা (Co-Founder)
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">নাম (বাংলা)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.coFounderNameBn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, coFounderNameBn: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">নাম (English)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.coFounderNameEn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, coFounderNameEn: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">পদবী (বাংলা)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.coFounderRoleBn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, coFounderRoleBn: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 mb-1">পদবী (English)</label>
+                          <input
+                            type="text"
+                            className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                            value={settingsForm.coFounderRoleEn || ''}
+                            onChange={(e) => setSettingsForm({ ...settingsForm, coFounderRoleEn: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">ছবি লিঙ্ক (Image URL)</label>
+                        <input
+                          type="text"
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none"
+                          value={settingsForm.coFounderImage || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, coFounderImage: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">পরিচিতি/জীবনী (বাংলা)</label>
+                        <textarea
+                          rows={4}
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none leading-relaxed"
+                          value={settingsForm.coFounderBioBn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, coFounderBioBn: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">Bio (English)</label>
+                        <textarea
+                          rows={4}
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none leading-relaxed"
+                          value={settingsForm.coFounderBioEn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, coFounderBioEn: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5,000-10,000 characters true story */}
+                  <div className="border-t border-gray-100 pt-4 space-y-3">
+                    <h4 className="text-xs font-black text-emerald-800 uppercase tracking-wide">
+                      📖 আমাদের প্রতিষ্ঠার সম্পূর্ণ সত্য কাহিনীর ইতিহাস (5,000 - 10,000 Characters Story)
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">সত্য কাহিনীর টাইটেল (বাংলা)</label>
+                        <input
+                          type="text"
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none font-bold"
+                          value={settingsForm.foundersStoryTitleBn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, foundersStoryTitleBn: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">Story Title (English)</label>
+                        <input
+                          type="text"
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none font-bold"
+                          value={settingsForm.foundersStoryTitleEn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, foundersStoryTitleEn: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">সম্পূর্ণ সত্য কাহিনী বডি টেক্সট (বাংলা)</label>
+                        <textarea
+                          rows={12}
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none leading-relaxed"
+                          value={settingsForm.foundersStoryBodyBn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, foundersStoryBodyBn: e.target.value })}
+                        />
+                        <span className="text-[10px] text-gray-400">অক্ষর সংখ্যা: {settingsForm.foundersStoryBodyBn?.length || 0}</span>
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 mb-1">Full Story Narrative Body (English)</label>
+                        <textarea
+                          rows={12}
+                          className="w-full rounded-lg border border-gray-200 py-1.5 px-2.5 text-xs outline-none leading-relaxed"
+                          value={settingsForm.foundersStoryBodyEn || ''}
+                          onChange={(e) => setSettingsForm({ ...settingsForm, foundersStoryBodyEn: e.target.value })}
+                        />
+                        <span className="text-[10px] text-gray-400">Character Count: {settingsForm.foundersStoryBodyEn?.length || 0}</span>
                       </div>
                     </div>
                   </div>

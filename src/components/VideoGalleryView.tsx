@@ -90,7 +90,7 @@ export const VideoGalleryView: React.FC<VideoGalleryViewProps> = ({ onBack }) =>
           id: vid,
           titleBn: `খামারি কার্যক্রম ও সোনালী ফসল সংগ্রহ ভিডিও #${idx + 1}`,
           titleEn: `Farmer Crop Harvesting Video #${idx + 1}`,
-          descBn: 'তৃণমূল মাঠের চাষীদের দৈনিক কাজের চিত্র',
+          descBn: 'তৃণমূল মাঠের কৃষকদের দৈনিক কাজের চিত্র',
           descEn: 'Daily routines of marginal farmers producing pesticide-free foods',
           type: 'farmer'
         });

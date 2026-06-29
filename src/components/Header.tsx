@@ -926,6 +926,13 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               <button
+                onClick={() => { handleNavClick('founders'); setIsMainMenuOpen(false); }}
+                className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'founders' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold' : 'bg-white text-emerald-850 border-emerald-100/70 hover:bg-emerald-100/40 hover:text-emerald-705'}`}
+              >
+                <span>👑</span> <span>{language === 'en' ? 'Our Founders' : 'প্রতিষ্ঠাতা পরিচিতি (Founders)'}</span>
+              </button>
+
+              <button
                 onClick={() => { handleNavClick('privacy-policy'); setIsMainMenuOpen(false); }}
                 className={`px-3 py-2.5 rounded-xl text-xs font-black text-left transition w-full flex items-center gap-2 border shadow-xs ${currentView === 'privacy-policy' ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold' : 'bg-white text-emerald-850 border-emerald-100/70 hover:bg-emerald-100/40 hover:text-emerald-705'}`}
               >

@@ -650,7 +650,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
                       <div className="flex flex-1 flex-col p-3 text-left">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-800 font-sans mb-1">{prod.category}</span>
                         <h4 className="text-xs sm:text-sm font-black text-gray-800 line-clamp-1 mb-1" title={prod.title}>{prod.title}</h4>
-                        <p className="text-[10px] text-gray-500 font-semibold mb-2 font-sans">চাষী: {prod.farmerName}</p>
+                        <p className="text-[10px] text-gray-500 font-semibold mb-2 font-sans">কৃষক: {prod.farmerName}</p>
 
                         <div className="flex items-baseline gap-1.5 mb-4 font-sans">
                           <span className="text-sm font-bold text-emerald-800 font-sans">৳{finalPrice} / {prod.unit}</span>
@@ -791,7 +791,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
                       )}
                       <div className="flex-1 min-w-0">
                         <h5 className="font-black text-gray-800 truncate" title={item.title}>{item.title}</h5>
-                        <p className="text-[10px] text-gray-400 font-semibold mt-0.5">চাষী আইডি: {item.farmerId}</p>
+                        <p className="text-[10px] text-gray-400 font-semibold mt-0.5">কৃষক আইডি: {item.farmerId}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <strong className="block text-gray-800 font-mono font-bold">৳{item.price}</strong>

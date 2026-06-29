@@ -227,6 +227,28 @@ export interface SiteSettings {
   sectionCategoriesSubtitleBn?: string;
   whatsappContactNumber?: string;
   primaryBrandColor?: string;
+
+  // Founder details (fully customizable)
+  founderNameBn?: string;
+  founderNameEn?: string;
+  founderRoleBn?: string;
+  founderRoleEn?: string;
+  founderImage?: string;
+  founderBioBn?: string;
+  founderBioEn?: string;
+
+  coFounderNameBn?: string;
+  coFounderNameEn?: string;
+  coFounderRoleBn?: string;
+  coFounderRoleEn?: string;
+  coFounderImage?: string;
+  coFounderBioBn?: string;
+  coFounderBioEn?: string;
+
+  foundersStoryTitleBn?: string;
+  foundersStoryTitleEn?: string;
+  foundersStoryBodyBn?: string;
+  foundersStoryBodyEn?: string;
 }
 
 export interface Offer {

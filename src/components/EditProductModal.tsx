@@ -94,6 +94,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [newVarNameBn, setNewVarNameBn] = useState('');
   const [newVarNameEn, setNewVarNameEn] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
+  const [newVarStock, setNewVarStock] = useState('');
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -218,6 +219,10 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setGoogleDriveFolderUrl(product.googleDriveFolderUrl || '');
       setFarmerId(product.farmerId || '');
       setVariations(product.variations || []);
+      setNewVarNameBn('');
+      setNewVarNameEn('');
+      setNewVarPrice('');
+      setNewVarStock('');
       setConfirmDelete(false);
       setSuccessAnimation(false);
       setUploadError('');
@@ -510,7 +515,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
               </div>
             </div>
 
-            {/* Description Description Box */}
+            {/* Description Box */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5 font-sans">পণ্যের আকর্ষণীয় বিবরণ (Description)</label>
               <textarea
@@ -537,34 +542,44 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
               </div>
 
               {/* Add New Variation Form */}
-              <div className="bg-white p-3 rounded-xl border border-emerald-100 grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
+              <div className="bg-white p-3 rounded-xl border border-emerald-100 grid grid-cols-2 sm:grid-cols-5 gap-2.5 items-end font-sans">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-650 mb-1">প্রকার নাম (বাংলা)</label>
+                  <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (বাংলা)</label>
                   <input
                     type="text"
                     value={newVarNameBn}
                     onChange={(e) => setNewVarNameBn(e.target.value)}
                     placeholder="যেমন: গোল বেগুন"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-650 mb-1">প্রকার নাম (English)</label>
+                  <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (English)</label>
                   <input
                     type="text"
                     value={newVarNameEn}
                     onChange={(e) => setNewVarNameEn(e.target.value)}
                     placeholder="e.g. Round Eggplant"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-650 mb-1">আলাদা দাম (ঐচ্ছিক ৳)</label>
+                  <label className="block text-[10px] font-bold text-gray-655 mb-1">আলাদা দাম (ঐচ্ছিক ৳)</label>
                   <input
                     type="number"
                     value={newVarPrice}
                     onChange={(e) => setNewVarPrice(e.target.value)}
                     placeholder="যেমন: ৬০"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-655 mb-1">স্টক পরিমাণ (ঐচ্ছিক)</label>
+                  <input
+                    type="number"
+                    value={newVarStock}
+                    onChange={(e) => setNewVarStock(e.target.value)}
+                    placeholder="যেমন: ৫০"
                     className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
                   />
                 </div>
@@ -574,6 +589,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                     const nameBn = newVarNameBn.trim();
                     const nameEn = newVarNameEn.trim();
                     const priceVal = newVarPrice ? Number(newVarPrice) : undefined;
+                    const stockVal = newVarStock ? Number(newVarStock) : undefined;
                     
                     if (!nameBn || !nameEn) {
                       alert("দয়া করে প্রকার নাম বাংলা এবং ইংরেজি দুই ভাষাতেই লিখুন!");
@@ -585,15 +601,16 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                       nameBn,
                       nameEn,
                       price: priceVal,
-                      stock: stock, // Default to base product stock
+                      stock: stockVal !== undefined ? stockVal : stock,
                     };
                     
                     setVariations(prev => [...prev, newVar]);
                     setNewVarNameBn('');
                     setNewVarNameEn('');
                     setNewVarPrice('');
+                    setNewVarStock('');
                   }}
-                  className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1"
+                  className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 sm:col-span-1 col-span-2 font-sans"
                 >
                   <Check className="h-3.5 w-3.5" /> প্রকার যোগ করুন
                 </button>
@@ -608,9 +625,16 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                       <div key={v.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-150 shadow-3xs text-xs font-sans">
                         <div className="flex flex-col">
                           <span className="font-bold text-gray-800">{v.nameBn} <span className="text-gray-400 font-normal">({v.nameEn})</span></span>
-                          <span className="text-[10px] text-emerald-700 font-bold font-mono">
-                            {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
-                          </span>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] text-emerald-700 font-bold font-mono">
+                              {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
+                            </span>
+                            {v.stock !== undefined && (
+                              <span className="text-[9.5px] text-indigo-700 font-bold font-mono bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                স্টক: {v.stock} পিস
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <button
                           type="button"
@@ -626,7 +650,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 text-gray-400 text-[11px]">
+                <div className="text-center py-4 bg-white rounded-xl border border-dashed border-gray-200 text-gray-400 text-[11px] font-sans">
                   কোনো প্রকার বা সাইজ ভেরিয়েশন যোগ করা নেই। পণ্যটি একটি একক সাধারণ অপশনে বিক্রি হবে।
                 </div>
               )}

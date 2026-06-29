@@ -178,6 +178,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     return product.variations.find(v => v.id === selectedVariationId) || null;
   }, [product.variations, selectedVariationId]);
 
+  const currentStock = (selectedVariation && selectedVariation.stock !== undefined && selectedVariation.stock !== null)
+    ? selectedVariation.stock
+    : product.stock;
+
   const basePrice = (selectedVariation && selectedVariation.price !== undefined) 
     ? selectedVariation.price 
     : (product.discountPrice || product.price);
@@ -189,6 +193,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const displayPrice = Math.round(basePrice * packMultiplier);
   const originalPrice = Math.round(baseOriginalPrice * packMultiplier);
   const hasDiscount = !!product.discountPrice && !selectedVariation?.price;
+
+  const hasVariations = product.variations && product.variations.length > 0;
+  const minPrice = React.useMemo(() => {
+    if (!hasVariations) return displayPrice;
+    const prices = product.variations!.map(v => {
+      const varBasePrice = (v.price !== undefined) ? v.price : (product.discountPrice || product.price);
+      return Math.round(varBasePrice * packMultiplier);
+    });
+    return Math.min(...prices);
+  }, [product, packMultiplier, hasVariations, displayPrice]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -425,7 +439,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 🍳 R2C
               </span>
             )}
-            {product.stock > 0 && product.stock < 5 && (
+            {currentStock > 0 && currentStock < 5 && (
               <span className="text-[7px] font-black text-rose-600 px-1 py-0.25 bg-rose-50 rounded select-none shrink-0 animate-pulse">
                 ⚠️ {language === 'bn' ? 'সীমিত স্টক' : 'Low Stock'}
               </span>
@@ -457,30 +471,47 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Stateful Variation Selection */}
         {product.variations && product.variations.length > 0 && (
-          <div className="mt-1.5 mb-0.5 flex items-center gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
-            <span className="text-gray-400 font-bold shrink-0">
-              {language === 'bn' ? 'প্রকার:' : 'Variant:'}
-            </span>
-            <select
-              value={selectedVariationId}
-              onChange={(e) => setSelectedVariationId(e.target.value)}
-              className="flex-1 rounded border border-gray-200 bg-white px-1 py-0.5 text-[8.5px] font-bold text-gray-700 outline-none focus:border-emerald-500 cursor-pointer"
-            >
-              {product.variations.map((v) => {
-                const diff = (v.price !== undefined) ? v.price - (product.discountPrice || product.price) : 0;
-                let diffText = '';
-                if (diff > 0) {
-                  diffText = ` (+৳${diff})`;
-                } else if (diff < 0) {
-                  diffText = ` (-৳${Math.abs(diff)})`;
-                }
-                return (
-                  <option key={v.id} value={v.id}>
-                    {language === 'bn' ? v.nameBn : v.nameEn}{diffText}
-                  </option>
-                );
-              })}
-            </select>
+          <div className="mt-1.5 mb-0.5 flex flex-col gap-1 font-sans text-[8px] sm:text-[9.5px]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-1">
+              <span className="text-gray-400 font-bold shrink-0">
+                {language === 'bn' ? 'প্রকার:' : 'Variant:'}
+              </span>
+              <select
+                value={selectedVariationId}
+                onChange={(e) => setSelectedVariationId(e.target.value)}
+                className="flex-1 rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[8.5px] font-bold text-gray-700 outline-none focus:border-emerald-500 cursor-pointer shadow-xs"
+              >
+                {product.variations.map((v) => {
+                  const vPrice = v.price !== undefined ? v.price : (product.discountPrice || product.price);
+                  const priceText = ` (৳${Math.round(vPrice * packMultiplier)})`;
+                  return (
+                    <option key={v.id} value={v.id}>
+                      {language === 'bn' ? v.nameBn : v.nameEn}{priceText}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            {/* Dynamic Stock Indicator for Selected Variation */}
+            <div className="flex items-center justify-between text-[8px] sm:text-[9px] px-1 text-gray-500 font-mono">
+              <span>
+                {language === 'bn' ? 'স্টক:' : 'Stock:'}{' '}
+                {currentStock > 0 ? (
+                  <span className="text-emerald-600 font-bold">
+                    {language === 'bn' ? `${currentStock}টি উপলব্ধ` : `${currentStock} available`}
+                  </span>
+                ) : (
+                  <span className="text-rose-500 font-bold">
+                    {language === 'bn' ? 'স্টক শেষ' : 'Out of Stock'}
+                  </span>
+                )}
+              </span>
+              {currentStock > 0 && currentStock < 5 && (
+                <span className="text-rose-600 font-black animate-pulse bg-rose-50 px-1 rounded">
+                  {language === 'bn' ? 'সীমিত স্টক' : 'Low Stock'}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
@@ -527,7 +558,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           {/* Single Buy Now button */}
-          {product.stock > 0 ? (
+          {currentStock > 0 ? (
             <button
               onClick={handleBuyNow}
               className="rounded bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9px] font-black text-white shadow hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"

@@ -319,7 +319,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           <ShieldAlert className="h-8 w-8" />
         </div>
         <h3 className="text-xl font-bold text-gray-850">দুঃখিত, অনুসন্ধানকৃত কৃষিপণ্যটি পাওয়া যায়নি!</h3>
-        <p className="text-gray-400 text-xs mt-1 max-w-md mx-auto">পণ্যটির হয়তো স্টক শেষ হয়ে গিয়েছে অথবা চাষী সাময়িকভাবে তালিকাটি সরিয়ে নিয়েছেন। কাইন্ডলি মূল বাজারে পুনরায় সার্চ করুন।</p>
+        <p className="text-gray-400 text-xs mt-1 max-w-md mx-auto">পণ্যটির হয়তো স্টক শেষ হয়ে গিয়েছে অথবা কৃষক সাময়িকভাবে তালিকাটি সরিয়ে নিয়েছেন। কাইন্ডলি মূল বাজারে পুনরায় সার্চ করুন।</p>
         <button 
           onClick={onBack} 
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-emerald-700 hover:shadow-lg transition-all"
@@ -950,7 +950,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   </div>
                   <h5 className="text-[11.5px] font-black text-gray-900 leading-tight">ফসলের উৎস, মান ও সত্যতা নিশ্চিত করুন</h5>
                   <p className="text-[9px] sm:text-[10px] text-gray-500 leading-normal font-sans">
-                    যেকোনো স্মার্টফোন দিয়ে এই কিউআর স্ক্যান করে ফসলটির তাজা সংগ্রহের লাইভ ট্র্যাক সহ উৎপাদক চাষী ও খামারের সম্পূর্ণ পরিচিতি দেখে নিতে পারবেন।
+                    যেকোনো স্মার্টফোন দিয়ে এই কিউআর স্ক্যান করে ফসলটির তাজা সংগ্রহের লাইভ ট্র্যাক সহ উৎপাদক কৃষক ও খামারের সম্পূর্ণ পরিচিতি দেখে নিতে পারবেন।
                   </p>
                   <button 
                     type="button"
@@ -1089,7 +1089,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 activeTab === 'details' ? 'border-emerald-650 text-emerald-850 font-black' : 'border-transparent text-gray-400 hover:text-gray-700'
               }`}
             >
-              🌱 ফসলের বিস্তারিত ও চাষী তথ্য
+              🌱 ফসলের বিস্তারিত ও কৃষক তথ্য
             </button>
             <button
               onClick={() => setActiveTab('reviews')}
@@ -1121,7 +1121,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100 shadow-inner">
                   <div className="flex justify-between border-b border-gray-100 pb-2">
-                    <span className="text-gray-450 font-bold">উৎপাদক চাষী:</span>
+                    <span className="text-gray-455 font-bold">উৎপাদক কৃষক:</span>
                     <span className="text-gray-800 font-extrabold">{product.farmerName}</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-100 pb-2">

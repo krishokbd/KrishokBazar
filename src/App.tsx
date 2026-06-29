@@ -31,7 +31,7 @@ import { FarmerSocialFeed } from './components/FarmerSocialFeed';
 import { AppEntryFlow } from './components/AppEntryFlow';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { SubscriptionPage } from './components/SubscriptionPage';
-import { BottomVideoSection, BottomFarmersSection } from './components/BottomHomeSections';
+import { BottomVideoSection, BottomFarmersSection, BottomFoundersSection } from './components/BottomHomeSections';
 import { useSubscriptionTimer } from './hooks/useSubscriptionTimer';
 import { VerifiedFarmersView } from './components/VerifiedFarmersView';
 import { BlogView } from './components/BlogView';
@@ -44,6 +44,7 @@ import { BottomNavigation } from './components/BottomNavigation';
 import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 import { ShippingPolicyView } from './components/ShippingPolicyView';
 import { VideoGalleryView } from './components/VideoGalleryView';
+import { FoundersPage } from './components/FoundersPage';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
   ShieldCheck, 
@@ -565,6 +566,7 @@ const AppContent: React.FC = () => {
       else if (path === '/blog' || hash === '#blog') matchedView = 'blog';
       else if (path === '/social-feed' || hash === '#social-feed') matchedView = 'social-feed';
       else if (path === '/our-story' || hash === '#our-story') matchedView = 'our-story';
+      else if (path === '/founders' || hash === '#founders') matchedView = 'founders';
       else if (path === '/privacy-policy' || hash === '#privacy-policy') matchedView = 'privacy-policy';
       else if (path === '/shipping-policy' || hash === '#shipping-policy' || hash === '#return-policy') matchedView = 'shipping-policy';
       
@@ -594,6 +596,7 @@ const AppContent: React.FC = () => {
     else if (currentView === 'blog') path = '/blog';
     else if (currentView === 'social-feed') path = '/social-feed';
     else if (currentView === 'our-story') path = '/our-story';
+    else if (currentView === 'founders') path = '/founders';
     else if (currentView === 'privacy-policy') path = '/privacy-policy';
     else if (currentView === 'shipping-policy') path = '/shipping-policy';
     else if (currentView === 'product-details') path = `/product/${selectedProductId || 'item'}`;
@@ -753,6 +756,11 @@ const AppContent: React.FC = () => {
         {/* SHIPPING & RETURN POLICY VIEW */}
         {currentView === 'shipping-policy' && (
           <ShippingPolicyView onBack={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+        )}
+
+        {/* OUR FOUNDERS PAGE VIEW */}
+        {currentView === 'founders' && (
+          <FoundersPage onBackToHome={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         )}
 
         {/* DEDICATED PRODUCT DETAILS PAGE */}
@@ -1668,6 +1676,7 @@ const AppContent: React.FC = () => {
             {/* WHY USE THIS APP VIDEO SECTION & MEET OUR 5 REAL FARMERS AT THE BOTTOM */}
             <BottomVideoSection />
             <BottomFarmersSection />
+            <BottomFoundersSection />
           </div>
         )}
         </main>
@@ -1816,6 +1825,7 @@ const AppContent: React.FC = () => {
                   <button onClick={() => { setView('weekly-combos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">কম্বো বাজেট (Weekly Budget)</button>
                   <button onClick={() => { setView('ready-to-cook'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">রেডি-টু-কুক (Ready to Cook)</button>
                   <button onClick={() => { setView('our-story'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none">আমাদের গল্প (Our Story)</button>
+                  <button onClick={() => { setView('founders'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors cursor-pointer select-none font-extrabold text-amber-300">আমাদের প্রতিষ্ঠাতা (Founders)</button>
                   <button onClick={() => { setView('privacy-policy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors text-amber-300 cursor-pointer select-none font-extrabold pb-0.5 border-b border-amber-300">গোপনীয়তা নীতি</button>
                   <button onClick={() => { setView('shipping-policy'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-amber-400 transition-colors text-amber-300 cursor-pointer select-none font-extrabold pb-0.5 border-b border-amber-300">ফেরত ও শিপিং নীতি</button>
                   <button 

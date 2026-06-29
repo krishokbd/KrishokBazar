@@ -290,7 +290,7 @@ export const AppEntryFlow: React.FC<AppEntryFlowProps> = ({ onComplete }) => {
               </div>
               <h2 className="text-xl font-bold text-gray-800">আপনার ঠিকানা নির্বাচন করুন</h2>
               <p className="text-[11px] text-gray-450 leading-relaxed font-semibold">
-                সরাসরি আপনার সন্নিকটের চাষীদের মৌসুমী ফলন দ্রুততম সময়ে পৌঁছে দেওয়ার জন্য ভৌগলিক অবস্থান প্রয়োজন।
+                সরাসরি আপনার সন্নিকটের কৃষকদের মৌসুমী ফলন দ্রুততম সময়ে পৌঁছে দেওয়ার জন্য ভৌগলিক অবস্থান প্রয়োজন।
               </p>
             </div>
 
