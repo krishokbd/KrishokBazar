@@ -255,10 +255,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [attemptIndex, setAttemptIndex] = React.useState(-1); // Start at -1 to indicate we are trying initial source
 
   React.useEffect(() => {
-    console.log(`[ProductCard/Effect] Product updated: "${product.title}" (ID: ${product.id}) images:`, product.images);
-    setCurrentSrc(getInitialSrc());
+    if (selectedVariation && selectedVariation.image) {
+      console.log(`[ProductCard/Effect] Selecting variation "${selectedVariation.nameBn}" image:`, selectedVariation.image);
+      setCurrentSrc(convertGoogleDriveLink(selectedVariation.image));
+    } else {
+      console.log(`[ProductCard/Effect] Product updated or no variation image: "${product.title}"`);
+      setCurrentSrc(getInitialSrc());
+    }
     setAttemptIndex(-1);
-  }, [product]);
+  }, [product, selectedVariationId]);
 
   const handleImageError = () => {
     const validUrls = (product.images || []).map(url => url ? url.trim() : '').filter(Boolean);
@@ -541,7 +546,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Price + Single Buy Now Button Bottom Section */}
-        <div className="mt-auto pt-1 border-t border-gray-100 flex items-center justify-between gap-1.5">
+        <div className="mt-auto pt-1 border-t border-gray-100 flex items-center justify-between gap-1.5" onClick={(e) => e.stopPropagation()}>
           {/* Pricing display */}
           <div className="flex flex-col">
             {hasDiscount && (
@@ -557,19 +562,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           </div>
 
-          {/* Single Buy Now button */}
-          {currentStock > 0 ? (
-            <button
-              onClick={handleBuyNow}
-              className="rounded bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-2.5 sm:px-3 py-1 text-[8px] sm:text-[9px] font-black text-white shadow hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-            >
-              কিনুন
-            </button>
-          ) : (
-            <span className="text-[7px] sm:text-[8px] font-black text-gray-400 bg-gray-50 px-1 sm:px-1.5 py-0.5 rounded">
-              স্টক শেষ
-            </span>
-          )}
+          {/* Action buttons (Add to Cart icon & Buy Now button) */}
+          <div className="flex items-center gap-1">
+            {currentStock > 0 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="rounded p-1 border border-emerald-600 hover:bg-emerald-50 text-emerald-600 transition duration-150 active:scale-90 cursor-pointer flex items-center justify-center h-6 w-6"
+                  title={language === 'bn' ? 'কার্টে যোগ করুন' : 'Add to Cart'}
+                >
+                  <ShoppingCart className="h-3 w-3 shrink-0" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="rounded bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-2 sm:px-2.5 py-1 text-[8px] sm:text-[9px] font-black text-white shadow hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer h-6 flex items-center"
+                >
+                  {language === 'bn' ? 'কিনুন' : 'Buy Now'}
+                </button>
+              </>
+            ) : (
+              <span className="text-[7px] sm:text-[8px] font-black text-gray-400 bg-gray-50 px-1 sm:px-1.5 py-0.5 rounded">
+                {language === 'bn' ? 'স্টক শেষ' : 'Out of Stock'}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

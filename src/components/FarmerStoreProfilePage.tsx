@@ -39,15 +39,21 @@ interface FarmerStoreProfilePageProps {
   farmerId: string;
   onBack: () => void;
   onSelectProduct: (productId: string) => void;
+  onNavigateToSubscriptions?: () => void;
 }
 
 export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({ 
   farmerId, 
   onBack, 
-  onSelectProduct 
+  onSelectProduct,
+  onNavigateToSubscriptions
 }) => {
   const { farmers, products, reviews, updateFarmer, currentUser } = useApp();
   const [selectedSubCategory, setSelectedSubCategory] = useState('all');
+  
+  const isPremiumUser = currentUser && 
+    currentUser.subscriptionStatus && 
+    currentUser.subscriptionStatus !== 'none';
   
   // Inline edit state
   const [isEditingFarmer, setIsEditingFarmer] = useState(false);
@@ -310,7 +316,11 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
                 <div className="mt-2 flex flex-wrap justify-center md:justify-start items-center gap-x-3 gap-y-1.5 text-xs text-gray-500 font-medium font-sans">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                    {farmer.district}, বাংলাদেশ
+                    {isPremiumUser ? (
+                      farmer.address || `${farmer.district}, বাংলাদেশ`
+                    ) : (
+                      `${farmer.district}, বাংলাদেশ (বিস্তারিত গ্রাম ও বাড়ির ঠিকানা 🔒)`
+                    )}
                   </span>
                   <span>•</span>
                   <div className="flex items-center gap-0.5 text-amber-500 font-bold">
@@ -335,15 +345,45 @@ export const FarmerStoreProfilePage: React.FC<FarmerStoreProfilePageProps> = ({
                 </div>
               </div>
 
-              {/* Contact / Connection box */}
+              {/* Contact / Connection box with Subscription-gating */}
               <div className="shrink-0 flex justify-center mt-2.5 md:mt-0">
-                <a 
-                  href={`tel:${farmer.phone}`}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-5 py-3 text-xs font-bold text-white shadow-md active:scale-98 transition-all"
-                >
-                  <Phone className="h-4 w-4" />
-                  সরাসরি যোগাযোগ: {farmer.phone}
-                </a>
+                {isPremiumUser ? (
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <a 
+                      href={`tel:${farmer.phone}`}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-700 hover:to-green-600 px-5 py-3 text-xs font-bold text-white shadow-md active:scale-98 transition-all"
+                    >
+                      <Phone className="h-4 w-4" />
+                      সরাসরি কল: {farmer.phone}
+                    </a>
+                    <a 
+                      href={`https://api.whatsapp.com/send?phone=88${farmer.phone}&text=${encodeURIComponent('আসসালামু আলাইকুম, আমি আপনার কৃষক বাজার স্টোর প্রোফাইল দেখে যোগাযোগ করছি।')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-md active:scale-98 transition-all"
+                    >
+                      💬 হোয়াটসঅ্যাপ চ্যাট
+                    </a>
+                  </div>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      if (onNavigateToSubscriptions) {
+                        onNavigateToSubscriptions();
+                      } else {
+                        alert('কৃষকের সাথে সরাসরি ফোন বা হোয়াটসঅ্যাপে কথা বলতে প্রিমিয়াম সাবস্ক্রিপশন প্রয়োজন। অনুগ্রহ করে আমাদের কৃষক প্রিমিয়াম মেম্বারশিপ গ্রহণ করুন।');
+                      }
+                    }}
+                    className="inline-flex flex-col items-center gap-1 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-6 py-3 text-xs font-black text-amber-950 shadow-md active:scale-98 transition-all cursor-pointer text-center"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="h-4 w-4 shrink-0" />
+                      <span>যোগাযোগ ও হোয়াটসঅ্যাপ লক করা 🔒</span>
+                    </div>
+                    <span className="text-[10px] text-amber-950/80 font-bold font-sans">ফোন নম্বর ও বিস্তারিত ঠিকানা দেখতে এখানে ক্লিক করুন</span>
+                  </button>
+                )}
               </div>
             </div>
 

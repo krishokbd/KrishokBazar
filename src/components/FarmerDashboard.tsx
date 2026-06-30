@@ -502,7 +502,38 @@ export const FarmerDashboard: React.FC = () => {
       alert("পণ্যটি সফলভাবে হালনাগাদ করা হয়েছে এবং সরাসরি হোমে যুক্ত হয়েছে!");
     } else {
       addProduct({ id: `p-farm-${Date.now()}`, ...pPayload } as any);
-      alert("বাছাইকৃত তাজা ফসলটি সফলভাবে আপলোড করা হয়েছে এবং সরাসরি হোমে যুক্ত হয়েছে!");
+      alert("বাছাইকৃত তাজা ফসলটি সফলভাবে আপলোড করা হয়েছে এবং সরাসরি হোমে যুক্ত হয়েছে! অর্ডার বা মেইল এলার্ট সহ এটি সরাসরি এডমিনের হোয়াটসঅ্যাপে পাঠানো হচ্ছে...");
+
+      // Send to WhatsApp directly
+      const adminPhone = "01931355398";
+      const catText = 
+        prodCategory === 'vegetables' ? 'শাকসবজি' : 
+        prodCategory === 'fruits' ? 'তাজা ফলমূল' : 
+        prodCategory === 'rice' ? 'চাল ও ডাল' : 
+        prodCategory === 'fish' ? 'নদী-বিলের মাছ' : 'অন্যান্য';
+      
+      const whatsappText = 
+        `🌾 *নতুন ফসল আপলোড বিজ্ঞপ্তি (NEW HARVEST)* 🚜\n` +
+        `========================================\n` +
+        `👨‍🌾 *কৃষকের নাম:* ${pPayload.farmerName} (ID: ${pPayload.farmerId})\n` +
+        `🍎 *ফসলের নাম:* ${pPayload.title}\n` +
+        `📂 *ক্যাটেগরি:* ${catText}\n` +
+        `💰 *মূল্য:* ৳${pPayload.price} প্রতি ${pPayload.unit || 'Kg'}\n` +
+        (pPayload.discountPrice ? `📉 *ডিসকাউন্ট মূল্য:* ৳${pPayload.discountPrice}\n` : '') +
+        `📦 *স্টক পরিমাণ:* ${pPayload.stock} ${pPayload.unit || 'Kg'}\n` +
+        (pPayload.harvestDate ? `📅 *কাটার তারিখ:* ${pPayload.harvestDate}\n` : '') +
+        `========================================\n` +
+        `✨ কৃষক বাজার প্ল্যাটফর্মে খামারির ড্যাশবোর্ড থেকে ফসলটি সরাসরি যুক্ত করা হয়েছে!`;
+
+      const waUrl = `https://api.whatsapp.com/send?phone=88${adminPhone}&text=${encodeURIComponent(whatsappText)}`;
+      try {
+        const opened = window.open(waUrl, '_blank');
+        if (!opened) {
+          window.location.href = waUrl;
+        }
+      } catch (e) {
+        window.location.href = waUrl;
+      }
     }
 
     // Redirect to homepage to show the uploaded product instantly

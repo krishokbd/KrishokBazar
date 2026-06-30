@@ -4,9 +4,10 @@
  */
 
 import React, { useState } from 'react';
-import { useApp } from '../AppContext';
+import { useApp, convertGoogleDriveLink } from '../AppContext';
 import { X, Trash2, ShoppingBag, MapPin, Phone, User, CheckCircle, CreditCard, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { generateWhatsAppReceipt } from '../utils/invoiceFormatter';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -88,31 +89,10 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
         checkoutPaymentMethod !== 'COD' ? checkoutTxId.trim() : undefined
       );
       
-      // WhatsApp auto routing
       const adminWhatsApp = siteSettings?.whatsappContactNumber || "01931355398";
-      const productListStr = order.products.map((p, idx) => {
-        const unit = p.selectedUnit ? ` (${p.selectedUnit})` : "";
-        return `${idx + 1}. *${p.title}*${unit} - ${p.quantity}টি x ৳${p.price} = ৳${p.price * p.quantity}`;
-      }).join('\n');
+      const deliveryFee = order.totalPrice > 500 ? 0 : 60;
       
-      let paymentInfoText = "ক্যাশ অন ডেলিভারি (COD)";
-      if (checkoutPaymentMethod === 'bKash') {
-        paymentInfoText = `bKash বিকাশ (TxID: ${checkoutTxId.trim()}, পেমেন্ট নম্বর: ${senderPhone.trim()})`;
-      } else if (checkoutPaymentMethod === 'Nagad') {
-        paymentInfoText = `Nagad নগদ (TxID: ${checkoutTxId.trim()}, পেমেন্ট নম্বর: ${senderPhone.trim()})`;
-      }
-
-      const waText = `*নতুন অর্ডার রিকোয়েস্ট (Riktaz AI)* 🥦🛒\n\n` +
-        `📦 *অর্ডার আইডি:* ${order.id}\n` +
-        `🚚 *ট্র্যাকিং আইডি:* ${order.trackingNumber}\n\n` +
-        `👤 *গ্রাহকের নাম:* ${order.customerName}\n` +
-        `📞 *মোবাইল নম্বর:* ${order.customerPhone}\n` +
-        `📍 *ডেলিভারি ঠিকানা:* ${order.customerAddress}\n` +
-        `💳 *পেমেন্ট মেথড:* ${paymentInfoText}\n\n` +
-        `🛍️ *অর্ডারকৃত ফসল:* \n${productListStr}\n\n` +
-        `💰 *সর্বমোট মূল্য:* ৳${order.totalPrice}💸\n\n` +
-        `আরিকতাজ এআই অ্যাপলিকেশন থেকে অর্ডারটি সাবমিট করা হয়েছে। ধন্যবাদ!`;
-
+      const waText = generateWhatsAppReceipt(order, deliveryFee);
       const waUrl = `https://api.whatsapp.com/send?phone=88${adminWhatsApp}&text=${encodeURIComponent(waText)}`;
       
       try {
@@ -194,9 +174,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
               /* PRODUCT LIST SECTION */
               <div className="space-y-4">
                 {cart.map((item) => (
-                  <div key={`${item.productId}_${item.selectedUnit || ''}`} className="flex gap-4 p-3 rounded-2xl border border-gray-100 hover:bg-gray-50/50 transition-all">
+                  <div key={`${item.productId}_${item.selectedUnit || ''}_${item.variationId || ''}`} className="flex gap-4 p-3 rounded-2xl border border-gray-100 hover:bg-gray-50/50 transition-all">
                     <div className="h-16 w-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
-                      <img src={item.image} alt={item.title} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                      <img src={convertGoogleDriveLink(item.image)} alt={item.title} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
@@ -249,8 +229,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onOrder
               /* CHECKOUT INSTRUCTION & FORM */
               <form onSubmit={handleCheckoutSubmit} className="space-y-4">
                 <div className="bg-emerald-50/50 rounded-xl p-3 border border-emerald-100 text-xs text-gray-600">
-                  <span className="font-bold text-emerald-800 block mb-1">🚴 সরাসরি হোম ডেলিভারি</span>
-                  আমরা কৃষকের কাছ থেকে পণ্য তুলে সরাসরি আপনার ঠিকানায় ২৪ থেকে ৪৮ ঘণ্টার মধ্যে পৌঁছে দিবো। মূল্য পরিশোধের সুযোগ পাবেন <strong>ক্যাশ অন ডেলিভারি (Cash on Delivery)</strong> মাধ্যমে।
+                  <span className="font-bold text-emerald-800 block mb-1">🚴 এলাকা-ভিত্তিক এক্সপ্রেস ডেলিভারি</span>
+                  আমরা শুধুমাত্র এলাকা-ভিত্তিক (Area-specific) দ্রুত হোম ডেলিভারি দিয়ে থাকি। আপনার এলাকা অনুযায়ী অর্ডার কনফার্ম হওয়ার পর মাত্র <strong>৬ থেকে ১২ ঘণ্টার মধ্যে</strong> শতভাগ সতেজ পণ্য সরাসরি আপনার ঠিকানায় পৌঁছে দেওয়া হবে। মূল্য পরিশোধের সুযোগ পাবেন <strong>ক্যাশ অন ডেলিভারি (Cash on Delivery)</strong> মাধ্যমে।
                 </div>
 
                 {errorMsg && (

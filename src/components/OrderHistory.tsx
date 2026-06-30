@@ -90,6 +90,61 @@ const OrderTrackerStepper: React.FC<{ order: Order }> = ({ order }) => {
     return 0;
   };
 
+  const getTrackingETAAndLocation = (status: Order['status']) => {
+    switch (status) {
+      case 'Pending':
+        return {
+          hours: '১০ - ১২ ঘণ্টা',
+          location: 'কৃষক বাজার প্রধান প্রসেসিং পয়েন্ট (সাভার)',
+          desc: 'অর্ডারটি সবেমাত্র সাবমিট করা হয়েছে। খামারিদের কাছে সতেজ ফসল সংগ্রহের নির্দেশ পাঠানো হচ্ছে।'
+        };
+      case 'Confirmed':
+        return {
+          hours: '৮ - ১০ ঘণ্টা',
+          location: 'কৃষক বাজার প্রধান প্রসেসিং পয়েন্ট (সাভার)',
+          desc: 'অর্ডারটি নিশ্চিত করা হয়েছে। খামারি সরাসরি কৃষিজমি থেকে তাজা ফসল সংগ্রহ শুরু করছেন।'
+        };
+      case 'Processing':
+        return {
+          hours: '৬ - ৮ ঘণ্টা',
+          location: 'সর্টিং ও মান নিয়ন্ত্রণ পয়েন্ট (তেজগাঁও হাব)',
+          desc: 'সংগৃহীত ফসলসমূহ বাছাই করে মান নিশ্চিত করা হচ্ছে এবং সর্টিং সেন্টারে প্রসেস করা হচ্ছে।'
+        };
+      case 'Packed':
+        return {
+          hours: '৪ - ৬ ঘণ্টা',
+          location: 'তেজগাঁও সেন্ট্রাল ডিস্ট্রিবিউশন হাব',
+          desc: 'পরিবেশবান্ধব ও প্যাকেজিং সম্পন্ন করে এলাকা-ভিত্তিক ডেলিভারি ব্যাগে লোড করা হয়েছে।'
+        };
+      case 'Shipped':
+        return {
+          hours: '২ - ৩ ঘণ্টা',
+          location: 'নিকটস্থ এলাকা-ভিত্তিক ডেলিভারি ট্রানজিট হাব',
+          desc: 'অর্ডারটি আমাদের নিবেদিত এক্সপ্রেস রাইডারকে বুঝিয়ে দেওয়া হয়েছে। দ্রুত আপনার ঠিকানায় আসার পথেই রয়েছে।'
+        };
+      case 'Out for delivery':
+        return {
+          hours: '৩০ মিনিট - ১.৫ ঘণ্টা',
+          location: 'আপনার ডেলিভারি এলাকার সন্নিকটে',
+          desc: 'ডেলিভারি রাইডার আপনার ঠিকানার অত্যন্ত কাছে চলে এসেছেন। দয়া করে আপনার মোবাইল ফোনটি সচল রাখুন।'
+        };
+      case 'Delivered':
+        return {
+          hours: 'ডেলিভারি সম্পন্ন ✔',
+          location: 'আপনার ডেলিভারি ঠিকানা (ডেলিভারি সম্পন্ন)',
+          desc: 'শতভাগ সতেজ ও পুষ্টিকর ফসল সফলভাবে আপনার কাছে হস্তান্তর করা হয়েছে। আরিকতাজ এর সাথে থাকার জন্য ধন্যবাদ!'
+        };
+      default:
+        return {
+          hours: '৬ - ১২ ঘণ্টা',
+          location: 'নিকটস্থ হাব',
+          desc: 'এলাকা-ভিত্তিক দ্রুত ডেলিভারি টিম কাজ করছে।'
+        };
+    }
+  };
+
+  const etaInfo = getTrackingETAAndLocation(order.status);
+
   return (
     <div className="w-full py-4 px-1 select-none">
       {/* Horizontal Progress Track */}
@@ -160,13 +215,34 @@ const OrderTrackerStepper: React.FC<{ order: Order }> = ({ order }) => {
             <Clock className="h-6 w-6 opacity-85" />
           )}
         </div>
-        <div className="space-y-1">
-          <h4 className="font-extrabold text-xs sm:text-sm text-gray-800 block text-left">
+        <div className="space-y-1 text-left">
+          <h4 className="font-extrabold text-xs sm:text-sm text-gray-800 block">
             {currentRank === 4 ? '🌱 ডেলিভারি সম্পন্ন হয়েছে' : currentRank === 3 ? '🚴 রোড ট্রানজিটে চলমান' : currentRank === 2 ? '📦 ইকো-প্যাকিং চলছে' : '🌱 অর্ডার বুকিং নিশ্চিত'}
           </h4>
-          <p className="text-[11.5px] text-gray-500 leading-relaxed text-left font-sans font-medium">
+          <p className="text-[11.5px] text-gray-500 leading-relaxed font-sans font-medium">
             {steps[currentRank <= 1 ? 0 : currentRank - 1]?.desc}
           </p>
+        </div>
+      </div>
+
+      {/* Live tracking location & hours details block */}
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-slate-50 border border-gray-150 rounded-2xl p-4 text-left font-sans">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 block mb-1">📍 পার্সেল বর্তমান অবস্থান (Current Location)</span>
+          <p className="text-xs font-black text-slate-800 flex items-center gap-1.5 mt-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
+            {etaInfo.location}
+          </p>
+          <p className="text-[10.5px] text-gray-500 mt-1 leading-relaxed font-medium">{etaInfo.desc}</p>
+        </div>
+
+        <div className="bg-emerald-50/20 border border-emerald-100 rounded-2xl p-4 text-left font-sans">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 block mb-1">⏰ ডেলিভারি প্রাক্কলিত সময় (Estimated Hours Left)</span>
+          <p className="text-xs font-black text-emerald-950 flex items-center gap-1.5 mt-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+            {etaInfo.hours}
+          </p>
+          <p className="text-[10.5px] text-emerald-700/80 mt-1 font-semibold">আমরা শুধুমাত্র এলাকা-ভিত্তিক (Area-specific) সুপার-ফাস্ট ৬ থেকে ১২ ঘণ্টার মধ্যে নিরাপদ উপায়ে ডেলিভারি নিশ্চিত করি।</p>
         </div>
       </div>
     </div>
@@ -195,6 +271,14 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<'orders' | 'wishlist'>('orders');
+
+  const handleViewInvoice = (orderId: string) => {
+    if (setView) {
+      setView('invoice');
+      window.history.pushState(null, '', `/invoice/${orderId}`);
+      window.dispatchEvent(new Event('popstate'));
+    }
+  };
 
   const fetchOrders = async () => {
     if (!currentUser) return;
@@ -412,6 +496,35 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
         </button>
       </div>
 
+      {/* ACCOUNT STATS & METRICS SUMMARY OVERVIEW */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 font-sans select-none text-left">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-4.5 text-white shadow-xs border border-emerald-400/20 relative overflow-hidden">
+          <div className="absolute right-3 bottom-1.5 opacity-10"><ShoppingBag className="w-16 h-16" /></div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-100 block">{language === 'bn' ? 'মোট সফল অর্ডার' : 'Total Orders Placed'}</span>
+          <h3 className="text-xl sm:text-2xl font-black mt-1 font-sans">{orders.length} টি</h3>
+          <p className="text-[10px] text-emerald-100/80 mt-1 font-medium">{language === 'bn' ? 'খামার থেকে সরাসরি ডেলিভারি' : 'Shipped from fresh farms'}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4.5 shadow-3xs border border-gray-150 relative overflow-hidden">
+          <div className="absolute right-3 bottom-1.5 opacity-10 text-emerald-600"><CreditCard className="w-16 h-16" /></div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 block">{language === 'bn' ? 'মোট কেনাকাটার পরিমাণ' : 'Total Spent Amount'}</span>
+          <h3 className="text-xl sm:text-2xl font-black mt-1 text-gray-800 font-sans">৳ {orders.reduce((sum, o) => sum + o.totalPrice, 0)}</h3>
+          <p className="text-[10px] text-gray-400 mt-1 font-medium">{language === 'bn' ? 'ভেজালমুক্ত সতেজ খাদ্যদ্রব্যে ব্যয়' : 'Invested in pure organic food'}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4.5 shadow-3xs border border-gray-150 relative overflow-hidden">
+          <div className="absolute right-3 bottom-1.5 opacity-10 text-emerald-600"><Truck className="w-16 h-16" /></div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 block">{language === 'bn' ? 'ডেলিভারি মোড' : 'Delivery Method'}</span>
+          <h3 className="text-sm font-black mt-1.5 text-emerald-800 font-sans flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            {language === 'bn' ? 'এক্সпресс হোম ডেলিভারি' : 'Express Delivery'}
+          </h3>
+          <p className="text-[10px] text-gray-500 mt-1 font-bold bg-emerald-50 border border-emerald-100 rounded px-2 py-0.5 inline-block">
+            {language === 'bn' ? 'সময়: মাত্র ৬ থেকে ১২ ঘণ্টা 🚀' : 'Within 6 to 12 Hours only'}
+          </p>
+        </div>
+      </div>
+
       {error && (
         <div className="bg-rose-50 border border-rose-100 text-rose-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2 mb-6">
           <span>{error}</span>
@@ -563,13 +676,22 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
                         {getStatusBadge(order.status)}
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 transition-colors cursor-pointer font-sans"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          {language === 'bn' ? 'দেখুন' : 'View'}
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black px-3 py-1.5 rounded-xl border border-emerald-100 transition-colors cursor-pointer font-sans"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            {language === 'bn' ? 'দেখুন' : 'View'}
+                          </button>
+                          <button
+                            onClick={() => handleViewInvoice(order.id)}
+                            className="inline-flex items-center gap-1 bg-white hover:bg-slate-50 text-slate-750 text-[11px] font-black px-3 py-1.5 rounded-xl border border-gray-250 transition-colors cursor-pointer font-sans shadow-3xs"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                            {language === 'bn' ? 'ইনভয়েস' : 'Invoice'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -783,7 +905,7 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
                     <div key={idx} className="flex gap-4 p-3 hover:bg-gray-50/50 transition-colors items-center text-xs">
                       {item.image && (
                         <img 
-                          src={item.image} 
+                          src={convertGoogleDriveLink(item.image)} 
                           alt={item.title} 
                           className="h-10 w-10 object-cover rounded-lg border border-gray-100 shrink-0"
                           referrerPolicy="no-referrer"
@@ -813,7 +935,18 @@ export const OrderHistory: React.FC<OrderHistoryProps> = ({ setView }) => {
             </div>
 
             {/* Footer actions */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  const oId = selectedOrder.id;
+                  setSelectedOrder(null);
+                  handleViewInvoice(oId);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black px-4 py-2.5 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              >
+                <FileText className="w-4 h-4" />
+                ইনভয়েস প্রিন্ট করুন / মেমো ডাউনলোড
+              </button>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors cursor-pointer"

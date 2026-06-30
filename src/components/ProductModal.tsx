@@ -29,6 +29,18 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const [selectedPackId, setSelectedPackId] = useState<string>('');
   const [selectedVariationId, setSelectedVariationId] = useState<string>('base');
 
+  const selectedVariation = React.useMemo(() => {
+    if (!product || !product.variations) return null;
+    return product.variations.find(v => v.id === selectedVariationId) || null;
+  }, [product, selectedVariationId]);
+
+  // Reset image view index when selecting a variation with a custom image
+  useEffect(() => {
+    if (selectedVariation && selectedVariation.image) {
+      setSelectedImgIdx(0);
+    }
+  }, [selectedVariationId, selectedVariation]);
+
   // Reset indices and pack state on product shift
   useEffect(() => {
     setSelectedImgIdx(0);
@@ -53,8 +65,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
   const packMultiplier = activeOption?.multiplier || 1;
   const packLabelBn = activeOption?.labelBn || product.unit || 'পিস';
   const packLabelEn = activeOption?.labelEn || product.unit || 'piece';
-
-  const selectedVariation = product.variations?.find(v => v.id === selectedVariationId) || null;
 
   const baseDisplayPrice = (selectedVariation && selectedVariation.price !== undefined)
     ? selectedVariation.price
@@ -114,7 +124,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                 <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-white aspect-[4/3] w-full shadow-inner flex items-center justify-center">
                   <LazyImage
                     src={
-                      safeImgIdx === 0 && product.googleDriveFolderUrl
+                      safeImgIdx === 0 && selectedVariation?.image
+                        ? convertGoogleDriveLink(selectedVariation.image)
+                        : safeImgIdx === 0 && product.googleDriveFolderUrl
                         ? convertGoogleDriveLink(product.googleDriveFolderUrl)
                         : convertGoogleDriveLink(productImages[safeImgIdx])
                     }
@@ -142,7 +154,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                     >
                       <LazyImage
                         src={
-                          idx === 0 && product.googleDriveFolderUrl
+                          idx === 0 && selectedVariation?.image
+                            ? convertGoogleDriveLink(selectedVariation.image)
+                            : idx === 0 && product.googleDriveFolderUrl
                             ? convertGoogleDriveLink(product.googleDriveFolderUrl)
                             : convertGoogleDriveLink(imgUrl)
                         }

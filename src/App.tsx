@@ -45,6 +45,7 @@ import { PrivacyPolicyView } from './components/PrivacyPolicyView';
 import { ShippingPolicyView } from './components/ShippingPolicyView';
 import { VideoGalleryView } from './components/VideoGalleryView';
 import { FoundersPage } from './components/FoundersPage';
+import { InvoiceView } from './components/InvoiceView';
 import { Product, Farmer, Order, Review, Category, Banner } from './types';
 import { 
   ShieldCheck, 
@@ -172,6 +173,7 @@ const AppContent: React.FC = () => {
 
   // Route state
   const [currentView, setView] = useState<string>('home');
+  const [selectedInvoiceOrderId, setSelectedInvoiceOrderId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedFarmerStoreId, setSelectedFarmerStoreId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -552,6 +554,13 @@ const AppContent: React.FC = () => {
       let matchedView: any = 'home';
       
       if (path === '/shop' || hash === '#shop') matchedView = 'shop';
+      else if (path.startsWith('/invoice/')) {
+        matchedView = 'invoice';
+        const parts = window.location.pathname.split('/invoice/');
+        if (parts[1]) {
+          setSelectedInvoiceOrderId(parts[1].toUpperCase());
+        }
+      }
       else if (path === '/ready-to-cook' || hash === '#ready-to-cook') matchedView = 'ready-to-cook';
       else if (path === '/farmers' || hash === '#farmers' || hash === '#farmer-directory') matchedView = 'farmers';
       else if (path === '/dashboard' || hash === '#dashboard') matchedView = 'customer-dashboard';
@@ -587,6 +596,7 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     let path = '/';
     if (currentView === 'shop') path = '/shop';
+    else if (currentView === 'invoice' && selectedInvoiceOrderId) path = `/invoice/${selectedInvoiceOrderId}`;
     else if (currentView === 'ready-to-cook') path = '/ready-to-cook';
     else if (currentView === 'farmers') path = '/farmers';
     else if (currentView === 'customer-dashboard') path = '/dashboard';
@@ -605,7 +615,7 @@ const AppContent: React.FC = () => {
     if (window.location.pathname !== path) {
       window.history.pushState(null, '', path);
     }
-  }, [currentView, selectedProductId, selectedFarmerStoreId, currentUser]);
+  }, [currentView, selectedInvoiceOrderId, selectedProductId, selectedFarmerStoreId, currentUser]);
 
   // 3. Dynamic Page titles, Metadata tag updates, and JSON-LD schema generation for absolute SEO compliance
   React.useEffect(() => {
@@ -763,6 +773,17 @@ const AppContent: React.FC = () => {
           <FoundersPage onBackToHome={() => { setView('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         )}
 
+        {/* INVOICE VIEW */}
+        {currentView === 'invoice' && selectedInvoiceOrderId && (
+          <InvoiceView 
+            orderId={selectedInvoiceOrderId} 
+            onBackToDashboard={() => {
+              setView('customer-dashboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }} 
+          />
+        )}
+
         {/* DEDICATED PRODUCT DETAILS PAGE */}
         {currentView === 'product-details' && selectedProductId && (
           <ProductDetailsPage 
@@ -818,6 +839,7 @@ const AppContent: React.FC = () => {
               setView('product-details');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onNavigateToSubscriptions={() => setView('subscriptions')}
           />
         )}
 

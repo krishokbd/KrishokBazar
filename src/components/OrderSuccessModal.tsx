@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../AppContext';
+import { generateWhatsAppReceipt } from '../utils/invoiceFormatter';
 import { 
   CheckCircle, 
   MessageSquare, 
@@ -59,25 +60,8 @@ export const OrderSuccessModal: React.FC<OrderSuccessModalProps> = ({ orderId, o
 
   // Formatting WhatsApp text
   const adminWhatsApp = targetNumber;
-  let productListStr = "";
-  if (order) {
-    productListStr = order.products.map((p, idx) => {
-      const unit = p.selectedUnit ? ` (${p.selectedUnit})` : "";
-      return `${idx + 1}. *${p.title}*${unit} - ${p.quantity}টি x ৳${p.price} = ৳${p.price * p.quantity}`;
-    }).join('\n');
-  }
-
-  const waText = order ? `*নতুন অর্ডার রিকোয়েস্ট (Riktaz AI)* 🥦🛒\n\n` +
-    `📦 *অর্ডার আইডি:* ${order.id}\n` +
-    `🚚 *ট্র্যাকিং আইডি:* ${order.trackingNumber}\n\n` +
-    `👤 *গ্রাহকের নাম:* ${order.customerName}\n` +
-    `📞 *মোবাইল নম্বর:* ${order.customerPhone}\n` +
-    `📍 *ডেলিভারি ঠিকানা:* ${order.customerAddress}\n` +
-    `💳 *পেমেন্ট মেথড:* ক্যাশ অন ডেলিভারি (COD)\n\n` +
-    `🛍️ *অর্ডারকৃত ফসল:* \n${productListStr}\n\n` +
-    `💰 *সর্বমোট মূল্য:* ৳${order.totalPrice}💸\n\n` +
-    `আরিকতাজ এআই অ্যাপলিকেশন থেকে অর্ডারটি সাবমিট করা হয়েছে। ধন্যবাদ!`
-    : "";
+  const deliveryFee = order && order.totalPrice > 500 ? 0 : 60;
+  const waText = order ? generateWhatsAppReceipt(order, deliveryFee) : "";
 
   const waUrl = `https://api.whatsapp.com/send?phone=88${adminWhatsApp}&text=${encodeURIComponent(waText)}`;
 

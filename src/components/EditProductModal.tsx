@@ -95,6 +95,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
   const [newVarNameEn, setNewVarNameEn] = useState('');
   const [newVarPrice, setNewVarPrice] = useState('');
   const [newVarStock, setNewVarStock] = useState('');
+  const [newVarImage, setNewVarImage] = useState('');
+  const [isUploadingVarImage, setIsUploadingVarImage] = useState(false);
 
   // Deletion guard
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -223,6 +225,8 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
       setNewVarNameEn('');
       setNewVarPrice('');
       setNewVarStock('');
+      setNewVarImage('');
+      setIsUploadingVarImage(false);
       setConfirmDelete(false);
       setSuccessAnimation(false);
       setUploadError('');
@@ -542,98 +546,190 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
               </div>
 
               {/* Add New Variation Form */}
-              <div className="bg-white p-3 rounded-xl border border-emerald-100 grid grid-cols-2 sm:grid-cols-5 gap-2.5 items-end font-sans">
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (বাংলা)</label>
-                  <input
-                    type="text"
-                    value={newVarNameBn}
-                    onChange={(e) => setNewVarNameBn(e.target.value)}
-                    placeholder="যেমন: গোল বেগুন"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
-                  />
+              <div className="bg-white p-3 rounded-xl border border-emerald-100 space-y-3 font-sans">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 items-end">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (বাংলা)</label>
+                    <input
+                      type="text"
+                      value={newVarNameBn}
+                      onChange={(e) => setNewVarNameBn(e.target.value)}
+                      placeholder="যেমন: গোল বেগুন"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (English)</label>
+                    <input
+                      type="text"
+                      value={newVarNameEn}
+                      onChange={(e) => setNewVarNameEn(e.target.value)}
+                      placeholder="e.g. Round Eggplant"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-655 mb-1">আলাদা দাম (ঐচ্ছিক ৳)</label>
+                    <input
+                      type="number"
+                      value={newVarPrice}
+                      onChange={(e) => setNewVarPrice(e.target.value)}
+                      placeholder="যেমন: ৬০"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-655 mb-1">স্টক পরিমাণ (ঐচ্ছিক)</label>
+                    <input
+                      type="number"
+                      value={newVarStock}
+                      onChange={(e) => setNewVarStock(e.target.value)}
+                      placeholder="যেমন: ৫০"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-655 mb-1">প্রকার নাম (English)</label>
-                  <input
-                    type="text"
-                    value={newVarNameEn}
-                    onChange={(e) => setNewVarNameEn(e.target.value)}
-                    placeholder="e.g. Round Eggplant"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-sans"
-                  />
+
+                {/* Variation Image URL & Direct Upload row */}
+                <div className="flex flex-col sm:flex-row gap-2.5 items-center bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                  <div className="flex-1 w-full">
+                    <label className="block text-[9px] font-bold text-gray-500 mb-1">প্রকার ছবি (Variation Image URL or Device Upload)</label>
+                    <input
+                      type="text"
+                      value={newVarImage}
+                      onChange={(e) => setNewVarImage(e.target.value)}
+                      placeholder="গুগল ড্রাইভ বা ছবি লিংক পেস্ট করুন..."
+                      className="w-full rounded-lg border border-gray-205 bg-white px-2.5 py-1 text-xs outline-none focus:border-emerald-500 font-mono"
+                    />
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2 mt-2 sm:mt-0 w-full sm:w-auto justify-between sm:justify-start">
+                    <label className="bg-emerald-55 border border-emerald-200 text-emerald-800 text-[10px] font-black px-2.5 py-1.5 rounded-lg cursor-pointer transition active:scale-95 inline-flex items-center gap-1 select-none">
+                      <span>📁 ছবি আপলোড</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setIsUploadingVarImage(true);
+                          try {
+                            let blobToUpload = file;
+                            try {
+                              blobToUpload = await compressImage(file);
+                            } catch (err) {
+                              console.warn("Compression failed, uploading original:", err);
+                            }
+                            let url = '';
+                            if (storage) {
+                              const fileRef = ref(storage, `variations/${Date.now()}_var_${file.name}`);
+                              await uploadBytes(fileRef, blobToUpload);
+                              url = await getDownloadURL(fileRef);
+                            } else {
+                              url = await new Promise<string>((res) => {
+                                const r = new FileReader();
+                                r.onload = () => res(r.result as string);
+                                r.readAsDataURL(blobToUpload);
+                              });
+                            }
+                            setNewVarImage(url);
+                          } catch (err) {
+                            console.error("Variation image upload failed:", err);
+                            alert("আপলোড ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।");
+                          } finally {
+                            setIsUploadingVarImage(false);
+                          }
+                        }}
+                      />
+                    </label>
+                    {newVarImage && (
+                      <div className="relative h-10 w-10 border border-gray-250 rounded-lg overflow-hidden bg-white shrink-0">
+                        <img src={newVarImage} className="h-full w-full object-cover" alt="Var Preview" referrerPolicy="no-referrer" />
+                        <button
+                          type="button"
+                          onClick={() => setNewVarImage('')}
+                          className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 text-[8px] leading-none hover:bg-red-650"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-655 mb-1">আলাদা দাম (ঐচ্ছিক ৳)</label>
-                  <input
-                    type="number"
-                    value={newVarPrice}
-                    onChange={(e) => setNewVarPrice(e.target.value)}
-                    placeholder="যেমন: ৬০"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
-                  />
+
+                {isUploadingVarImage && (
+                  <p className="text-[10px] text-emerald-600 animate-pulse font-bold">আপলোড হচ্ছে...</p>
+                )}
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nameBn = newVarNameBn.trim();
+                      const nameEn = newVarNameEn.trim();
+                      const priceVal = newVarPrice ? Number(newVarPrice) : undefined;
+                      const stockVal = newVarStock ? Number(newVarStock) : undefined;
+                      
+                      if (!nameBn || !nameEn) {
+                        alert("দয়া করে প্রকার নাম বাংলা এবং ইংরেজি দুই ভাষাতেই লিখুন!");
+                        return;
+                      }
+                      
+                      const newVar: ProductVariation = {
+                        id: `var-${Date.now()}`,
+                        nameBn,
+                        nameEn,
+                        price: priceVal,
+                        stock: stockVal !== undefined ? stockVal : stock,
+                        image: newVarImage || undefined,
+                      };
+                      
+                      setVariations(prev => [...prev, newVar]);
+                      setNewVarNameBn('');
+                      setNewVarNameEn('');
+                      setNewVarPrice('');
+                      setNewVarStock('');
+                      setNewVarImage('');
+                    }}
+                    className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 font-sans"
+                  >
+                    <Check className="h-3.5 w-3.5" /> প্রকার যোগ করুন
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-655 mb-1">স্টক পরিমাণ (ঐচ্ছিক)</label>
-                  <input
-                    type="number"
-                    value={newVarStock}
-                    onChange={(e) => setNewVarStock(e.target.value)}
-                    placeholder="যেমন: ৫০"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-emerald-500 text-gray-700 font-mono"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nameBn = newVarNameBn.trim();
-                    const nameEn = newVarNameEn.trim();
-                    const priceVal = newVarPrice ? Number(newVarPrice) : undefined;
-                    const stockVal = newVarStock ? Number(newVarStock) : undefined;
-                    
-                    if (!nameBn || !nameEn) {
-                      alert("দয়া করে প্রকার নাম বাংলা এবং ইংরেজি দুই ভাষাতেই লিখুন!");
-                      return;
-                    }
-                    
-                    const newVar: ProductVariation = {
-                      id: `var-${Date.now()}`,
-                      nameBn,
-                      nameEn,
-                      price: priceVal,
-                      stock: stockVal !== undefined ? stockVal : stock,
-                    };
-                    
-                    setVariations(prev => [...prev, newVar]);
-                    setNewVarNameBn('');
-                    setNewVarNameEn('');
-                    setNewVarPrice('');
-                    setNewVarStock('');
-                  }}
-                  className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1 sm:col-span-1 col-span-2 font-sans"
-                >
-                  <Check className="h-3.5 w-3.5" /> প্রকার যোগ করুন
-                </button>
               </div>
 
               {/* Variation List */}
               {variations.length > 0 ? (
                 <div className="space-y-2">
                   <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">চলতি প্রকারসমূহ (Current Variations):</span>
-                  <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                     {variations.map((v, index) => (
                       <div key={v.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-150 shadow-3xs text-xs font-sans">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-gray-800">{v.nameBn} <span className="text-gray-400 font-normal">({v.nameEn})</span></span>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] text-emerald-700 font-bold font-mono">
-                              {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
-                            </span>
-                            {v.stock !== undefined && (
-                              <span className="text-[9.5px] text-indigo-700 font-bold font-mono bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
-                                স্টক: {v.stock} পিস
+                        <div className="flex items-center gap-2.5">
+                          {v.image ? (
+                            <img 
+                              src={v.image} 
+                              alt="Variation preview" 
+                              className="h-9 w-9 object-cover rounded-lg border border-gray-200 shrink-0" 
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="h-9 w-9 rounded-lg border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-350 shrink-0 text-[8px] font-bold">
+                              No Image
+                            </div>
+                          )}
+                          <div className="flex flex-col">
+                            <span className="font-bold text-gray-800">{v.nameBn} <span className="text-gray-400 font-normal">({v.nameEn})</span></span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-emerald-700 font-bold font-mono">
+                                {v.price ? `৳${v.price}` : 'বেস প্রাইস (Base Price)'}
                               </span>
-                            )}
+                              {v.stock !== undefined && (
+                                <span className="text-[9.5px] text-indigo-700 font-bold font-mono bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                  স্টক: {v.stock} পিস
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <button
@@ -641,7 +737,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({ product, isO
                           onClick={() => {
                             setVariations(prev => prev.filter((_, i) => i !== index));
                           }}
-                          className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                          className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

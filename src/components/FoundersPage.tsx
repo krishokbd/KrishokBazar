@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../AppContext';
-import { ArrowLeft, Award, ShieldCheck, Heart, Users, Sparkles, BookOpen } from 'lucide-react';
+import { ArrowLeft, Award, ShieldCheck, Heart, Users, Sparkles, BookOpen, Eye, Target, Microscope } from 'lucide-react';
 import { LazyImage } from './LazyImage';
 
 interface FoundersPageProps {
@@ -42,6 +42,30 @@ export const FoundersPage: React.FC<FoundersPageProps> = ({ onBackToHome }) => {
   const storyBody = language === 'bn'
     ? (siteSettings?.foundersStoryBodyBn || '')
     : (siteSettings?.foundersStoryBodyEn || '');
+
+  const visionTitle = language === 'bn'
+    ? (siteSettings?.visionTitleBn || 'আমাদের দূরদর্শী ভিশন')
+    : (siteSettings?.visionTitleEn || 'Our Strategic Vision');
+
+  const visionBody = language === 'bn'
+    ? (siteSettings?.visionBodyBn || '')
+    : (siteSettings?.visionBodyEn || '');
+
+  const missionTitle = language === 'bn'
+    ? (siteSettings?.missionTitleBn || 'আমাদের মিশন')
+    : (siteSettings?.missionTitleEn || 'Our Core Mission');
+
+  const missionBody = language === 'bn'
+    ? (siteSettings?.missionBodyBn || '')
+    : (siteSettings?.missionBodyEn || '');
+
+  const foodSafetyTitle = language === 'bn'
+    ? (siteSettings?.foodSafetyTitleBn || 'খাদ্য নিরাপত্তা ও ল্যাব স্ট্যান্ডার্ড')
+    : (siteSettings?.foodSafetyTitleEn || 'Food Safety & Lab Standards');
+
+  const foodSafetyBody = language === 'bn'
+    ? (siteSettings?.foodSafetyBodyBn || '')
+    : (siteSettings?.foodSafetyBodyEn || '');
 
   // Split story paragraphs for beautiful editorial layout
   const paragraphs = storyBody.split('\n\n').filter(p => p.trim() !== '');
@@ -187,6 +211,93 @@ export const FoundersPage: React.FC<FoundersPageProps> = ({ onBackToHome }) => {
                     {language === 'bn' ? 'ভেজালমুক্ত সতেজ খাবার ও সুস্থ আগামী প্রজন্মের অঙ্গীকার' : 'Committed to a healthy, safe future generation'}
                   </span>
                 </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5. Vision, Mission & Food Safety Section */}
+      <section className="py-20 bg-gradient-to-b from-gray-50/60 to-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-black text-emerald-700 tracking-wider uppercase bg-emerald-100/50 px-3 py-1 rounded-full border border-emerald-200 block w-max mx-auto">
+              {language === 'bn' ? 'আমাদের ভিত্তিপ্রস্তর' : 'Our Foundations'}
+            </span>
+            <h2 className="text-2xl sm:text-3.5xl font-extrabold text-gray-900 tracking-tight">
+              {language === 'bn' ? 'ভিশন, মিশন এবং কঠোর ল্যাব স্ট্যান্ডার্ড' : 'Vision, Mission & Rigorous Standards'}
+            </h2>
+            <p className="text-xs text-gray-500 max-w-lg mx-auto">
+              {language === 'bn'
+                ? 'একটি সুস্থ ও বিষমুক্ত সমাজ বিনির্মাণে আমাদের মূল কর্মপদ্ধতি ও প্রতিজ্ঞা।'
+                : 'Our core operations and promises to foster a healthy, poison-free community.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            
+            {/* Vision Card */}
+            <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-300 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 h-24 w-24 bg-emerald-500/5 rounded-bl-full group-hover:bg-emerald-500/10 transition duration-300"></div>
+              <div className="space-y-6">
+                <div className="h-12 w-12 bg-emerald-50 text-emerald-700 rounded-2xl flex items-center justify-center shadow-inner">
+                  <Eye className="h-6 w-6" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-slate-800">{visionTitle}</h3>
+                  <p className="text-xs sm:text-[13.5px] text-gray-600 leading-relaxed font-normal text-justify">
+                    {visionBody}
+                  </p>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 pt-4 mt-6 flex items-center gap-2 text-[10px] font-black text-emerald-800 uppercase tracking-wider">
+                <span>🎯 {language === 'bn' ? 'আমাদের দীর্ঘমেয়াদী লক্ষ্য' : 'Our Long-term Goal'}</span>
+              </div>
+            </div>
+
+            {/* Mission Card */}
+            <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-300 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 h-24 w-24 bg-amber-500/5 rounded-bl-full group-hover:bg-amber-500/10 transition duration-300"></div>
+              <div className="space-y-6">
+                <div className="h-12 w-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center shadow-inner">
+                  <Target className="h-6 w-6" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-slate-800">{missionTitle}</h3>
+                  <div className="space-y-3">
+                    {missionBody.split('\n').filter(line => line.trim() !== '').map((line, i) => (
+                      <div key={i} className="flex items-start gap-2.5">
+                        <span className="mt-1.5 h-2 w-2 rounded-full bg-amber-500 shrink-0"></span>
+                        <p className="text-xs sm:text-[13.5px] text-gray-600 leading-relaxed font-normal text-justify">
+                          {line.trim().replace(/^([0-9\u09E6-\u09EF]+\.\s*)/, '')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 pt-4 mt-6 flex items-center gap-2 text-[10px] font-black text-amber-700 uppercase tracking-wider">
+                <span>🚀 {language === 'bn' ? 'উদ্যোগ ও বাস্তবায়ন' : 'Action & Implementation'}</span>
+              </div>
+            </div>
+
+            {/* Food Safety Card */}
+            <div className="bg-white rounded-3xl border border-gray-150 p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-300 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 h-24 w-24 bg-teal-500/5 rounded-bl-full group-hover:bg-teal-500/10 transition duration-300"></div>
+              <div className="space-y-6">
+                <div className="h-12 w-12 bg-teal-50 text-teal-700 rounded-2xl flex items-center justify-center shadow-inner">
+                  <Microscope className="h-6 w-6" />
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-xl font-extrabold text-slate-800">{foodSafetyTitle}</h3>
+                  <p className="text-xs sm:text-[13.5px] text-gray-600 leading-relaxed font-normal text-justify">
+                    {foodSafetyBody}
+                  </p>
+                </div>
+              </div>
+              <div className="border-t border-gray-100 pt-4 mt-6 flex items-center gap-2 text-[10px] font-black text-teal-700 uppercase tracking-wider">
+                <span>🧪 {language === 'bn' ? 'শতভাগ ল্যাব ভেরিফাইড' : '100% Lab Verified'}</span>
               </div>
             </div>
 

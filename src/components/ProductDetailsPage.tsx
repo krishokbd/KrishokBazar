@@ -296,6 +296,23 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     return getProductImages(product);
   }, [product]);
 
+  const mainImageSrc = React.useMemo(() => {
+    if (selectedVariation && selectedVariation.image && selectedImgIdx === 0) {
+      return convertGoogleDriveLink(selectedVariation.image);
+    }
+    if (selectedImgIdx === 0 && product.googleDriveFolderUrl) {
+      return convertGoogleDriveLink(product.googleDriveFolderUrl);
+    }
+    return convertGoogleDriveLink(productImages[selectedImgIdx]);
+  }, [product, selectedVariation, selectedImgIdx, productImages]);
+
+  // Reset image view index when selecting a variation with a custom image
+  useEffect(() => {
+    if (selectedVariation && selectedVariation.image) {
+      setSelectedImgIdx(0);
+    }
+  }, [selectedVariationId, selectedVariation]);
+
   // Synchronize dynamic packaging selection on startup or item change
   useEffect(() => {
     if (product && packOptions.length > 0) {
@@ -503,11 +520,7 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               title="Swipe left or right to change images"
             >
               <LazyImage
-                src={
-                  selectedImgIdx === 0 && product.googleDriveFolderUrl
-                    ? convertGoogleDriveLink(product.googleDriveFolderUrl)
-                    : convertGoogleDriveLink(productImages[selectedImgIdx])
-                }
+                src={mainImageSrc}
                 alt={`${product.title} - Main Preview image`}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 referrerPolicy="no-referrer"
@@ -599,7 +612,9 @@ export const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 >
                   <LazyImage
                     src={
-                      idx === 0 && product.googleDriveFolderUrl
+                      idx === 0 && selectedVariation?.image
+                        ? convertGoogleDriveLink(selectedVariation.image)
+                        : idx === 0 && product.googleDriveFolderUrl
                         ? convertGoogleDriveLink(product.googleDriveFolderUrl)
                         : convertGoogleDriveLink(imgUrl)
                     }

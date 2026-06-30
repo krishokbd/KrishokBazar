@@ -39,6 +39,7 @@ export interface ProductVariation {
   nameEn: string;
   price?: number;
   stock?: number;
+  image?: string;
 }
 
 export interface Product {
@@ -249,6 +250,21 @@ export interface SiteSettings {
   foundersStoryTitleEn?: string;
   foundersStoryBodyBn?: string;
   foundersStoryBodyEn?: string;
+
+  visionTitleBn?: string;
+  visionTitleEn?: string;
+  visionBodyBn?: string;
+  visionBodyEn?: string;
+
+  missionTitleBn?: string;
+  missionTitleEn?: string;
+  missionBodyBn?: string;
+  missionBodyEn?: string;
+
+  foodSafetyTitleBn?: string;
+  foodSafetyTitleEn?: string;
+  foodSafetyBodyBn?: string;
+  foodSafetyBodyEn?: string;
 }
 
 export interface Offer {

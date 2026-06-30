@@ -666,20 +666,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('kb_farmers');
     let loaded: Farmer[] = saved ? JSON.parse(saved) : demoFarmers;
     
-    // Clean up old demo farmers (e.g., in f1 to f69 range) and keep the five real ones and newly introduced active files
+    // Keep the five real partner farmers and any new ones with real pictures
     const allowedIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
     loaded = loaded.filter(f => {
       if (allowedIds.includes(f.id)) return true;
-      const match = f.id.match(/^f(d+)$/);
-      if (match) {
-        const num = parseInt(match[1]);
-        if (num < 70) return false;
+      // If it doesn't have a real picture, filter it out
+      if (!f.avatar || f.avatar === 'male' || f.avatar === 'female' || (!f.avatar.startsWith('http') && !f.avatar.startsWith('data:image'))) {
+        return false;
       }
       return true;
     });
 
     // Ensure all 5 real partner farmers are always loaded if missing
-    const missing = demoFarmers.filter(df => !loaded.some(lf => lf.id === df.id));
+    const missing = demoFarmers.filter(df => allowedIds.includes(df.id) && !loaded.some(lf => lf.id === df.id));
     if (missing.length > 0) {
       loaded = [...loaded, ...missing];
     }
@@ -867,7 +866,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
     const saved = localStorage.getItem('kb_site_settings');
-    return saved ? JSON.parse(saved) : DEFAULT_SITE_SETTINGS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Force update if old unsplash images are found or if the story needs synchronization
+        if (
+          !parsed.founderImage || 
+          parsed.founderImage.includes('unsplash.com') ||
+          parsed.founderImage.includes('1782806475662') ||
+          !parsed.coFounderImage || 
+          parsed.coFounderImage.includes('unsplash.com') ||
+          parsed.coFounderImage.includes('1782806489478') ||
+          !parsed.foundersStoryBodyBn || 
+          parsed.foundersStoryBodyBn.length < 1000 ||
+          !parsed.visionTitleBn
+        ) {
+          const updated = {
+            ...parsed,
+            founderImage: DEFAULT_SITE_SETTINGS.founderImage,
+            coFounderImage: DEFAULT_SITE_SETTINGS.coFounderImage,
+            foundersStoryBodyBn: DEFAULT_SITE_SETTINGS.foundersStoryBodyBn,
+            foundersStoryBodyEn: DEFAULT_SITE_SETTINGS.foundersStoryBodyEn,
+            founderBioBn: DEFAULT_SITE_SETTINGS.founderBioBn,
+            founderBioEn: DEFAULT_SITE_SETTINGS.founderBioEn,
+            coFounderBioBn: DEFAULT_SITE_SETTINGS.coFounderBioBn,
+            coFounderBioEn: DEFAULT_SITE_SETTINGS.coFounderBioEn,
+            visionTitleBn: DEFAULT_SITE_SETTINGS.visionTitleBn,
+            visionTitleEn: DEFAULT_SITE_SETTINGS.visionTitleEn,
+            visionBodyBn: DEFAULT_SITE_SETTINGS.visionBodyBn,
+            visionBodyEn: DEFAULT_SITE_SETTINGS.visionBodyEn,
+            missionTitleBn: DEFAULT_SITE_SETTINGS.missionTitleBn,
+            missionTitleEn: DEFAULT_SITE_SETTINGS.missionTitleEn,
+            missionBodyBn: DEFAULT_SITE_SETTINGS.missionBodyBn,
+            missionBodyEn: DEFAULT_SITE_SETTINGS.missionBodyEn,
+            foodSafetyTitleBn: DEFAULT_SITE_SETTINGS.foodSafetyTitleBn,
+            foodSafetyTitleEn: DEFAULT_SITE_SETTINGS.foodSafetyTitleEn,
+            foodSafetyBodyBn: DEFAULT_SITE_SETTINGS.foodSafetyBodyBn,
+            foodSafetyBodyEn: DEFAULT_SITE_SETTINGS.foodSafetyBodyEn
+          };
+          localStorage.setItem('kb_site_settings', JSON.stringify(updated));
+          return updated;
+        }
+        return parsed;
+      } catch (e) {
+        return DEFAULT_SITE_SETTINGS;
+      }
+    }
+    return DEFAULT_SITE_SETTINGS;
   });
 
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
@@ -1147,15 +1192,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 2. FARMERS LIVE SYNC
     const unsubFarmers = onSnapshot(collection(db, 'farmers'), (snapshot) => {
-      const items: Farmer[] = [];
+      let items: Farmer[] = [];
       snapshot.forEach(docSnap => {
         items.push({ id: docSnap.id, ...docSnap.data() } as Farmer);
       });
+      
+      // Filter out any demo/fake farmers without real pictures, keeping f70-f74 and any new farmers who have real pictures
+      const allowedIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
+      items = items.filter(f => {
+        if (allowedIds.includes(f.id)) return true;
+        // If it's a new farmer, keep them if they have a real avatar image
+        if (!f.avatar || f.avatar === 'male' || f.avatar === 'female' || (!f.avatar.startsWith('http') && !f.avatar.startsWith('data:image'))) {
+          return false;
+        }
+        return true;
+      });
+
       if (items.length > 0) {
         setFarmers(items);
         // Make sure the 5 real farmers (f70 to f74) are fully up to date in Firestore
-        const targetIds = ['f70', 'f71', 'f72', 'f73', 'f74'];
-        const realFive = demoFarmers.filter(f => targetIds.includes(f.id));
+        const realFive = demoFarmers.filter(f => allowedIds.includes(f.id));
         realFive.forEach(async (f) => {
           const matched = items.find(item => item.id === f.id);
           if (!matched) {
@@ -1169,8 +1225,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       } else {
         console.log("Firestore empty: seeding default verified farmers...");
-        setFarmers(demoFarmers);
-        demoFarmers.forEach(async (f) => {
+        const realFive = demoFarmers.filter(f => allowedIds.includes(f.id));
+        setFarmers(realFive);
+        realFive.forEach(async (f) => {
           try {
             await setDoc(doc(db, 'farmers', f.id), f);
           } catch (e) {
@@ -1793,7 +1850,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         title: itemTitle,
         price: itemPrice,
         quantity: quantity,
-        image: product.images[0],
+        image: (variation && variation.image) ? variation.image : product.images[0],
         farmerId: product.farmerId,
         variationId: variation?.id,
         variationName: variation?.nameBn,
@@ -1867,7 +1924,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (isFirebaseConfigured && db) {
-      setDoc(doc(db, 'orders', newOrder.id), newOrder).catch(err => {
+      const sanitizedOrder = JSON.parse(JSON.stringify(newOrder));
+      setDoc(doc(db, 'orders', newOrder.id), sanitizedOrder).catch(err => {
         handleFirestoreError(err, OperationType.CREATE, `orders/${newOrder.id}`);
       });
 
@@ -2677,13 +2735,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         let parsed: Farmer[] = JSON.parse(savedFarmers);
         
-        // Clean up old demo farmers (e.g., in f1 to f69 range)
+        // Clean up old demo farmers
         parsed = parsed.filter(f => {
           if (targetIds.includes(f.id)) return true;
-          const match = f.id.match(/^f(\d+)$/);
-          if (match) {
-            const num = parseInt(match[1]);
-            if (num < 70) return false;
+          // If it doesn't have a real picture, filter it out
+          if (!f.avatar || f.avatar === 'male' || f.avatar === 'female' || (!f.avatar.startsWith('http') && !f.avatar.startsWith('data:image'))) {
+            return false;
           }
           return true;
         });
@@ -2698,10 +2755,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         localStorage.setItem('kb_farmers', JSON.stringify(parsed));
       } catch (e) {
-        localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers));
+        localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers.filter(f => targetIds.includes(f.id))));
       }
     } else {
-      localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers));
+      localStorage.setItem('kb_farmers', JSON.stringify(demoFarmers.filter(f => targetIds.includes(f.id))));
     }
 
     // 3. Write/Update to Cloud Firestore 'farmers' collection
