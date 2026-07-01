@@ -23,6 +23,7 @@ interface AppContextType {
   orders: Order[];
   reviews: Review[];
   currentUser: User | null;
+  setCurrentUser: React.Dispatch<React.SetStateAction<User | null>>;
   cart: OrderItem[];
   withdrawalRequests: WithdrawalRequest[];
   registeredCustomers: User[];
@@ -3049,6 +3050,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       orders,
       reviews,
       currentUser,
+      setCurrentUser,
       cart,
       withdrawalRequests,
       registeredCustomers,

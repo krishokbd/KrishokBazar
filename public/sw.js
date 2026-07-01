@@ -8,8 +8,10 @@ const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon-192.svg',
-  '/icon-512.svg'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+  '/icons/icon-192x192-maskable.png',
+  '/icons/icon-512x512-maskable.png'
 ];
 
 // Install Service Worker and pre-cache basic static shells
@@ -43,9 +45,42 @@ self.addEventListener('fetch', (event) => {
   // Only intercept GET requests
   if (event.request.method !== 'GET') return;
 
-  // Let browser handle bypass routes like cloud Firestore directly or server APIs
   const requestUrl = new URL(event.request.url);
+
+  // Let browser handle bypass routes like cloud Firestore directly or server APIs
   if (requestUrl.pathname.startsWith('/api/') || requestUrl.host.includes('firestore.googleapis.com')) {
+    return;
+  }
+
+  // 1. Strict Cache-First for icons folder and logo assets
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname.startsWith('/icons/')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // 2. Handle SPA dynamic client routing paths (/products, /cart, /share) offline or online
+  if (
+    requestUrl.origin === self.location.origin &&
+    (requestUrl.pathname === '/products' || requestUrl.pathname === '/cart' || requestUrl.pathname === '/share')
+  ) {
+    event.respondWith(
+      caches.match('/index.html').then((cachedIndex) => {
+        return cachedIndex || fetch(event.request);
+      })
+    );
     return;
   }
 
